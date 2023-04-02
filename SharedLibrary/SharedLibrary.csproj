@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
-        <PostBuildEvent>copy SharedLibrary.dll $(OutDir)..\..\..\..\SpaceWar\Assets\DLLs\SharedLibrary.dll</PostBuildEvent>
+        <PostBuildEvent>copy SharedLibrary.dll $(OutDir)..\..\..\..\..\GameClient\SpaceWar\Assets\DLLs\SharedLibrary.dll</PostBuildEvent>
     </PropertyGroup>
     
 </Project>
