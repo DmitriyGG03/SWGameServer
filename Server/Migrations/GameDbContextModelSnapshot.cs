@@ -21,13 +21,13 @@ namespace Server.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("SharedLibrary.Hero", b =>
+            modelBuilder.Entity("SharedLibrary.Models.Hero", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("HeroId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HeroId"));
 
                     b.Property<byte>("ColonizationShipLimit")
                         .HasColumnType("tinyint");
@@ -45,15 +45,15 @@ namespace Server.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("HeroId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Heros");
+                    b.ToTable("Heroes");
                 });
 
-            modelBuilder.Entity("SharedLibrary.User", b =>
+            modelBuilder.Entity("SharedLibrary.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -78,18 +78,18 @@ namespace Server.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Hero", b =>
+            modelBuilder.Entity("SharedLibrary.Models.Hero", b =>
                 {
-                    b.HasOne("SharedLibrary.User", "User")
+                    b.HasOne("SharedLibrary.Models.User", "User")
                         .WithOne("Hero")
-                        .HasForeignKey("SharedLibrary.Hero", "UserId")
+                        .HasForeignKey("SharedLibrary.Models.Hero", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SharedLibrary.User", b =>
+            modelBuilder.Entity("SharedLibrary.Models.User", b =>
                 {
                     b.Navigation("Hero");
                 });

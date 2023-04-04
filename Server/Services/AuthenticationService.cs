@@ -2,9 +2,11 @@
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json;
 using Server.Models;
-using SharedLibrary;
+using SharedLibrary.Models;
 
 namespace Server.Services;
 
@@ -26,9 +28,10 @@ public class AuthenticationService : IAuthenticationService
 		var user = new User
 		{
 			Username = username,
-			PasswordHash = password
+			PasswordHash = password,
 		};
 		user.ProvideSaltAndHash();
+		user.Hero = null;
 
 		Context.Add(user);
 		Context.SaveChanges();
@@ -38,7 +41,7 @@ public class AuthenticationService : IAuthenticationService
 
 	public (bool success, string token) Login(string username, string password)
 	{
-		var user = Context.Users.SingleOrDefault(u => u.Username.Equals(username));
+		var user = Context.Users.Include(u=>u.Hero).SingleOrDefault(u => u.Username.Equals(username));
 
 		if (user == null) return (false, "No user with that name found");
 
@@ -51,6 +54,7 @@ public class AuthenticationService : IAuthenticationService
 		var subject = new ClaimsIdentity(new[]
 		{
 			new Claim("id", user.Id.ToString()),
+			new Claim("hero", JsonConvert.SerializeObject(user.Hero))
 		});
 
 		return subject;

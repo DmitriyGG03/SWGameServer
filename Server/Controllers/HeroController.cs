@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using Server.Services;
-using SharedLibrary;
+using SharedLibrary.Models;
 using SharedLibrary.Requests;
 
 namespace Server.Controllers;
@@ -30,14 +31,20 @@ public class HeroController : ControllerBase
         DbContext.SaveChanges();
 	}
 
-    [HttpGet("{id}")]
-    public Hero Get([FromRoute] int id)
+    [HttpPost("{id}")]
+    public IActionResult Edit([FromRoute] int id, [FromBody] CreateHeroRequest request)
     {
-        var player = new Hero() {Id = id};
+        var availableHeroId = JsonConvert.DeserializeObject<int>(User.FindFirst("hero").Value);
 
-		HeroService.DoSomething();
+        if(!availableHeroId.Equals(id)) return Unauthorized();
 
-        return player;
+        var hero = DbContext.Heroes.First(h => h.HeroId.Equals(id));
+
+        hero.Name = request.Name;
+
+        DbContext.SaveChanges();
+
+        return Ok();
     }
 
     [HttpPost]

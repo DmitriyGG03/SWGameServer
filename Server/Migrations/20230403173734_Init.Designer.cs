@@ -11,8 +11,8 @@ using Server;
 namespace Server.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    [Migration("20230401204437_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20230403173734_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,6 +23,38 @@ namespace Server.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("SharedLibrary.Hero", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<byte>("ColonizationShipLimit")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte>("ResearchShipLimit")
+                        .HasColumnType("tinyint");
+
+                    b.Property<int>("Resourses")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Heroes");
+                });
 
             modelBuilder.Entity("SharedLibrary.User", b =>
                 {
@@ -47,6 +79,22 @@ namespace Server.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("SharedLibrary.Hero", b =>
+                {
+                    b.HasOne("SharedLibrary.User", "User")
+                        .WithOne("Hero")
+                        .HasForeignKey("SharedLibrary.Hero", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SharedLibrary.User", b =>
+                {
+                    b.Navigation("Hero");
                 });
 #pragma warning restore 612, 618
         }
