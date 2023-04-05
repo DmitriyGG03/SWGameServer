@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Server.Domain;
 using Server.Services.Abstract;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
@@ -20,23 +21,21 @@ public class AuthenticationController : ControllerBase
 	[HttpPost(ApiRoutes.Authentication.Register)]
 	public IActionResult Register([FromBody] RegistrationRequest authRequest)
 	{
-		var (success, content) = _authenticationService.Register(authRequest.Username, authRequest.Email, authRequest.Password);
-		return ValidateServiceResultAndReturnResponse((success, content));
+		var result = _authenticationService.Register(authRequest.Username, authRequest.Email, authRequest.Password);
+		return ValidateServiceResultAndReturnResponse(result);
 	}
 	[HttpPost(ApiRoutes.Authentication.Login)]
 	public IActionResult Login([FromBody] LoginRequest request)
 	{
-		var (success, content) = _authenticationService.Login(request.Email, request.Password);
-        return ValidateServiceResultAndReturnResponse((success, content));
+        var result = _authenticationService.Login(request.Email, request.Password);
+        return ValidateServiceResultAndReturnResponse(result);
     }
 
-    private IActionResult ValidateServiceResultAndReturnResponse((bool, string) result)
+    private IActionResult ValidateServiceResultAndReturnResponse(AuthenticationResult result)
 	{
-		bool success = result.Item1;
-		string content = result.Item2;
+        if (result.Success == false) 
+			return BadRequest(new AuthenticationFailedResponse(result.Errors));
 
-        if (!success) 
-			return BadRequest(new AuthenticationFailedResponse(new string[] { content }));
-        return Ok(new AuthenticationResponse() { Token = content });
+        return Ok(new AuthenticationResponse() { Token = result.AccessToken });
     }
 }

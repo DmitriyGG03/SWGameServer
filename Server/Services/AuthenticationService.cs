@@ -2,10 +2,9 @@
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Server.Domain;
 using Server.Helpers;
 using Server.Models;
 using Server.Services.Abstract;
@@ -26,13 +25,12 @@ public class AuthenticationService : IAuthenticationService
         _hashProvider = hashProvider;
     }
 
-    public (bool success, string content) Register(string username, string email, string password)
+    public AuthenticationResult Register(string username, string email, string password)
 	{
 		if (Context.Users.Any(u => u.Username.Equals(username))) 
-			return (false, "This username already exists");
-
+			return new AuthenticationResult(new string[] { "The user with given username already exists" });
 		if(Context.Users.Any(u => u.Email.Equals(email) || !Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.(com|net|org|gov)$", RegexOptions.IgnoreCase)))
-			return (false, "Incorrect email");
+			return new AuthenticationResult(new string[] { "Incorrect email format" });
 
 		var user = new User
 		{
@@ -47,18 +45,18 @@ public class AuthenticationService : IAuthenticationService
 		Context.SaveChanges();
 
 		string accessToken = GenerateJwtToken(AssembleClaimsIdentity(user));
-        return (true, accessToken);
+        return new AuthenticationResult(accessToken);
 	}
-	public (bool success, string token) Login(string email, string password)
+	public AuthenticationResult Login(string email, string password)
 	{
 		var user = Context.Users.FirstOrDefault(u => u.Email == email);
 
-		if (user == null) return (false, "No user with that email found");
-
+		if (user == null) 
+			return new AuthenticationResult(new string[] { "No user with that email found" });
 		if (user.PasswordHash != _hashProvider.ComputeHash(password, user.Salt)) 
-			return (false, "Password is incorrect");
+			return new AuthenticationResult(new string[] { "Password is incorrect" });
 
-		return (true, GenerateJwtToken(AssembleClaimsIdentity(user)));
+		return new AuthenticationResult(GenerateJwtToken(AssembleClaimsIdentity(user)));
 	}
 
 	private ClaimsIdentity AssembleClaimsIdentity(User user)
