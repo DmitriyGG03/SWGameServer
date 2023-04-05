@@ -52,3 +52,5 @@ app.MapControllers();
 
 app.Run();
 
+//For test
+public partial class Program { }
