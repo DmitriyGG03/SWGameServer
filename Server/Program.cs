@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json.Serialization;
 using Server;
 using Server.Models;
 using Server.Services;
+using Server.Services.Abstract;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);

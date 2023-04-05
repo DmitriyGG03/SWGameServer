@@ -1,9 +1,8 @@
-﻿using Azure.Identity;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
-using Microsoft.AspNetCore.Mvc;
-using Server.Services;
+﻿using Microsoft.AspNetCore.Mvc;
+using Server.Services.Abstract;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
+using SharedLibrary.Routes;
 
 namespace Server.Controllers;
 
@@ -11,28 +10,32 @@ namespace Server.Controllers;
 [Route("[controller]")]
 public class AuthenticationController : ControllerBase
 {
-	public IAuthenticationService AuthService { get; init; }
+	public IAuthenticationService _authenticationService { get; init; }
 
 	public AuthenticationController(IAuthenticationService authService)
 	{
-		AuthService = authService;
+		_authenticationService = authService;
 	}
 
-	[HttpPost("register")]
+	[HttpPost(ApiRoutes.Authentication.Register)]
 	public IActionResult Register(AuthenticationRequest authRequest)
 	{
-		var (success, content) = AuthService.Register(authRequest.Username, authRequest.Email, authRequest.Password);
-		if (!success) return BadRequest(content);
-
-		return Login(authRequest);
+		var (success, content) = _authenticationService.Register(authRequest.Username, authRequest.Email, authRequest.Password);
+		return ValidateServiceResultAndReturnResponse((success, content));
 	}
-
-	[HttpPost("login")]
+	[HttpPost(ApiRoutes.Authentication.Login)]
 	public IActionResult Login(AuthenticationRequest authRequest)
 	{
-		var (success, content) = AuthService.Login(authRequest.Username, authRequest.Password);
-		if (!success) return BadRequest(content);
+		var (success, content) = _authenticationService.Login(authRequest.Username, authRequest.Password);
+        return ValidateServiceResultAndReturnResponse((success, content));
+    }
 
-		return Ok(new AuthenticationResponse() { Token = content });
-	}
+    private IActionResult ValidateServiceResultAndReturnResponse((bool, string) result)
+	{
+		bool success = result.Item1;
+		string content = result.Item2;
+
+        if (!success) return BadRequest(content);
+        return Ok(new AuthenticationResponse() { Token = content });
+    }
 }
