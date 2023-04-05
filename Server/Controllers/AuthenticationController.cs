@@ -21,7 +21,7 @@ public class AuthenticationController : ControllerBase
 	[HttpPost("register")]
 	public IActionResult Register(AuthenticationRequest authRequest)
 	{
-		var (success, content) = AuthService.Register(authRequest.Username, authRequest.Password);
+		var (success, content) = AuthService.Register(authRequest.Username, authRequest.Email, authRequest.Password);
 		if (!success) return BadRequest(content);
 
 		return Login(authRequest);

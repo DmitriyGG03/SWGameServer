@@ -1,7 +1,9 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
@@ -21,14 +23,19 @@ public class AuthenticationService : IAuthenticationService
 		Context = context;
 	}
 
-	public (bool seccess, string content) Register(string username, string password)
+	public (bool seccess, string content) Register(string username, string email, string password)
 	{
-		if (Context.Users.Any(u => u.Username.Equals(username))) return (false, "This username already exists");
+		if (Context.Users.Any(u => u.Username.Equals(username))) 
+			return (false, "This username already exists");
+
+		if(Context.Users.Any(u => u.Email.Equals(email) || !Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.(com|net|org|gov)$", RegexOptions.IgnoreCase)))
+			return (false, "Incorrect email");
 
 		var user = new User
 		{
 			Username = username,
 			PasswordHash = password,
+			Email = email
 		};
 		user.ProvideSaltAndHash();
 		user.Hero = null;
@@ -78,7 +85,7 @@ public class AuthenticationService : IAuthenticationService
 
 public interface IAuthenticationService
 {
-	(bool seccess, string content) Register(string username, string password);
+	(bool seccess, string content) Register(string username, string email, string password);
 	(bool success, string token) Login(string username, string password);
 }
 
