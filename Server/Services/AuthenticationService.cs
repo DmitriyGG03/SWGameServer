@@ -2,6 +2,7 @@
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
@@ -16,14 +17,16 @@ public class AuthenticationService : IAuthenticationService
 {
 	public Settings Settings { get; init; }
 	public GameDbContext Context { get; init; }
+	private readonly IHashProvider _hashProvider;
 
-	public AuthenticationService(Settings settings, GameDbContext context)
-	{
-		Settings = settings;
-		Context = context;
-	}
+    public AuthenticationService(Settings settings, GameDbContext context, IHashProvider hashProvider)
+    {
+        Settings = settings;
+        Context = context;
+        _hashProvider = hashProvider;
+    }
 
-	public (bool success, string content) Register(string username, string email, string password)
+    public (bool success, string content) Register(string username, string email, string password)
 	{
 		if (Context.Users.Any(u => u.Username.Equals(username))) 
 			return (false, "This username already exists");
@@ -37,7 +40,7 @@ public class AuthenticationService : IAuthenticationService
 			PasswordHash = password,
 			Email = email
 		};
-		user.ProvideSaltAndHash();
+		user.ProvideSaltAndHash(_hashProvider);
 		user.Hero = null;
 
 		Context.Add(user);
@@ -46,13 +49,15 @@ public class AuthenticationService : IAuthenticationService
 		string accessToken = GenerateJwtToken(AssembleClaimsIdentity(user));
         return (true, accessToken);
 	}
-	public (bool success, string token) Login(string username, string password)
+	public (bool success, string token) Login(string email, string password)
 	{
-		var user = Context.Users.Include(u=>u.Hero).SingleOrDefault(u => u.Username.Equals(username));
+		var user = Context.Users.FirstOrDefault(u => u.Email == email);
 
-		if (user == null) return (false, "No user with that name found");
+		if (user == null) return (false, "No user with that email found");
 
-		if (user.PasswordHash != AuthenticationHelper.ComputeHash(password, user.Salt)) return (false, "Password is incorrect");
+		if (user.PasswordHash != _hashProvider.ComputeHash(password, user.Salt)) 
+			return (false, "Password is incorrect");
+
 		return (true, GenerateJwtToken(AssembleClaimsIdentity(user)));
 	}
 

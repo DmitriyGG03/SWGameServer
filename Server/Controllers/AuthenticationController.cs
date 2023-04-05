@@ -10,7 +10,7 @@ namespace Server.Controllers;
 [Route("[controller]")]
 public class AuthenticationController : ControllerBase
 {
-	public IAuthenticationService _authenticationService { get; init; }
+	private readonly IAuthenticationService _authenticationService;
 
 	public AuthenticationController(IAuthenticationService authService)
 	{
@@ -18,15 +18,15 @@ public class AuthenticationController : ControllerBase
 	}
 
 	[HttpPost(ApiRoutes.Authentication.Register)]
-	public IActionResult Register(AuthenticationRequest authRequest)
+	public IActionResult Register([FromBody] RegistrationRequest authRequest)
 	{
 		var (success, content) = _authenticationService.Register(authRequest.Username, authRequest.Email, authRequest.Password);
 		return ValidateServiceResultAndReturnResponse((success, content));
 	}
 	[HttpPost(ApiRoutes.Authentication.Login)]
-	public IActionResult Login(AuthenticationRequest authRequest)
+	public IActionResult Login([FromBody] LoginRequest request)
 	{
-		var (success, content) = _authenticationService.Login(authRequest.Username, authRequest.Password);
+		var (success, content) = _authenticationService.Login(request.Email, request.Password);
         return ValidateServiceResultAndReturnResponse((success, content));
     }
 
@@ -35,7 +35,8 @@ public class AuthenticationController : ControllerBase
 		bool success = result.Item1;
 		string content = result.Item2;
 
-        if (!success) return BadRequest(content);
+        if (!success) 
+			return BadRequest(new AuthenticationFailedResponse(new string[] { content }));
         return Ok(new AuthenticationResponse() { Token = content });
     }
 }

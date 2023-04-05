@@ -23,6 +23,7 @@ builder.Services.AddControllers().AddNewtonsoftJson(i =>
 
 builder.Services.AddScoped<IHeroService, HeroService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IHashProvider, HashProvider>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
