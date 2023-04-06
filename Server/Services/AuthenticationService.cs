@@ -1,11 +1,13 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using System.Text;
-using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
+using Server.Domain;
+using Server.Helpers;
 using Server.Models;
+using Server.Services.Abstract;
 using SharedLibrary.Models;
 
 namespace Server.Services;
@@ -14,39 +16,47 @@ public class AuthenticationService : IAuthenticationService
 {
 	public Settings Settings { get; init; }
 	public GameDbContext Context { get; init; }
+	private readonly IHashProvider _hashProvider;
 
-	public AuthenticationService(Settings settings, GameDbContext context)
-	{
-		Settings = settings;
-		Context = context;
-	}
+    public AuthenticationService(Settings settings, GameDbContext context, IHashProvider hashProvider)
+    {
+        Settings = settings;
+        Context = context;
+        _hashProvider = hashProvider;
+    }
 
-	public (bool seccess, string content) Register(string username, string password)
+    public AuthenticationResult Register(string username, string email, string password)
 	{
-		if (Context.Users.Any(u => u.Username.Equals(username))) return (false, "This username already exists");
+		if (Context.Users.Any(u => u.Username.Equals(username))) 
+			return new AuthenticationResult(new string[] { "The user with given username already exists" });
+		if(Context.Users.Any(u => u.Email.Equals(email) || !Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.(com|net|org|gov)$", RegexOptions.IgnoreCase)))
+			return new AuthenticationResult(new string[] { "Incorrect email format" });
 
 		var user = new User
 		{
 			Username = username,
 			PasswordHash = password,
+			Email = email
 		};
-		user.ProvideSaltAndHash();
+		user.ProvideSaltAndHash(_hashProvider);
 		user.Hero = null;
 
 		Context.Add(user);
 		Context.SaveChanges();
 
-		return (true, "");
+		string accessToken = GenerateJwtToken(AssembleClaimsIdentity(user));
+        return new AuthenticationResult(accessToken);
 	}
-
-	public (bool success, string token) Login(string username, string password)
+	public AuthenticationResult Login(string email, string password)
 	{
-		var user = Context.Users.Include(u=>u.Hero).SingleOrDefault(u => u.Username.Equals(username));
+		var user = Context.Users.FirstOrDefault(u => u.Email == email);
 
-		if (user == null) return (false, "No user with that name found");
+		if (user == null) 
+			return new AuthenticationResult(new string[] { "No user with that email found" });
+		if (user.PasswordHash != _hashProvider.ComputeHash(password, user.Salt)) 
+			return new AuthenticationResult(new string[] { "Password is incorrect" });
 
-		if (user.PasswordHash != AuthenticationHelper.ComputeHash(password, user.Salt)) return (false, "Password is incorrect");
-		return (true, GenerateJwtToken(AssembleClaimsIdentity(user)));
+		return new AuthenticationResult(GenerateJwtToken(AssembleClaimsIdentity(user)));
 	}
 
 	private ClaimsIdentity AssembleClaimsIdentity(User user)
@@ -59,7 +69,6 @@ public class AuthenticationService : IAuthenticationService
 
 		return subject;
 	}
-
 	private string GenerateJwtToken(ClaimsIdentity subject)
 	{
 		var tokenHandler = new JwtSecurityTokenHandler();
@@ -72,43 +81,5 @@ public class AuthenticationService : IAuthenticationService
 		};
 		var token = tokenHandler.CreateToken(tokenDescriptor);
 		return tokenHandler.WriteToken(token);
-	}
-
-}
-
-public interface IAuthenticationService
-{
-	(bool seccess, string content) Register(string username, string password);
-	(bool success, string token) Login(string username, string password);
-}
-
-public static class AuthenticationHelper
-{
-	public static void ProvideSaltAndHash(this User user)
-	{
-		var salt = GenerateSalt();
-		user.Salt = Convert.ToBase64String(salt);
-		user.PasswordHash = ComputeHash(user.PasswordHash, user.Salt);
-	}
-
-	private static byte[] GenerateSalt()
-	{
-		var rng = RandomNumberGenerator.Create();
-		var salt = new byte[24];
-		rng.GetBytes(salt);
-		return salt;
-	}
-
-	public static string ComputeHash(string password, string saltString)
-	{
-		var salt = Convert.FromBase64String(saltString);
-		byte[] bytes;
-
-		using (var hashGenerator = new Rfc2898DeriveBytes(password, salt))
-		{
-			hashGenerator.IterationCount = 10101;
-			bytes = hashGenerator.GetBytes(24);
-		}
-		return Convert.ToBase64String(bytes);
 	}
 }

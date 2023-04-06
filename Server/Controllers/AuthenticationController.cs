@@ -1,9 +1,9 @@
-﻿using Azure.Identity;
-using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
-using Microsoft.AspNetCore.Mvc;
-using Server.Services;
+﻿using Microsoft.AspNetCore.Mvc;
+using Server.Domain;
+using Server.Services.Abstract;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
+using SharedLibrary.Routes;
 
 namespace Server.Controllers;
 
@@ -11,28 +11,31 @@ namespace Server.Controllers;
 [Route("[controller]")]
 public class AuthenticationController : ControllerBase
 {
-	public IAuthenticationService AuthService { get; init; }
+	private readonly IAuthenticationService _authenticationService;
 
 	public AuthenticationController(IAuthenticationService authService)
 	{
-		AuthService = authService;
+		_authenticationService = authService;
 	}
 
-	[HttpPost("register")]
-	public IActionResult Register(AuthenticationRequest authRequest)
+	[HttpPost(ApiRoutes.Authentication.Register)]
+	public IActionResult Register([FromBody] RegistrationRequest authRequest)
 	{
-		var (success, content) = AuthService.Register(authRequest.Username, authRequest.Password);
-		if (!success) return BadRequest(content);
-
-		return Login(authRequest);
+		var result = _authenticationService.Register(authRequest.Username, authRequest.Email, authRequest.Password);
+		return ValidateServiceResultAndReturnResponse(result);
 	}
-
-	[HttpPost("login")]
-	public IActionResult Login(AuthenticationRequest authRequest)
+	[HttpPost(ApiRoutes.Authentication.Login)]
+	public IActionResult Login([FromBody] LoginRequest request)
 	{
-		var (success, content) = AuthService.Login(authRequest.Username, authRequest.Password);
-		if (!success) return BadRequest(content);
+        var result = _authenticationService.Login(request.Email, request.Password);
+        return ValidateServiceResultAndReturnResponse(result);
+    }
 
-		return Ok(new AuthenticationResponse() { Token = content });
-	}
+    private IActionResult ValidateServiceResultAndReturnResponse(AuthenticationResult result)
+	{
+        if (result.Success == false) 
+			return BadRequest(new AuthenticationFailedResponse(result.Errors));
+
+        return Ok(new AuthenticationResponse() { Token = result.AccessToken });
+    }
 }
