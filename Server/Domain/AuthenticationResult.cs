@@ -1,22 +1,17 @@
-﻿namespace Server.Domain
+﻿using Azure.Core;
+
+namespace Server.Domain
 {
     public class AuthenticationResult
     {
-        public bool Success { get; set; }
+        public bool Success { get => AccessToken is not null; }
         public string? AccessToken { get; set; }
-        public string[]? Errors { get; set; }
+        public string[] OperationInfo { get; set; }
 
-        public AuthenticationResult(string accessToken)
+        public AuthenticationResult(string[] info, string accessToken = null)
         {
-            Success = true;
+			OperationInfo = info;
             AccessToken = accessToken;
-            Errors = null;
-        }
-        public AuthenticationResult(string[] errors)
-        {
-            Success = false;
-            Errors = errors;
-            AccessToken = null;
         }
     }
 }
