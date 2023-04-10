@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace SharedLibrary.Models
 {
 	public class User
@@ -8,7 +10,7 @@ namespace SharedLibrary.Models
 		public string Salt { get; set; }
 		public string Email { get; set; }
 
-		public Hero? Hero { get; set; }
+		public ICollection<Hero> Heroes { get; set; }
 	}
 }
 

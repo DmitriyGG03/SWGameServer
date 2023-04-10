@@ -21,7 +21,7 @@ namespace Server.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("SharedLibrary.Models.Hero", b =>
+            modelBuilder.Entity("SharedLibrary.Models.Heroes", b =>
                 {
                     b.Property<int>("HeroId")
                         .ValueGeneratedOnAdd()
@@ -82,11 +82,11 @@ namespace Server.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Models.Hero", b =>
+            modelBuilder.Entity("SharedLibrary.Models.Heroes", b =>
                 {
                     b.HasOne("SharedLibrary.Models.User", "User")
-                        .WithOne("Hero")
-                        .HasForeignKey("SharedLibrary.Models.Hero", "UserId")
+                        .WithOne("Heroes")
+                        .HasForeignKey("SharedLibrary.Models.Heroes", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -95,7 +95,7 @@ namespace Server.Migrations
 
             modelBuilder.Entity("SharedLibrary.Models.User", b =>
                 {
-                    b.Navigation("Hero");
+                    b.Navigation("Heroes");
                 });
 #pragma warning restore 612, 618
         }
