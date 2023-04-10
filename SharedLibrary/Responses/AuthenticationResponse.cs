@@ -13,6 +13,7 @@ namespace SharedLibrary.Responses
 			Info = info.ToArray();
 			Token = token;
 		}
+		public AuthenticationResponse() { } //For correct JSON deserialization
 	}
 }
 
