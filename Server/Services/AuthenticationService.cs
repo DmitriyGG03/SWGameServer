@@ -45,18 +45,22 @@ public class AuthenticationService : IAuthenticationService
 		Context.SaveChanges();
 
 		string accessToken = GenerateJwtToken(AssembleClaimsIdentity(user));
-        return new AuthenticationResult(accessToken);
+		string[] operationResult = new[] { "New user has been successfully created" };
+
+        return new AuthenticationResult(operationResult, accessToken);
 	}
 	public AuthenticationResult Login(string email, string password)
 	{
 		var user = Context.Users.FirstOrDefault(u => u.Email == email);
 
-		if (user == null) 
-			return new AuthenticationResult(new string[] { "No user with that email found" });
-		if (user.PasswordHash != _hashProvider.ComputeHash(password, user.Salt)) 
-			return new AuthenticationResult(new string[] { "Password is incorrect" });
+		string[] negativeOperationResult = new[] { "Email or password is incorrect" };
+		string[] posutiveOperationResult = new[] { "Login is successful" };
 
-		return new AuthenticationResult(GenerateJwtToken(AssembleClaimsIdentity(user)));
+		if (user == null ||
+			user.PasswordHash != _hashProvider.ComputeHash(password, user.Salt)) 
+			return new AuthenticationResult(negativeOperationResult);
+
+		return new AuthenticationResult(posutiveOperationResult, GenerateJwtToken(AssembleClaimsIdentity(user)));
 	}
 
 	private ClaimsIdentity AssembleClaimsIdentity(User user)

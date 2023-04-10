@@ -34,8 +34,8 @@ public class AuthenticationController : ControllerBase
     private IActionResult ValidateServiceResultAndReturnResponse(AuthenticationResult result)
 	{
         if (result.Success == false) 
-			return BadRequest(new AuthenticationFailedResponse(result.Errors));
+			return BadRequest(new AuthenticationResponse(result.OperationInfo));
 
-        return Ok(new AuthenticationResponse() { Token = result.AccessToken });
+        return Ok(new AuthenticationResponse(result.OperationInfo, result.AccessToken));
     }
 }
