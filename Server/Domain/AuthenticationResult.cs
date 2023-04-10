@@ -8,10 +8,10 @@ namespace Server.Domain
         public string? AccessToken { get; set; }
         public string[] OperationInfo { get; set; }
 
-        public AuthenticationResult(string[] info, string accessToken = null)
+		public AuthenticationResult(string[] info, string accessToken = null)
         {
 			OperationInfo = info;
             AccessToken = accessToken;
         }
-    }
+	}
 }
