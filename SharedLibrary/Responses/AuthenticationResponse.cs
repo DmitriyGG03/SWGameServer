@@ -1,9 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using SharedLibrary.Responses.Abstract;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SharedLibrary.Responses
 {
-	public class AuthenticationResponse
+	public class AuthenticationResponse : IResponse
 	{
 		public string[]? Info { get; set; }
 		public string? Token { get; set; }
