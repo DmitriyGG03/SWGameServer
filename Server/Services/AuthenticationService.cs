@@ -39,7 +39,7 @@ public class AuthenticationService : IAuthenticationService
 			Email = email
 		};
 		user.ProvideSaltAndHash(_hashProvider);
-		user.Hero = null;
+		user.Heroes = null;
 
 		Context.Add(user);
 		Context.SaveChanges();
@@ -68,7 +68,7 @@ public class AuthenticationService : IAuthenticationService
 		var subject = new ClaimsIdentity(new[]
 		{
 			new Claim("id", user.Id.ToString()),
-			new Claim("hero", JsonConvert.SerializeObject(user.Hero))
+			new Claim("hero", JsonConvert.SerializeObject(user.Heroes))
 		});
 
 		return subject;
