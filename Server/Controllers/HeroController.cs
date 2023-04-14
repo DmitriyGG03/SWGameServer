@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Server.Services;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
+using SharedLibrary.Responses;
 using SharedLibrary.Routes;
 
 namespace Server.Controllers;
@@ -73,12 +74,14 @@ public class HeroController : ControllerBase
         return hero;
 	}
 
-    // AllowAnonymous for tests
-    [HttpGet, Route(ApiRoutes.Hero.GetMap), AllowAnonymous]
+    [HttpGet, Route(ApiRoutes.Hero.GetMap)]
     public async Task<IActionResult> GetMap([FromRoute] int id, CancellationToken cancellationToken)
     {
         var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
-        var map = await _heroService.GetMapAsync(id, defaultOptions, cancellationToken);
-        return Ok(map);
+        var serviceResponse = await _heroService.GetMapAsync(id, defaultOptions, cancellationToken);
+        if (serviceResponse.Success == false)
+            return BadRequest(new GetMapResponse { Map = null, Info = new[] { serviceResponse.ErrorMessage } });
+
+        return Ok(new GetMapResponse { Map = serviceResponse.Value, Info = null });
     }
 }
