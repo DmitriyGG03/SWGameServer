@@ -7,11 +7,11 @@ namespace SharedLibrary.Models
     public class Edge
     {
         public Guid Id { get; set; }
-        [NotMapped, JsonIgnore]
-        public Planet From { get; set; }
+        [JsonIgnore(Condition = JsonIgnoreCondition.Always), NotMapped]
+        public Planet? From { get; set; }
         public Guid FromPlanetId { get; set; }
-        [NotMapped, JsonIgnore]
-        public Planet To { get; set; }
+        [JsonIgnore, NotMapped]
+        public Planet? To { get; set; }
         public Guid ToPlanetId { get; set; }
         /* ctor for deserialization */
         public Edge()

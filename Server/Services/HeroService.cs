@@ -27,7 +27,6 @@ public class HeroService : IHeroService
             .Include(x => x.Planets)
              .ThenInclude(x => x.Position)
             .Include(x => x.Connections)
-            .Include(x => x.Hero)
             .FirstOrDefaultAsync(x => x.HeroId == heroId, cancellationToken);
 
         if (exists != null)

@@ -73,6 +73,7 @@ public class HeroController : ControllerBase
         return hero;
 	}
 
+    // AllowAnonymous for tests
     [HttpGet, Route(ApiRoutes.Hero.GetMap), AllowAnonymous]
     public async Task<IActionResult> GetMap([FromRoute] int id, CancellationToken cancellationToken)
     {
