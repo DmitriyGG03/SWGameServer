@@ -4,5 +4,5 @@ namespace Server.Services.Abstract;
 
 public interface IMapGenerator
 {
-    Map GenerateMap(MapGenerationOptions options);
+    SessionMap GenerateMap(MapGenerationOptions options);
 }

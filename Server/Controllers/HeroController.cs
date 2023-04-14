@@ -73,7 +73,7 @@ public class HeroController : ControllerBase
         return hero;
 	}
 
-    [HttpGet, Route(ApiRoutes.Hero.GetMap)]
+    [HttpGet, Route(ApiRoutes.Hero.GetMap), AllowAnonymous]
     public async Task<IActionResult> GetMap([FromRoute] int id, CancellationToken cancellationToken)
     {
         var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);

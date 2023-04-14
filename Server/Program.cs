@@ -13,7 +13,9 @@ var settings = new Settings();
 builder.Configuration.Bind("Settings", settings);
 builder.Services.AddSingleton(settings);
 
-builder.Services.AddDbContext<GameDbContext>(o => o.UseSqlServer(builder.Configuration.GetConnectionString("Db")));
+string productionDatabase = builder.Configuration.GetConnectionString("Db");
+string localDatabase = builder.Configuration.GetConnectionString("Local");
+builder.Services.AddDbContext<GameDbContext>(o => o.UseSqlServer(localDatabase));
 
 builder.Services.AddControllers().AddNewtonsoftJson(i =>
 {

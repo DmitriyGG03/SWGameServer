@@ -7,7 +7,7 @@ namespace Server.Services;
 
 public class MapGeneratorService : IMapGenerator
 {
-    public Map GenerateMap(MapGenerationOptions options)
+    public SessionMap GenerateMap(MapGenerationOptions options)
     {
         if (options == null)
             throw new ArgumentNullException($"{nameof(options)} can not be null");
@@ -15,7 +15,7 @@ public class MapGeneratorService : IMapGenerator
         var planets = GeneratePlanets(options);
         var connections = GenerateConnectionsBetweenPlanets(planets, options);
 
-        return new Map(planets, connections);
+        return new SessionMap(planets, connections);
     }
 
     private List<Planet> GeneratePlanets(MapGenerationOptions options)

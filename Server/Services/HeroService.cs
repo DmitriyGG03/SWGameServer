@@ -8,7 +8,7 @@ namespace Server.Services;
 public interface IHeroService
 {
     void DoSomething();
-    Task<Map> GetMapAsync(int sessionId, MapGenerationOptions options, CancellationToken cancellationToken);
+    Task<SessionMap> GetMapAsync(int heroId, MapGenerationOptions options, CancellationToken cancellationToken);
 }
 public class HeroService : IHeroService
 {
@@ -21,13 +21,22 @@ public class HeroService : IHeroService
     }
 
     public void DoSomething() => Console.WriteLine("Doing something");
-    public async Task<Map> GetMapAsync(int sessionId, MapGenerationOptions options, CancellationToken cancellationToken)
+    public async Task<SessionMap> GetMapAsync(int heroId, MapGenerationOptions options, CancellationToken cancellationToken)
     {
-        // var exists = await _dbContext.HeroMapViews.FirstOrDefaultAsync(x => x.HeroId == heroId, cancellationToken);
-        //if (exists != null)
-            // return exists;
+        var exists = await _dbContext.SessionMaps
+            .Include(x => x.Planets)
+             .ThenInclude(x => x.Position)
+            .Include(x => x.Connections)
+            .Include(x => x.Hero)
+            .FirstOrDefaultAsync(x => x.HeroId == heroId, cancellationToken);
+
+        if (exists != null)
+            return exists;
 
         var map = _mapGenerator.GenerateMap(options);
+        map.HeroId = heroId;
+        await _dbContext.SessionMaps.AddAsync(map);
+        await _dbContext.SaveChangesAsync();
         return map;
     }
 }
