@@ -1,19 +1,20 @@
-namespace drawing_test.Models;
-
-public class MapGenerationOptions
+namespace SharedLibrary.Models
 {
-    public int Width { get; }
-    public int Height { get; }
-    public int MinDistanceBetweenPlanets { get; }
-    public int MinDistanceFromPlanetToEdge { get; }
-    public int NumberOfPlanets { get; }
-
-    public MapGenerationOptions(int width, int height, int minDistanceBetweenPlanets, int minDistanceFromPlanetToEdge, int numberOfPlanets)
+    public class MapGenerationOptions
     {
-        Width = width;
-        Height = height;
-        MinDistanceBetweenPlanets = minDistanceBetweenPlanets;
-        MinDistanceFromPlanetToEdge = minDistanceFromPlanetToEdge;
-        NumberOfPlanets = numberOfPlanets;
-    }
+        public int Width { get; set; }
+        public int Height { get; set; }
+        public int MinDistanceBetweenPlanets { get; set; }
+        public int MinDistanceFromPlanetToEdge { get; set; }
+        public int NumberOfPlanets { get; set; }
+
+        public MapGenerationOptions(int width, int height, int minDistanceBetweenPlanets, int minDistanceFromPlanetToEdge, int numberOfPlanets)
+        {
+            Width = width;
+            Height = height;
+            MinDistanceBetweenPlanets = minDistanceBetweenPlanets;
+            MinDistanceFromPlanetToEdge = minDistanceFromPlanetToEdge;
+            NumberOfPlanets = numberOfPlanets;
+        }
+    }   
 }

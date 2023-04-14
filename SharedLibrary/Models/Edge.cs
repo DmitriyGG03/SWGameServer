@@ -1,12 +1,15 @@
-﻿using System.Drawing;
-using drawing_test.Math;
+﻿using System;
 
-namespace drawing_test.Models
+namespace SharedLibrary.Models
 {
     public class Edge
     {
-        public Planet From { get; }
-        public Planet To { get; }
+        public Planet From { get; set; }
+        public Planet To { get; set; }
+        /* ctor for deserialization */
+        public Edge()
+        { }
+
         public Edge(Planet from, Planet to)
         {
             From = from;

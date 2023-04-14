@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using Server.Services;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
+using SharedLibrary.Routes;
 
 namespace Server.Controllers;
 
@@ -12,15 +13,16 @@ namespace Server.Controllers;
 [Route("[controller]")]
 public class HeroController : ControllerBase
 {
-    public IHeroService HeroService { get; init; }
+    private readonly IHeroService _heroService;
     public GameDbContext DbContext { get; init; }
 
     public HeroController(IHeroService playerService, GameDbContext dbContext)
     {
-        HeroService = playerService;
+        _heroService = playerService;
 		DbContext = dbContext;
 
-        User user = new User() { 
+        /*
+         * User user = new User() { 
             Username = "Dmitriy", 
             PasswordHash = "password69", 
             Salt = "gdfbrxtbxrt"
@@ -29,6 +31,7 @@ public class HeroController : ControllerBase
 		DbContext.Add(user);
 
         DbContext.SaveChanges();
+         */
 	}
 
     [HttpPost("{id}")]
@@ -69,4 +72,12 @@ public class HeroController : ControllerBase
 
         return hero;
 	}
+
+    [HttpGet, Route(ApiRoutes.Hero.GetMap)]
+    public async Task<IActionResult> GetMap([FromRoute] int id, CancellationToken cancellationToken)
+    {
+        var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
+        var map = await _heroService.GetMapAsync(id, defaultOptions, cancellationToken);
+        return Ok(map);
+    }
 }

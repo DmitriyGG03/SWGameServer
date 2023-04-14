@@ -1,11 +1,14 @@
-﻿using System.Drawing;
+﻿using System;
 
-namespace drawing_test.Models
+namespace SharedLibrary.Models
 {
     public class Planet
     {
-        public PointF Position { get; set; }
-        public Planet(PointF position)
+        public Point Position { get; set; }
+        /* ctor for deserialization */
+        public Planet()
+        { }
+        public Planet(Point position)
         {
             Position = position;
         }

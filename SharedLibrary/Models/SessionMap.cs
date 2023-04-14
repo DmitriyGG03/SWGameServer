@@ -1,4 +1,6 @@
-﻿namespace SharedLibrary.Models
+﻿using System.Collections.Generic;
+
+namespace SharedLibrary.Models
 {
 	public class SessionMap
 	{

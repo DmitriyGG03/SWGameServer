@@ -13,7 +13,6 @@ var settings = new Settings();
 builder.Configuration.Bind("Settings", settings);
 builder.Services.AddSingleton(settings);
 
-
 builder.Services.AddDbContext<GameDbContext>(o => o.UseSqlServer(builder.Configuration.GetConnectionString("Db")));
 
 builder.Services.AddControllers().AddNewtonsoftJson(i =>
@@ -24,6 +23,7 @@ builder.Services.AddControllers().AddNewtonsoftJson(i =>
 builder.Services.AddScoped<IHeroService, HeroService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IHashProvider, HashProvider>();
+builder.Services.AddScoped<IMapGenerator, MapGeneratorService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {
