@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.Common.Constants;
-using Server.Domain;
 using Server.Services;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
+using SharedLibrary.Routes;
 
 namespace Server.Controllers;
 
@@ -23,7 +23,7 @@ public class HeroController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPut, Route("{id:int}")]
+    [HttpPut, Route(ApiRoutes.Hero.Update)]
     public async Task<IActionResult> Update([FromRoute] int id, [FromBody] CreateHeroRequest request, CancellationToken cancellationToken)
     {
         /* this operation is not working
@@ -50,7 +50,7 @@ public class HeroController : ControllerBase
         return Ok(new UpdateHeroResponse { Hero = result.Value, Info = new[] { SuccessMessages.Hero.Updated }});
     }
 
-    [HttpPost]
+    [HttpPost, Route(ApiRoutes.Hero.Create)]
     public async Task<IActionResult> Create(CreateHeroRequest request, CancellationToken cancellationToken)
     {
         var userId = int.Parse(User.FindFirst("id").Value);
@@ -70,7 +70,7 @@ public class HeroController : ControllerBase
         return Ok(new CreateHeroResponse { HeroId = result.Value.HeroId, Info = new[] { SuccessMessages.Hero.Created }});
     }
 
-    [HttpGet, Route("{id:int}")]
+    [HttpGet, Route(ApiRoutes.Hero.GetById)]
     public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken)
     {
         var hero = await _heroService.GetByIdAsync(id, cancellationToken);
