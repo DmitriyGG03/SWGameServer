@@ -67,7 +67,10 @@ public class HeroController : ControllerBase
 
         // for cyclic dependency
         result.Value.User = null;
-        return Ok(new CreateHeroResponse { HeroId = result.Value.HeroId, Info = new[] { SuccessMessages.Hero.Created }});
+        var response = new CreateHeroResponse { HeroId = result.Value.HeroId, Info = new[] { SuccessMessages.Hero.Created }};
+        var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
+        var locationUrl = $"{baseUrl}/{nameof(HeroController).Replace("Controller", "")}/{ApiRoutes.Hero.GetById.Replace("{id:int}", response.HeroId.ToString())}";
+        return Created(locationUrl, response);
     }
 
     [HttpGet, Route(ApiRoutes.Hero.GetById)]
