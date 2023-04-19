@@ -1,10 +1,10 @@
 ﻿using SharedLibrary.Models;
+using SharedLibrary.Responses.Abstract;
 
 namespace SharedLibrary.Responses
 {
-    public class GetMapResponse
+    public class GetMapResponse : ResponseBase
     {
         public SessionMap? Map { get; set; }
-        public string[]? Info { get; set; }
     }
 }

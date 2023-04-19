@@ -4,9 +4,8 @@ using System.Linq;
 
 namespace SharedLibrary.Responses
 {
-	public class AuthenticationResponse : IResponse
+	public class AuthenticationResponse : ResponseBase, IAuthenticationResponse
 	{
-		public string[]? Info { get; set; }
 		public string? Token { get; set; }
 
 		public AuthenticationResponse()
