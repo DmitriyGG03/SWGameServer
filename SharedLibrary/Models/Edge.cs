@@ -1,16 +1,15 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace SharedLibrary.Models
 {
     public class Edge
     {
         public Guid Id { get; set; }
-        [JsonIgnore(Condition = JsonIgnoreCondition.Always), NotMapped]
+        [NotMapped]
         public Planet? From { get; set; }
         public Guid FromPlanetId { get; set; }
-        [JsonIgnore, NotMapped]
+        [NotMapped]
         public Planet? To { get; set; }
         public Guid ToPlanetId { get; set; }
         /* ctor for deserialization */

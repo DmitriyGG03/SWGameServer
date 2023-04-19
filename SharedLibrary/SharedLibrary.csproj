@@ -7,9 +7,5 @@
 
 		<!-- <PostBuildEvent>copy SharedLibrary.dll $(OutDir)..\..\..\..\..\GameClient\SpaceWar\Assets\DLLs\SharedLibrary.dll</PostBuildEvent> -->
     </PropertyGroup>
-
-    <ItemGroup>
-      <PackageReference Include="System.Text.Json" Version="7.0.0" />
-    </ItemGroup>
     
 </Project>
