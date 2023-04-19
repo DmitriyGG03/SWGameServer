@@ -21,6 +21,7 @@ public class MapController : ControllerBase
     [HttpGet, Route(ApiRoutes.Map.GetMap)]
     public async Task<IActionResult> GetMap([FromRoute] int id, CancellationToken cancellationToken)
     {
+        /* in future options can be add as body parameter */
         var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
         var serviceResponse = await _mapService.GetMapAsync(id, defaultOptions, cancellationToken);
         if (serviceResponse.Success == false)
