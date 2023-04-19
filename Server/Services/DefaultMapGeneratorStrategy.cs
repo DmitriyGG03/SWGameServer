@@ -5,7 +5,7 @@ using SharedLibrary.Models;
 
 namespace Server.Services;
 
-public class MapGeneratorService : IMapGenerator
+public class DefaultMapGeneratorStrategy : IMapGenerator
 {
     public SessionMap GenerateMap(MapGenerationOptions options)
     {

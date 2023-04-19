@@ -6,6 +6,7 @@ using Server.Models;
 using Server.Services;
 using Server.Services.Abstract;
 using System.Text;
+using Server.Common.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,8 +14,8 @@ var settings = new Settings();
 builder.Configuration.Bind("Settings", settings);
 builder.Services.AddSingleton(settings);
 
-string productionDatabase = builder.Configuration.GetConnectionString("Db");
-string localDatabase = builder.Configuration.GetConnectionString("Local");
+var productionDatabase = builder.Configuration.GetConnectionString(ConnectionKeys.Production);
+var localDatabase = builder.Configuration.GetConnectionString(ConnectionKeys.Local);
 builder.Services.AddDbContext<GameDbContext>(o => o.UseSqlServer(localDatabase));
 
 builder.Services.AddControllers().AddNewtonsoftJson(i =>
@@ -25,7 +26,8 @@ builder.Services.AddControllers().AddNewtonsoftJson(i =>
 builder.Services.AddScoped<IHeroService, HeroService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IHashProvider, HashProvider>();
-builder.Services.AddScoped<IMapGenerator, MapGeneratorService>();
+builder.Services.AddScoped<IMapService, MapService>();
+builder.Services.AddScoped<IMapGenerator, DefaultMapGeneratorStrategy>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {

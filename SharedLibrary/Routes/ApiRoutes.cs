@@ -12,9 +12,9 @@ namespace SharedLibrary.Routes
             public const string Login = "login";
         }
 
-        public static class Hero
+        public static class Map
         {
-            public const string GetMap = "map" + "/{id:int}";
+            public const string GetMap = "{id:int}";
         }
     }
 }

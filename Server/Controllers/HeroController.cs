@@ -14,12 +14,10 @@ namespace Server.Controllers;
 [Route("[controller]")]
 public class HeroController : ControllerBase
 {
-    private readonly IHeroService _heroService;
     public GameDbContext DbContext { get; init; }
 
-    public HeroController(IHeroService playerService, GameDbContext dbContext)
+    public HeroController(GameDbContext dbContext)
     {
-        _heroService = playerService;
 		DbContext = dbContext;
 
         /*
@@ -73,15 +71,4 @@ public class HeroController : ControllerBase
 
         return hero;
 	}
-
-    [HttpGet, Route(ApiRoutes.Hero.GetMap)]
-    public async Task<IActionResult> GetMap([FromRoute] int id, CancellationToken cancellationToken)
-    {
-        var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
-        var serviceResponse = await _heroService.GetMapAsync(id, defaultOptions, cancellationToken);
-        if (serviceResponse.Success == false)
-            return BadRequest(new GetMapResponse { Map = null, Info = new[] { serviceResponse.ErrorMessage } });
-
-        return Ok(new GetMapResponse { Map = serviceResponse.Value, Info = null });
-    }
 }
