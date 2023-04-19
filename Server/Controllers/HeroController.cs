@@ -5,6 +5,7 @@ using Server.Domain;
 using Server.Services;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
+using SharedLibrary.Responses;
 
 namespace Server.Controllers;
 
@@ -35,7 +36,18 @@ public class HeroController : ControllerBase
         var destination = new Hero { HeroId = id, Name = request.Name, };
         var result = await _heroService.Update(userId, destination, cancellationToken);
         
-        return ValidateResult(result);
+        if (result.Success == false)
+        {
+            _logger.LogWarning("Can not update hero: " + result.ErrorMessage);
+            if (result.ErrorMessage == ErrorMessages.UserHasNoAccessToGivenHero)
+                return Forbid();
+            
+            return BadRequest(new UpdateHeroResponse { Hero = null, Info = new[] { result.ErrorMessage }});
+        }
+
+        // for cyclic dependency
+        result.Value.User = null;
+        return Ok(new UpdateHeroResponse { Hero = result.Value, Info = new[] { SuccessMessages.Hero.Updated }});
     }
 
     [HttpPost]
@@ -47,7 +59,15 @@ public class HeroController : ControllerBase
         var hero = new Hero { Name = request.Name };
         var result = await _heroService.Create(userId, hero, cancellationToken);
 
-        return ValidateResult(result);
+        if (result.Success == false)
+        {
+            _logger.LogWarning("Can not create hero: " + result.ErrorMessage);
+            return BadRequest(new CreateHeroResponse { HeroId = -1, Info = new[] { result.ErrorMessage }});
+        }
+
+        // for cyclic dependency
+        result.Value.User = null;
+        return Ok(new CreateHeroResponse { HeroId = result.Value.HeroId, Info = new[] { SuccessMessages.Hero.Created }});
     }
 
     [HttpGet, Route("{id:int}")]
@@ -57,23 +77,6 @@ public class HeroController : ControllerBase
         if (hero is null)
             return NotFound();
         
-        return Ok(hero);
-    }
-
-    private IActionResult ValidateResult(ServiceResult<Hero> result)
-    {
-        if (result.Success == false)
-        {
-            if (result.ErrorMessage == ErrorMessages.UserHasNoAccessToGivenHero)
-                return Forbid();
-            
-            // for now it throws exception, because there is no validation. if they will appear we have to create new response
-            _logger.LogError("Can not update hero: " + result.ErrorMessage);
-            throw new Exception(result.ErrorMessage);
-        }
-
-        // for cyclic dependency
-        result.Value.User = null;
-        return Ok(result.Value);
+        return Ok(new GetHeroResponse { Hero = hero, Info = null });
     }
 }
