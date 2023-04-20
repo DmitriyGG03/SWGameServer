@@ -12,8 +12,8 @@ using Server;
 namespace Server.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    [Migration("20230420090103_withsession")]
-    partial class withsession
+    [Migration("20230420093757_initmodels")]
+    partial class initmodels
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -24,6 +24,35 @@ namespace Server.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("SharedLibrary.Models.ApplicationUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ApplicationUsers");
+                });
 
             modelBuilder.Entity("SharedLibrary.Models.Edge", b =>
                 {
@@ -49,7 +78,7 @@ namespace Server.Migrations
 
                     b.HasIndex("SessionMapId");
 
-                    b.ToTable("Edge");
+                    b.ToTable("Edges");
                 });
 
             modelBuilder.Entity("SharedLibrary.Models.Hero", b =>
@@ -66,7 +95,7 @@ namespace Server.Migrations
                     b.Property<byte>("ColonizationShipLimit")
                         .HasColumnType("tinyint");
 
-                    b.Property<int>("HeroMapId")
+                    b.Property<int?>("HeroMapId")
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -79,7 +108,7 @@ namespace Server.Migrations
                     b.Property<int>("Resourses")
                         .HasColumnType("int");
 
-                    b.Property<Guid>("SessionId")
+                    b.Property<Guid?>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("UserId")
@@ -88,7 +117,8 @@ namespace Server.Migrations
                     b.HasKey("HeroId");
 
                     b.HasIndex("HeroMapId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[HeroMapId] IS NOT NULL");
 
                     b.HasIndex("SessionId");
 
@@ -115,7 +145,7 @@ namespace Server.Migrations
 
                     b.HasIndex("HomePlanetId");
 
-                    b.ToTable("HeroMapViews");
+                    b.ToTable("HeroMaps");
                 });
 
             modelBuilder.Entity("SharedLibrary.Models.Planet", b =>
@@ -141,7 +171,7 @@ namespace Server.Migrations
 
                     b.HasIndex("SessionMapId");
 
-                    b.ToTable("Planet");
+                    b.ToTable("Planets");
                 });
 
             modelBuilder.Entity("SharedLibrary.Models.Point", b =>
@@ -158,7 +188,7 @@ namespace Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Point");
+                    b.ToTable("Points");
                 });
 
             modelBuilder.Entity("SharedLibrary.Models.Session", b =>
@@ -179,7 +209,7 @@ namespace Server.Migrations
                     b.HasIndex("SessionMapId")
                         .IsUnique();
 
-                    b.ToTable("Session");
+                    b.ToTable("Sessions");
                 });
 
             modelBuilder.Entity("SharedLibrary.Models.SessionMap", b =>
@@ -198,35 +228,6 @@ namespace Server.Migrations
                     b.ToTable("SessionMaps");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Models.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Salt")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Users");
-                });
-
             modelBuilder.Entity("SharedLibrary.Models.Edge", b =>
                 {
                     b.HasOne("SharedLibrary.Models.HeroMap", null)
@@ -242,17 +243,13 @@ namespace Server.Migrations
                 {
                     b.HasOne("SharedLibrary.Models.HeroMap", "HeroMap")
                         .WithOne("Hero")
-                        .HasForeignKey("SharedLibrary.Models.Hero", "HeroMapId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SharedLibrary.Models.Hero", "HeroMapId");
 
                     b.HasOne("SharedLibrary.Models.Session", "Session")
                         .WithMany("Heroes")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("SessionId");
 
-                    b.HasOne("SharedLibrary.Models.User", "User")
+                    b.HasOne("SharedLibrary.Models.ApplicationUser", "User")
                         .WithMany("Heroes")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -317,6 +314,11 @@ namespace Server.Migrations
                     b.Navigation("Hero");
                 });
 
+            modelBuilder.Entity("SharedLibrary.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("Heroes");
+                });
+
             modelBuilder.Entity("SharedLibrary.Models.HeroMap", b =>
                 {
                     b.Navigation("Connections");
@@ -338,11 +340,6 @@ namespace Server.Migrations
                     b.Navigation("Planets");
 
                     b.Navigation("Session");
-                });
-
-            modelBuilder.Entity("SharedLibrary.Models.User", b =>
-                {
-                    b.Navigation("Heroes");
                 });
 #pragma warning restore 612, 618
         }

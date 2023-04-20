@@ -5,13 +5,19 @@ namespace Server;
 
 public class GameDbContext : DbContext
 {
-    public DbSet<User> Users { get; set; }
+    public DbSet<ApplicationUser> Users { get; set; }
     public DbSet<Hero> Heroes { get; set; }
-    public DbSet<HeroMap> HeroMapViews { get; set; }
+    public DbSet<HeroMap> HeroMaps { get; set; }
+    public DbSet<Session> Sessions { get; set; }
     public DbSet<SessionMap> SessionMaps { get; set; }
 
     public GameDbContext(DbContextOptions<GameDbContext> options) : base(options)
     {
         Database.EnsureCreated();
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
     }
 }
