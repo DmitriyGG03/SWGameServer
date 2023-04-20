@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Server.Migrations
 {
     /// <inheritdoc />
-    public partial class initmodels : Migration
+    public partial class lobbies : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -28,6 +28,19 @@ namespace Server.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Lobbies",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    LobbyName = table.Column<string>(type: "nvarchar(256)", nullable: false),
+                    MaxHeroNumbers = table.Column<byte>(type: "tinyint", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Lobbies", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Points",
                 columns: table => new
                 {
@@ -38,6 +51,34 @@ namespace Server.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Points", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LobbyInfos",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Argb = table.Column<int>(type: "int", nullable: false),
+                    Ready = table.Column<bool>(type: "bit", nullable: false),
+                    LobbyLeader = table.Column<bool>(type: "bit", nullable: false),
+                    LobbyId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LobbyInfos", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LobbyInfos_ApplicationUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "ApplicationUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_LobbyInfos_Lobbies_LobbyId",
+                        column: x => x.LobbyId,
+                        principalTable: "Lobbies",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -195,6 +236,16 @@ namespace Server.Migrations
                 column: "HomePlanetId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_LobbyInfos_LobbyId",
+                table: "LobbyInfos",
+                column: "LobbyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LobbyInfos_UserId",
+                table: "LobbyInfos",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Planets_HeroMapId",
                 table: "Planets",
                 column: "HeroMapId");
@@ -274,6 +325,12 @@ namespace Server.Migrations
 
             migrationBuilder.DropTable(
                 name: "Edges");
+
+            migrationBuilder.DropTable(
+                name: "LobbyInfos");
+
+            migrationBuilder.DropTable(
+                name: "Lobbies");
 
             migrationBuilder.DropTable(
                 name: "HeroMaps");

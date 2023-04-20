@@ -12,8 +12,8 @@ using Server;
 namespace Server.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    [Migration("20230420093757_initmodels")]
-    partial class initmodels
+    [Migration("20230420103613_lobbies")]
+    partial class lobbies
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -148,6 +148,54 @@ namespace Server.Migrations
                     b.ToTable("HeroMaps");
                 });
 
+            modelBuilder.Entity("SharedLibrary.Models.Lobby", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("LobbyName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<byte>("MaxHeroNumbers")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Lobbies");
+                });
+
+            modelBuilder.Entity("SharedLibrary.Models.LobbyInfo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Argb")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("LobbyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("LobbyLeader")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Ready")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LobbyId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LobbyInfos");
+                });
+
             modelBuilder.Entity("SharedLibrary.Models.Planet", b =>
                 {
                     b.Property<Guid>("Id")
@@ -273,6 +321,25 @@ namespace Server.Migrations
                     b.Navigation("HomePlanet");
                 });
 
+            modelBuilder.Entity("SharedLibrary.Models.LobbyInfo", b =>
+                {
+                    b.HasOne("SharedLibrary.Models.Lobby", "Lobby")
+                        .WithMany("LobbyInfos")
+                        .HasForeignKey("LobbyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SharedLibrary.Models.ApplicationUser", "User")
+                        .WithMany("LobbyInfos")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Lobby");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SharedLibrary.Models.Planet", b =>
                 {
                     b.HasOne("SharedLibrary.Models.HeroMap", null)
@@ -317,6 +384,8 @@ namespace Server.Migrations
             modelBuilder.Entity("SharedLibrary.Models.ApplicationUser", b =>
                 {
                     b.Navigation("Heroes");
+
+                    b.Navigation("LobbyInfos");
                 });
 
             modelBuilder.Entity("SharedLibrary.Models.HeroMap", b =>
@@ -326,6 +395,11 @@ namespace Server.Migrations
                     b.Navigation("Hero");
 
                     b.Navigation("Planets");
+                });
+
+            modelBuilder.Entity("SharedLibrary.Models.Lobby", b =>
+                {
+                    b.Navigation("LobbyInfos");
                 });
 
             modelBuilder.Entity("SharedLibrary.Models.Session", b =>
