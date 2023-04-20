@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
+	[Table("HeroMaps")]
 	public class HeroMap
 	{
 		public int Id { get; set; }

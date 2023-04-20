@@ -5,12 +5,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
+    [Table("Sessions")]
     public class Session
     {
         [Key]
         public Guid Id { get; set; }
         [Required]
         public string Name { get; set; }
+        
         public ICollection<Hero>? Heroes { get; set; }
         
         [ForeignKey(nameof(SessionMap))]

@@ -5,6 +5,7 @@ using System.Drawing;
 
 namespace SharedLibrary.Models
 {
+	[Table("Heroes")]
 	public class Hero
 	{
 		[Key]
@@ -24,14 +25,14 @@ namespace SharedLibrary.Models
 
 		[ForeignKey(nameof(User))]
 		public int UserId { get; set; }
-		public User? User { get; set; }
+		public ApplicationUser? User { get; set; }
 		
 		[ForeignKey(nameof(HeroMap))]
-		public int HeroMapId { get; set; }
+		public int? HeroMapId { get; set; }
 		public HeroMap? HeroMap { get; set; }
 		
 		[ForeignKey(nameof(Session))]
-		public Guid SessionId { get; set; }
+		public Guid? SessionId { get; set; }
 		public Session? Session { get; set; }
 	}
 }

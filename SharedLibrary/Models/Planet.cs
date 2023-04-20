@@ -1,7 +1,9 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
+    [Table("Planets")]
     public class Planet
     {
         public Guid Id { get; set; }

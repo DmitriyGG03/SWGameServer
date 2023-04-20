@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
+    [Table("SessionMaps")]
     public class SessionMap
     {
         public Guid Id { get; set; }

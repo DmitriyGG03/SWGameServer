@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
-	public class User
+	[Table("ApplicationUsers")]
+	public class ApplicationUser
 	{
 		[Key]
 		public int Id { get; set; }
@@ -12,7 +14,8 @@ namespace SharedLibrary.Models
 		public string Salt { get; set; }
 		public string Email { get; set; }
 
-		public ICollection<Hero> Heroes { get; set; }
+		public ICollection<LobbyInfo>? LobbyInfos { get; set; }
+		public ICollection<Hero>? Heroes { get; set; }
 	}
 }
 
