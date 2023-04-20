@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Server.Common.Constants;
 using Server.Domain;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
@@ -12,9 +14,9 @@ public class LobbyService : ILobbyService
         _context = context;
     }
 
-    public Task<List<Lobby>> GetAllLobbiesAsync()
+    public async Task<List<Lobby>> GetAllLobbiesAsync()
     {
-        throw new NotImplementedException();
+        return await _context.Lobbies.Include(x => x.LobbyInfos).Where(x => x.LobbyInfos.Count < x.MaxHeroNumbers).ToListAsync();
     }
 
     public Task<Lobby?> GetLobbyByIdAsync(Guid id)
@@ -22,13 +24,39 @@ public class LobbyService : ILobbyService
         throw new NotImplementedException();
     }
 
-    public Task<ServiceResult<Guid>> CreateLobbyAsync(Lobby lobby)
+    public async Task<ServiceResult<Guid>> CreateLobbyAsync(Lobby lobby)
     {
-        throw new NotImplementedException();
+        var exists = await _context.Lobbies.FirstOrDefaultAsync(x => x.LobbyName == lobby.LobbyName);
+        if (exists is not null)
+        {
+            return new ServiceResult<Guid>(ErrorMessages.Lobby.SameName);
+        }
+
+        if (lobby.LobbyInfos is null)
+        {
+            throw new ArgumentException();
+        }
+        
+        _context.Lobbies.Add(lobby);
+        await _context.SaveChangesAsync();
+        return new ServiceResult<Guid>(lobby.Id);
     }
 
-    public Task<ServiceResult<Guid>> DeleteLobbyIfThereAreNoUsers(Guid id)
+    public async Task<ServiceResult<Guid>> DeleteLobbyIfThereAreNoUsers(Guid id)
     {
-        throw new NotImplementedException();
+        var exists = await _context.Lobbies.Include(x => x.LobbyInfos).FirstOrDefaultAsync(x => x.Id == id);
+        if (exists is null)
+        {
+            return new ServiceResult<Guid>(ErrorMessages.Lobby.NotFound);
+        }
+
+        if (exists.LobbyInfos.Any())
+        {
+            return new ServiceResult<Guid>(ErrorMessages.Lobby.ThereIsUsers);
+        }
+
+        _context.Lobbies.Remove(exists);
+        await _context.SaveChangesAsync();
+        return new ServiceResult<Guid>(id);
     }
 }

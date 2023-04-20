@@ -39,7 +39,7 @@ public class HeroController : ControllerBase
         if (result.Success == false)
         {
             _logger.LogWarning("Can not update hero: " + result.ErrorMessage);
-            if (result.ErrorMessage == ErrorMessages.UserHasNoAccessToGivenHero)
+            if (result.ErrorMessage == ErrorMessages.User.HasNoAccess)
                 return Forbid();
             
             return BadRequest(new UpdateHeroResponse { Hero = null, Info = new[] { result.ErrorMessage }});
