@@ -6,6 +6,12 @@ namespace Server.Services;
 
 public class LobbyService : ILobbyService
 {
+    private readonly GameDbContext _context;
+    public LobbyService(GameDbContext context)
+    {
+        _context = context;
+    }
+
     public Task<List<Lobby>> GetAllLobbiesAsync()
     {
         throw new NotImplementedException();

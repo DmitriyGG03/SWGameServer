@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Server.Migrations;
 using SharedLibrary.Models;
 
 namespace Server;
@@ -10,6 +11,8 @@ public class GameDbContext : DbContext
     public DbSet<HeroMap> HeroMaps { get; set; }
     public DbSet<Session> Sessions { get; set; }
     public DbSet<SessionMap> SessionMaps { get; set; }
+    public DbSet<Lobby> Lobbies { get; set; }
+    public DbSet<LobbyInfo> LobbyInfos { get; set; }
 
     public GameDbContext(DbContextOptions<GameDbContext> options) : base(options)
     {
