@@ -1,3 +1,4 @@
+using System.Drawing;
 using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
 using Server.Domain;
@@ -58,5 +59,44 @@ public class LobbyService : ILobbyService
         _context.Lobbies.Remove(exists);
         await _context.SaveChangesAsync();
         return new ServiceResult<Guid>(id);
+    }
+
+    public async Task<ServiceResult<Lobby>> ConnectUserAsync(int userId, Guid lobbyId)
+    {
+        var lobby = await _context.Lobbies
+            .Include(x => x.LobbyInfos)
+            .ThenInclude(y => y.User)
+            .FirstOrDefaultAsync(x => x.Id == lobbyId);
+        
+        if (lobby is null)
+        {
+            return new ServiceResult<Lobby>(ErrorMessages.Lobby.NotFound);
+        }
+        
+        if (lobby.LobbyInfos.Any(x => x.UserId == userId))
+        {
+            return new ServiceResult<Lobby>(ErrorMessages.Lobby.UserAlreadyInLobby);
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        if (user is null)
+        {
+            return new ServiceResult<Lobby>(ErrorMessages.User.NotFound);
+        }
+
+        var lobbyInfo = new LobbyInfo
+        {
+            Id = new Guid(),
+            LobbyId = lobbyId,
+            UserId = userId,
+            User = user,
+            LobbyLeader = false,
+            Ready = false,
+            Argb = Color.Red.ToArgb()
+        };
+        lobby.LobbyInfos.Add(lobbyInfo);
+        await _context.SaveChangesAsync();
+
+        return new ServiceResult<Lobby>(lobby);
     }
 }

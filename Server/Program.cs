@@ -31,6 +31,7 @@ builder.Services.AddScoped<IHashProvider, HashProvider>();
 builder.Services.AddScoped<IMapService, MapService>();
 builder.Services.AddScoped<IMapGenerator, DefaultMapGeneratorStrategy>();
 builder.Services.AddScoped<ILobbyService, LobbyService>();
+builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>
 {

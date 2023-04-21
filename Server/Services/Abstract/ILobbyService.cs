@@ -9,4 +9,5 @@ public interface ILobbyService
     Task<Lobby?> GetLobbyByIdAsync(Guid id);
     Task<ServiceResult<Guid>> CreateLobbyAsync(Lobby lobby);
     Task<ServiceResult<Guid>> DeleteLobbyIfThereAreNoUsers(Guid id);
+    Task<ServiceResult<Lobby>> ConnectUserAsync(int userId, Guid lobbyId);
 }
