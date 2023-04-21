@@ -6,6 +6,7 @@ namespace SharedLibrary.Contracts.Hubs
         {
             public const string HealthCheck = "HealthCheck";
             public const string ConnectToLobby = "ConnectToLobby";
+            public const string ExitFromLobby = "ExitFromLobby";
         }
     }
 }

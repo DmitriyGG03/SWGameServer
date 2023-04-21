@@ -13,5 +13,6 @@ public static class ErrorMessages
         public const string SameName = "There is a lobby with the same name";
         public const string ThereIsUsers = "There is users in lobby";
         public const string UserAlreadyInLobby = "User already in lobby";
+        public const string UserIsNotInLobby = "Lobby does not contain user with given id";
     }
 }

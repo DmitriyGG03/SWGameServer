@@ -6,7 +6,9 @@ namespace SharedLibrary.Contracts.Hubs
         {
             public const string HealthHandler = "HealthHandler";
             public const string ConnectToLobbyHandler = "ConnectHanler";
-            public const string ConnectionError = "ConnectionErrorHandler";
+            public const string Error = "ErrorHandler";
+            public const string DeleteLobbyHandler = "DeleteLobbyHandler";
+            public const string ExitFromLobbyHandler = "Exit from lobby hanlder";
         }
     }
 }

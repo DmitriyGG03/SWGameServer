@@ -20,12 +20,25 @@ try
         .WithAutomaticReconnect()
         .Build();
     
-    connection.On<string>(ClientHandlers.Lobby.ConnectionError, (errorMessage) =>
+    connection.On<string>(ClientHandlers.Lobby.Error, (errorMessage) =>
     {
         var message = $"Server error: {errorMessage}";
         Console.WriteLine(message);
     });
+    connection.On<string>(ClientHandlers.Lobby.DeleteLobbyHandler, (serverMessage) =>
+    {
+        var message = $"Server message: {serverMessage}";
+        Console.WriteLine(message);
+    });
     connection.On<Lobby>(ClientHandlers.Lobby.ConnectToLobbyHandler, (lobby) =>
+    {
+        Console.WriteLine(lobby.LobbyName + ": \n");
+        foreach (var info in lobby.LobbyInfos)
+        {
+            Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready);
+        }
+    });
+    connection.On<Lobby>(ClientHandlers.Lobby.ExitFromLobbyHandler, (lobby) =>
     {
         Console.WriteLine(lobby.LobbyName + ": \n");
         foreach (var info in lobby.LobbyInfos)
@@ -41,8 +54,15 @@ try
         string message = Console.ReadLine();
         if(message == "exit")
             break;
-        
-        await connection.InvokeAsync(ServerHandlers.Lobby.ConnectToLobby, lobbyId);
+
+        if (message == "connect")
+        {
+            await connection.InvokeAsync(ServerHandlers.Lobby.ConnectToLobby, lobbyId);
+        }
+        else if (message == "lobbyexit")
+        {
+            await connection.InvokeAsync(ServerHandlers.Lobby.ExitFromLobby, lobbyId);
+        }
     }
 }
 catch (Exception exception)
