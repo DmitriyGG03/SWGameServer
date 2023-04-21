@@ -51,9 +51,11 @@ public class LobbyHub : Hub
             if (result.ErrorMessage == SuccessMessages.Lobby.Deleted)
             {
                 await this.Clients.Caller.SendAsync(ClientHandlers.Lobby.DeleteLobbyHandler, SuccessMessages.Lobby.Deleted);
+                return;
             }
             
             await this.Clients.Caller.SendAsync(ClientHandlers.Lobby.Error, result.ErrorMessage);
+            return;
         }
 
         var lobby = SolveCyclicDependency(result.Value);
@@ -63,13 +65,16 @@ public class LobbyHub : Hub
     {
         var lobby = lobbyToSolve;
         // for cyclic dependency
-        foreach (var item in lobby.LobbyInfos)
+        if (lobby.LobbyInfos != null)
         {
-            item.Lobby = null;
-            if (item.User != null)
+            foreach (var item in lobby.LobbyInfos)
             {
-                item.User.LobbyInfos = null;
-                item.User.Heroes = null;
+                item.Lobby = null;
+                if (item.User != null)
+                {
+                    item.User.LobbyInfos = null;
+                    item.User.Heroes = null;
+                }
             }
         }
 

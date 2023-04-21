@@ -5,11 +5,20 @@ using SharedLibrary.Models;
 var username = Guid.NewGuid().ToString();
 const int port = 44355;
 const string hubName = "lobby";
-const string accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3MzcxNywiZXhwIjoxOTk3NjkyOTE3LCJpYXQiOjE2ODIwNzM3MTd9.dFeDG-ypFgOwEV3httO4ua5WmnW9f7XcrysUu2AR13g";
-const string accessTokenSignalRUser =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3NjU1NCwiZXhwIjoxOTk3Njk1NzU0LCJpYXQiOjE2ODIwNzY1NTR9.Qm2_mDnptR5DmkLYgm2Ha6zWL9_cfFh8JGKzs812hbc";
-Guid lobbyId = Guid.Parse("aaa2441d-04b4-4357-ba04-218513a1213c");
+string accessToken = string.Empty;
+Guid lobbyId = Guid.Parse("AAA2441D-04B4-4357-BA04-218513A1213C");
 
+Console.WriteLine("Choose the user: ");
+var user = Console.ReadLine();
+
+if(user == "0")
+{
+    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3MzcxNywiZXhwIjoxOTk3NjkyOTE3LCJpYXQiOjE2ODIwNzM3MTd9.dFeDG-ypFgOwEV3httO4ua5WmnW9f7XcrysUu2AR13g";
+}
+else
+{
+    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3NjU1NCwiZXhwIjoxOTk3Njk1NzU0LCJpYXQiOjE2ODIwNzY1NTR9.Qm2_mDnptR5DmkLYgm2Ha6zWL9_cfFh8JGKzs812hbc";
+}
 try
 {
     var connection = new HubConnectionBuilder()
