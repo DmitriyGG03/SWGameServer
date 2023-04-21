@@ -7,6 +7,6 @@ namespace SharedLibrary.Requests
         [Required]
         public string LobbyName { get; set; }
         [Range(0, 100)]
-        public int MaxUsersCount { get; set; }
+        public byte MaxUsersCount { get; set; }
     }
 }

@@ -23,11 +23,11 @@ public class HeroService : IHeroService
     public async Task<ServiceResult<Hero>> Update(int userId, Hero destination, CancellationToken cancellationToken)
     {
         var user = await _dbContext.Users.Include(x => x.Heroes).FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
-            ?? throw new ArgumentException(ErrorMessages.UserNotFound);
+            ?? throw new ArgumentException(ErrorMessages.User.NotFound);
 
         var hero = user.Heroes.FirstOrDefault(x => x.HeroId == destination.HeroId);
         if (hero is null)
-            return new ServiceResult<Hero>(ErrorMessages.UserHasNoAccessToGivenHero);
+            return new ServiceResult<Hero>(ErrorMessages.User.HasNoAccess);
 
         hero.Name = destination.Name;
 
@@ -40,7 +40,7 @@ public class HeroService : IHeroService
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         
         if (user is null)
-            return new ServiceResult<Hero>(ErrorMessages.UserNotFound);
+            return new ServiceResult<Hero>(ErrorMessages.User.NotFound);
 
         if (hero.User is null)
             hero.User = user;
