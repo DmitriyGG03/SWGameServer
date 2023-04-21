@@ -7,6 +7,7 @@ using Server.Services;
 using Server.Services.Abstract;
 using System.Text;
 using Server.Common.Constants;
+using Server.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,7 @@ builder.Services.AddSingleton(settings);
 var productionDatabase = builder.Configuration.GetConnectionString(ConnectionKeys.Production);
 var localDatabase = builder.Configuration.GetConnectionString(ConnectionKeys.Local);
 builder.Services.AddDbContext<GameDbContext>(o => o.UseSqlServer(localDatabase));
+builder.Services.AddSignalR();
 
 builder.Services.AddControllers().AddNewtonsoftJson(i =>
 {
@@ -54,7 +56,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
+app.MapHub<LobbyHub>("/lobbyHub");
 app.Run();
 
 //For test
