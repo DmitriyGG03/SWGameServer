@@ -3,12 +3,16 @@ using SharedLibrary.Contracts.Hubs;
 
 var username = Guid.NewGuid().ToString();
 const int port = 44355;
-const string hubName = "lobbyHub";
+const string hubName = "lobby";
+const string accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3MzcxNywiZXhwIjoxOTk3NjkyOTE3LCJpYXQiOjE2ODIwNzM3MTd9.dFeDG-ypFgOwEV3httO4ua5WmnW9f7XcrysUu2AR13g";
 
 try
 {
     var connection = new HubConnectionBuilder()
-        .WithUrl($"https://localhost:{port}/{hubName}")
+        .WithUrl($"https://localhost:{port}/hubs/{hubName}", options =>
+        { 
+            options.AccessTokenProvider = () => Task.FromResult(accessToken);
+        })
         .WithAutomaticReconnect()
         .Build();
     

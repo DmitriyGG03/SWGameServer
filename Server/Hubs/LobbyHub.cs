@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using SharedLibrary.Contracts.Hubs;
 
@@ -11,6 +12,7 @@ public class LobbyHub : Hub
         _logger = logger;
     }
 
+    [Authorize]
     public async Task HealthCheck()
     {
         await this.Clients.All.SendAsync(ClientHandlers.Lobby.HealthHandler, "online");
