@@ -38,4 +38,31 @@ public class MapService : IMapService
         await _context.SaveChangesAsync(cancellationToken);
         return new ServiceResult<SessionMap>(map);
     }
+    public async Task<ServiceResult<List<HeroMap>>> GetHeroMaps(List<Hero> heroes, SessionMap sessionMap, CancellationToken cancellationToken)
+    {
+        List<Planet> listPlanet = new List<Planet>();
+        var heroMapList = new List<HeroMap>();
+
+        var rnd = new Random();
+        for (int i = 0; i < heroes.Count; i++)
+        {
+            Planet planet = new Planet();
+            var heroMap = new HeroMap();
+            do
+            {
+                var rndIndex = rnd.Next(sessionMap.Planets.Count);
+                planet = sessionMap.Planets[rndIndex];
+            } while (listPlanet.Contains(planet));
+            listPlanet.Add(planet);
+            heroMap.HeroId = heroes[i].HeroId;
+            // heroMap.Id = i;
+            // heroMap.Hero = heroes[i];
+            heroMap.Connections = sessionMap.Connections;
+            heroMap.Planets = sessionMap.Planets;
+            heroMap.HomePlanet = planet;
+            heroMap.HomePlanetId = Guid.NewGuid();
+            heroMapList.Add(heroMap);
+        }
+        return new ServiceResult<List<HeroMap>>(heroMapList);
+    }
 }

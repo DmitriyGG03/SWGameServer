@@ -22,7 +22,8 @@ public class LobbyService : ILobbyService
 
     public Task<Lobby?> GetLobbyByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        var result =  _context.Lobbies.FirstOrDefaultAsync(l => l.Id == id);
+        return result;
     }
 
     public async Task<ServiceResult<Guid>> CreateLobbyAsync(Lobby lobby)
@@ -144,5 +145,12 @@ public class LobbyService : ILobbyService
             .Include(x => x.LobbyInfos)
              .ThenInclude(y => y.User)
             .FirstOrDefaultAsync(x => x.Id == lobbyId);
+    }
+    public async Task<ServiceResult<Lobby>> ChangeLobbyDataAsync(Lobby lobby)
+    {
+        var result = _context.Lobbies.Update(lobby);
+        await _context.SaveChangesAsync();
+            return new ServiceResult<Lobby>(lobby);
+       
     }
 }

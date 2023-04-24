@@ -3,21 +3,21 @@ using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 
 var username = Guid.NewGuid().ToString();
-const int port = 44355;
+const int port = 7148;
 const string hubName = "lobby";
 string accessToken = string.Empty;
-Guid lobbyId = Guid.Parse("AAA2441D-04B4-4357-BA04-218513A1213C");
+Guid lobbyId = Guid.Parse("6d4806df-4f4e-41f5-8533-adba34cfc770");
 
 Console.WriteLine("Choose the user: ");
 var user = Console.ReadLine();
 
 if(user == "0")
 {
-    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjMiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3MzcxNywiZXhwIjoxOTk3NjkyOTE3LCJpYXQiOjE2ODIwNzM3MTd9.dFeDG-ypFgOwEV3httO4ua5WmnW9f7XcrysUu2AR13g";
+    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3NTQ0NSwiZXhwIjoxOTk3Njk0NjQ0LCJpYXQiOjE2ODIwNzU0NDV9.ssFAgkNQJvNS9AfCiawsYixPWM7cwL8GquPCD5BTsZE";
 }
 else
 {
-    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3NjU1NCwiZXhwIjoxOTk3Njk1NzU0LCJpYXQiOjE2ODIwNzY1NTR9.Qm2_mDnptR5DmkLYgm2Ha6zWL9_cfFh8JGKzs812hbc";
+    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3NTQ0NSwiZXhwIjoxOTk3Njk0NjQ0LCJpYXQiOjE2ODIwNzU0NDV9.ssFAgkNQJvNS9AfCiawsYixPWM7cwL8GquPCD5BTsZE";
 }
 try
 {
@@ -55,8 +55,16 @@ try
             Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready);
         }
     });
+    connection.On<Lobby>(ClientHandlers.Lobby.ChangeLobbyDataHandler, (lobby) =>
+    {
+        Console.WriteLine(lobby.LobbyName + ": \n");
+        foreach (var info in lobby.LobbyInfos)
+        {
+            Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready);
+        }
+    });
     await connection.StartAsync();
-
+   
     while (true)
     {
         Console.WriteLine("Type message to execute operation: ");
@@ -71,6 +79,14 @@ try
         else if (message == "lobbyexit")
         {
             await connection.InvokeAsync(ServerHandlers.Lobby.ExitFromLobby, lobbyId);
+        }
+        else if (message == "change")
+        {
+            var lobbys = new Lobby();
+            lobbys.LobbyName = "New Lobby";
+            lobbys.MaxHeroNumbers = 10;
+            lobbys.Id = lobbyId;
+            await connection.InvokeAsync(ServerHandlers.Lobby.ChangeLobbyData, lobbys);
         }
     }
 }

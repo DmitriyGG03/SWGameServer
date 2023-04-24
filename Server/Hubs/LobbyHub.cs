@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using Server.Common.Constants;
 using Server.Domain;
@@ -12,7 +13,7 @@ public class LobbyHub : Hub
 {
     private readonly ILogger<LobbyHub> _logger;
     private readonly ILobbyService _lobbyService;
-    public LobbyHub(ILogger<LobbyHub> logger, ILobbyService lobbyService)
+    public LobbyHub(ILogger<LobbyHub> logger, ILobbyService lobbyService, GameDbContext context)
     {
         _logger = logger;
         _lobbyService = lobbyService;
@@ -40,6 +41,15 @@ public class LobbyHub : Hub
         await HandleResult(result, ClientHandlers.Lobby.ExitFromLobbyHandler);
     }
 
+    [Authorize]
+    public async Task ChangeLobbyData(Lobby lobby)
+    {
+
+        var result = await _lobbyService.ChangeLobbyDataAsync(lobby);
+        await HandleResult(result, ClientHandlers.Lobby.ChangeLobbyDataHandler);
+
+    }
+
     private int GetUserIdFromContext()
     {
         return int.Parse(this.Context.User.FindFirst("id").Value);
@@ -60,6 +70,7 @@ public class LobbyHub : Hub
 
         var lobby = SolveCyclicDependency(result.Value);
         await this.Clients.All.SendAsync(successMethod, lobby);
+        
     }
     private Lobby SolveCyclicDependency(Lobby lobbyToSolve)
     {

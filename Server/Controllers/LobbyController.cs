@@ -38,9 +38,13 @@ public class LobbyController : ControllerBase
     }
 
     [HttpGet, Route(ApiRoutes.Lobby.GetById)]
-    public async Task<IActionResult> GetLobbyByIdAsync(Guid id)
+   public async Task<IActionResult> GetLobbyByIdAsync([FromRoute] Guid id)
     {
-        throw new NotImplementedException();
+        var lobby = await _lobbyService.GetLobbyByIdAsync(id);
+        if (lobby is null)
+            return NotFound();
+
+        return Ok(new GetLobbyResponse { Lobby = lobby, Info = null });
     }
     
     [HttpPost, Route(ApiRoutes.Lobby.Create)]

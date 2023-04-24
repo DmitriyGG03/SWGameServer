@@ -31,5 +31,9 @@ namespace SharedLibrary.Routes
         {
             public const string GetMap = "{id:int}";
         }
+        public static class Session
+        {
+            public const string Create = "{id}";
+        }
     }
 }
