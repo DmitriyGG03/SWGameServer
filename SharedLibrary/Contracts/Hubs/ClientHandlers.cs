@@ -8,8 +8,9 @@ namespace SharedLibrary.Contracts.Hubs
             public const string ConnectToLobbyHandler = "ConnectHanler";
             public const string Error = "ErrorHandler";
             public const string DeleteLobbyHandler = "DeleteLobbyHandler";
-            public const string ExitFromLobbyHandler = "Exit from lobby hanlder";
+            public const string ExitFromLobbyHandler = "ExitFromLobbyHanlder";
             public const string ChangeLobbyDataHandler = "Change lobby data hanlder";
+            public const string CreatedSessionHandler = "CreatedSessionHandler";
         }
     }
 }

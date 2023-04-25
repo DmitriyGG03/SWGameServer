@@ -1,3 +1,5 @@
+using System.Net.NetworkInformation;
+
 namespace SharedLibrary.Contracts.Hubs
 {
     public static class ServerHandlers
@@ -8,6 +10,7 @@ namespace SharedLibrary.Contracts.Hubs
             public const string ConnectToLobby = "ConnectToLobby";
             public const string ExitFromLobby = "ExitFromLobby";
             public const string ChangeLobbyData = "ChangeLobbyData";
+            public const string CreateSession = "CreateSession";
         }
     }
 }

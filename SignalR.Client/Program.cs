@@ -6,21 +6,23 @@ var username = Guid.NewGuid().ToString();
 const int port = 7148;
 const string hubName = "lobby";
 string accessToken = string.Empty;
-Guid lobbyId = Guid.Parse("6d4806df-4f4e-41f5-8533-adba34cfc770");
+Guid lobbyId = Guid.Parse("AAA2441D-04B4-4357-BA04-218513A1213C");
 
 Console.WriteLine("Choose the user: ");
 var user = Console.ReadLine();
 
 if(user == "0")
 {
-    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3NTQ0NSwiZXhwIjoxOTk3Njk0NjQ0LCJpYXQiOjE2ODIwNzU0NDV9.ssFAgkNQJvNS9AfCiawsYixPWM7cwL8GquPCD5BTsZE";
+    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjUiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjQyOTU4NywiZXhwIjoxOTk4MDQ4Nzg3LCJpYXQiOjE2ODI0Mjk1ODd9.LfSP4PpvU8uGIsxV5BqnZRRaByZBvGwFt6rhoRXTvFQ";
 }
 else
 {
-    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjEiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjA3NTQ0NSwiZXhwIjoxOTk3Njk0NjQ0LCJpYXQiOjE2ODIwNzU0NDV9.ssFAgkNQJvNS9AfCiawsYixPWM7cwL8GquPCD5BTsZE";
+    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjQyOTUzMSwiZXhwIjoxOTk4MDQ4NzMxLCJpYXQiOjE2ODI0Mjk1MzF9.nNGq-E9N_4JaRD6ZdTA4HTlsudWGWt4zVrgodR8z1ns";
 }
 try
 {
+    Lobby? currentLobby = null;
+    
     var connection = new HubConnectionBuilder()
         .WithUrl($"https://localhost:{port}/hubs/{hubName}", options =>
         { 
@@ -46,6 +48,7 @@ try
         {
             Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready);
         }
+        currentLobby = lobby;
     });
     connection.On<Lobby>(ClientHandlers.Lobby.ExitFromLobbyHandler, (lobby) =>
     {
@@ -54,6 +57,7 @@ try
         {
             Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready);
         }
+        currentLobby = lobby;
     });
     connection.On<Lobby>(ClientHandlers.Lobby.ChangeLobbyDataHandler, (lobby) =>
     {
@@ -62,9 +66,23 @@ try
         {
             Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready);
         }
+
+        currentLobby = lobby;
     });
+    connection.On<Session>(ClientHandlers.Lobby.CreatedSessionHandler, (session) =>
+    {
+        Console.WriteLine("Session name: " + session.Name);
+
+        foreach (var hero in session.Heroes)
+        {
+            Console.WriteLine("Hero name: " + hero.Name);
+        }
+
+        Console.WriteLine("Planets count: " + session.SessionMap.Planets.Count);
+    });
+    
     await connection.StartAsync();
-   
+    
     while (true)
     {
         Console.WriteLine("Type message to execute operation: ");
@@ -87,6 +105,17 @@ try
             lobbys.MaxHeroNumbers = 10;
             lobbys.Id = lobbyId;
             await connection.InvokeAsync(ServerHandlers.Lobby.ChangeLobbyData, lobbys);
+        }
+        else if (message == "create session")
+        {
+            if (currentLobby is not null)
+            {
+                await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, currentLobby);
+            }
+            else
+            {
+                Console.WriteLine("Current lobby is null");
+            }
         }
     }
 }
