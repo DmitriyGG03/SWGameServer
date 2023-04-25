@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Server;
 
@@ -11,9 +12,11 @@ using Server;
 namespace Server.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    partial class GameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230425132324_changedsessionmap")]
+    partial class changedsessionmap
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -251,8 +254,7 @@ namespace Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SessionMapId")
-                        .IsUnique();
+                    b.HasIndex("SessionMapId");
 
                     b.ToTable("Sessions");
                 });
@@ -263,7 +265,12 @@ namespace Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("SessionId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
 
                     b.ToTable("SessionMaps");
                 });
@@ -354,12 +361,21 @@ namespace Server.Migrations
             modelBuilder.Entity("SharedLibrary.Models.Session", b =>
                 {
                     b.HasOne("SharedLibrary.Models.SessionMap", "SessionMap")
-                        .WithOne("Session")
-                        .HasForeignKey("SharedLibrary.Models.Session", "SessionMapId")
+                        .WithMany()
+                        .HasForeignKey("SessionMapId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("SessionMap");
+                });
+
+            modelBuilder.Entity("SharedLibrary.Models.SessionMap", b =>
+                {
+                    b.HasOne("SharedLibrary.Models.Session", "Session")
+                        .WithMany()
+                        .HasForeignKey("SessionId");
+
+                    b.Navigation("Session");
                 });
 
             modelBuilder.Entity("SharedLibrary.Models.ApplicationUser", b =>
@@ -393,8 +409,6 @@ namespace Server.Migrations
                     b.Navigation("Connections");
 
                     b.Navigation("Planets");
-
-                    b.Navigation("Session");
                 });
 #pragma warning restore 612, 618
         }

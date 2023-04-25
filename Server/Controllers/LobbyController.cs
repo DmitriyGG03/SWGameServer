@@ -43,7 +43,11 @@ public class LobbyController : ControllerBase
         var lobby = await _lobbyService.GetLobbyByIdAsync(id);
         if (lobby is null)
             return NotFound();
-
+        // For cyclic dependency
+        foreach (var info in lobby.LobbyInfos)
+        {
+            info.Lobby = null;
+        }
         return Ok(new GetLobbyResponse { Lobby = lobby, Info = null });
     }
     

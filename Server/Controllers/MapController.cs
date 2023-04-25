@@ -19,7 +19,7 @@ public class MapController : ControllerBase
     }
 
     [HttpGet, Route(ApiRoutes.Map.GetMap)]
-    public async Task<IActionResult> GetHeroMap([FromRoute] int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetHeroMap([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         /* in future options can be add as body parameter */
         var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);

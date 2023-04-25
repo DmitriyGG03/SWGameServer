@@ -14,5 +14,6 @@ public static class ErrorMessages
         public const string ThereIsUsers = "There is users in lobby";
         public const string UserAlreadyInLobby = "User already in lobby";
         public const string UserIsNotInLobby = "Lobby does not contain user with given id";
+        public const string UsersNotReady = "Not all lobby members are ready";
     }
 }

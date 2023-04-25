@@ -12,77 +12,75 @@ namespace Server.Services
     {
         private readonly GameDbContext _context;
         private readonly IMapGenerator _mapGenerator;
-        private readonly IMapService _mapService;
         private readonly IHeroService _heroService;
-        public SessionService(GameDbContext context, IMapGenerator mapGenerator, IMapService mapService, IHeroService heroService)
+        private readonly ILogger<SessionService> _logger;
+        public SessionService(GameDbContext context, IMapGenerator mapGenerator,  IHeroService heroService, ILogger<SessionService> logger)
         {
             _context = context;
             _mapGenerator = mapGenerator;
-            _mapService = mapService;
             _heroService = heroService;
+            _logger = logger;
         }
-        public async Task<ServiceResult<Session>> Create(Guid lobbyId)
+        public async Task<ServiceResult<Session>> CreateAsync(Guid lobbyId, CancellationToken cancellationToken)
         {
-
-            var lobby = await _context.Lobbies.FirstOrDefaultAsync(l => l.Id == lobbyId);
-
+            var lobby = await _context.Lobbies.Include(x => x.LobbyInfos)
+                 .ThenInclude(x => x.User)
+                .FirstOrDefaultAsync(l => l.Id == lobbyId);
             if (lobby == null)
                 return new ServiceResult<Session>(ErrorMessages.Lobby.NotFound);
 
-            /*
-            var ready = lobby.LobbyInfos.All(li => li.Ready);
-            if (!ready)
+            var lobbyInfos = lobby.LobbyInfos;
+            if (lobbyInfos.Any(x => x.Ready == false))
                 return new ServiceResult<Session>(ErrorMessages.Lobby.UsersNotReady);
-            */
-            var session = new Session();
 
             var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
-
-            //session.SessionMap = _mapGenerator.GenerateMap(defaultOptions);
-            session.Id = Guid.NewGuid();
-            session.Name = lobby.LobbyName;
-           // session.SessionMap.Id = Guid.NewGuid();
-            //var users = lobby.LobbyInfos.Select(l => l.User).ToList();
-            var users = _context.Users.Take(1).ToList();
-            var heroes = new List<Hero>();
-          //  await _context.SessionMaps.AddAsync(session.SessionMap);
-           // await _context.SaveChangesAsync(new CancellationToken(false));
-           // await _context.Sessions.AddAsync(session, new CancellationToken(false));
-           // await _context.SaveChangesAsync(new CancellationToken(false));
-            for (int i = 0; i < users.Count; i++)
+            var map = _mapGenerator.GenerateMap(defaultOptions);
+            
+            // await _context.SessionMaps.AddAsync(map, cancellationToken);
+            var session = new Session
             {
-                var hero = new Hero();
-                hero.ResearchShipLimit = 1;
-                hero.Resourses = 1;
-                hero.Argb = 1;
-                hero.ColonizationShipLimit = 1;
-                hero.Name = users[i].Username;
-               // hero.SessionId = session.Id;
-                await _context.SessionMaps.AddAsync(session.SessionMap);
-                await _context.SaveChangesAsync(new CancellationToken(false));
-                var heroResult = await _heroService.Create(users[i].Id, hero, new CancellationToken(false));
-                 if (!heroResult.Success) {
-                    return new ServiceResult<Session>(heroResult.ErrorMessage);
+                Id = Guid.NewGuid(),
+                Name = lobby.LobbyName,
+                Heroes = new List<Hero>(),
+                SessionMapId = map.Id,
+                SessionMap = map,
+            };
+            
+            await _context.Sessions.AddAsync(session, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+            
+            // add heroes
+            foreach (var item in lobbyInfos)
+            {
+                var hero = new Hero
+                {
+                    Name = item.User.Username,
+                    Argb = item.Argb,
+                    ColonizationShipLimit = 10,
+                    ResearchShipLimit = 10,
+                    Resourses = 10,
+                    SessionId = session.Id,
+                    Session = session,
+                    UserId = item.UserId
+                };
+                
+                var homePlanet = map.Planets[Random.Shared.Next(0, map.Planets.Count)];
+                hero.HeroMap = new HeroMap
+                {
+                    Planets = map.Planets, Connections = map.Connections, HeroId = hero.HeroId,
+                    HomePlanetId = homePlanet.Id, HomePlanet = homePlanet
+                };
+                
+                var addingResult = await _heroService.Create(item.UserId, hero, cancellationToken);
+
+                if (addingResult.Success == false)
+                {
+                    _logger.LogError(addingResult.ErrorMessage);
+                    return new ServiceResult<Session>(addingResult.ErrorMessage);
+                }
             }
-             heroes.Add(heroResult.Value);
-             users[i].LobbyInfos = lobby.LobbyInfos;
-             users[i].Heroes.Add(heroResult.Value);
-             _context.Users.Update(users[i]);
-                await _context.SaveChangesAsync(new CancellationToken(false));
-                 }
-                var heromaps = _mapService.GetHeroMaps(heroes, session.SessionMap, new CancellationToken(false)).Result.Value;
-                  for (int i = 0; i < heroes.Count; i++) {
-              //   await _context.HeroMaps.AddAsync(heromaps[i]);
-                 await _context.SaveChangesAsync(new CancellationToken(false));
-                heroes[i].HeroMapId = heromaps[i].Id;
-                heroes[i].SessionId = session.Id;
-                  }
-
-                // session.Heroes = heroes;
-                //
-
-
-                return new ServiceResult<Session>(session);
+            
+            return new ServiceResult<Session>(session);
         }
     }
 }

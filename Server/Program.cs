@@ -17,7 +17,9 @@ builder.Services.AddSingleton(settings);
 
 var productionDatabase = builder.Configuration.GetConnectionString(ConnectionKeys.Production);
 var localDatabase = builder.Configuration.GetConnectionString(ConnectionKeys.Local);
+
 builder.Services.AddDbContext<GameDbContext>(o => o.UseSqlServer(localDatabase));
+
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers().AddNewtonsoftJson(i =>
@@ -32,6 +34,7 @@ builder.Services.AddScoped<IMapService, MapService>();
 builder.Services.AddScoped<IMapGenerator, DefaultMapGeneratorStrategy>();
 builder.Services.AddScoped<ILobbyService, LobbyService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>

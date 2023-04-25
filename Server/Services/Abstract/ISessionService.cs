@@ -7,7 +7,7 @@ namespace Server.Services.Abstract
 
     public interface ISessionService
     {
-        Task<ServiceResult<Session>> Create(Guid lobbyId);
+        Task<ServiceResult<Session>> CreateAsync(Guid lobbyId, CancellationToken cancellationToken);
         
     }
 }

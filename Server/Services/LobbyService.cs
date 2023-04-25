@@ -22,7 +22,7 @@ public class LobbyService : ILobbyService
 
     public Task<Lobby?> GetLobbyByIdAsync(Guid id)
     {
-        var result =  _context.Lobbies.FirstOrDefaultAsync(l => l.Id == id);
+        var result =  _context.Lobbies.Include(x => x.LobbyInfos).FirstOrDefaultAsync(l => l.Id == id);
         return result;
     }
 
