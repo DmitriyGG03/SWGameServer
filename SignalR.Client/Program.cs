@@ -69,16 +69,16 @@ try
 
         currentLobby = lobby;
     });
-    connection.On<Session>(ClientHandlers.Lobby.CreatedSessionHandler, (session) =>
+    connection.On<Hero>(ClientHandlers.Lobby.CreatedSessionHandler, (hero) =>
     {
-        Console.WriteLine("Session name: " + session.Name);
-
-        foreach (var hero in session.Heroes)
+        Console.WriteLine("Hero name: " + hero.Name);
+        Console.WriteLine("Planets count: " + hero.HeroMap.Planets.Count);
+        foreach (var item in hero.HeroMap.Planets)
         {
-            Console.WriteLine("Hero name: " + hero.Name);
+            Console.WriteLine("X=" + item.Position.X + "; Y=" + item.Position.Y);
         }
 
-        Console.WriteLine("Planets count: " + session.SessionMap.Planets.Count);
+        Console.WriteLine("Home planet cords: " + "X=" + hero.HeroMap.HomePlanet.Position.X + "; Y=" + hero.HeroMap.HomePlanet.Position.Y);
     });
     
     await connection.StartAsync();

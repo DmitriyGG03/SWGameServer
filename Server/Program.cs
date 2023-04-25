@@ -6,8 +6,10 @@ using Server.Models;
 using Server.Services;
 using Server.Services.Abstract;
 using System.Text;
+using Microsoft.AspNetCore.SignalR;
 using Server.Common.Constants;
 using Server.Hubs;
+using Server.Hubs.Providers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +22,7 @@ var localDatabase = builder.Configuration.GetConnectionString(ConnectionKeys.Loc
 
 builder.Services.AddDbContext<GameDbContext>(o => o.UseSqlServer(localDatabase));
 
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddSignalR();
 
 builder.Services.AddControllers().AddNewtonsoftJson(i =>

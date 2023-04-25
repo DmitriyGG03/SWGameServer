@@ -23,6 +23,7 @@ namespace Server.Services
         }
         public async Task<ServiceResult<Session>> CreateAsync(Guid lobbyId, CancellationToken cancellationToken)
         {
+            // TODO: session can be created only by owner of lobby 
             var lobby = await _context.Lobbies.Include(x => x.LobbyInfos)
                  .ThenInclude(x => x.User)
                 .FirstOrDefaultAsync(l => l.Id == lobbyId);

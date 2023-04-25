@@ -54,6 +54,7 @@ public class LobbyHub : Hub
     public async Task CreateSession(Lobby lobby)
     {
         var result = await _sessionService.CreateAsync(lobby.Id, CancellationToken.None);
+        // TODO: return hero by client
         await HandleResult(result, ClientHandlers.Lobby.CreatedSessionHandler);
     }
 
@@ -93,20 +94,18 @@ public class LobbyHub : Hub
         }
 
         var session = result.Value;
-        // solve cyclic dependency
-        session.SessionMap.Session = null;
         foreach (var item in session.Heroes)
         {
-            item.Session = null;
+            // solve cyclic dependency
             item.User = null;
-            
             if (item.HeroMap?.Hero is not null)
             {
                 item.HeroMap.Hero = null;
             }
+            item.Session = null;
+            
+            await this.Clients.User(item.UserId.ToString()).SendAsync(successMethod, item);
         }
-        
-        await this.Clients.All.SendAsync(successMethod, session);
     }
 
     private Lobby SolveCyclicDependency(Lobby lobbyToSolve)
