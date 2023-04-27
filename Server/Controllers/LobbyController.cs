@@ -25,8 +25,11 @@ public class LobbyController : ControllerBase
     public async Task<IActionResult> GetAllLobbiesAsync()
     {
         var lobbies = await _lobbyService.GetAllLobbiesAsync();
-        // For cyclic dependency
-        foreach (var lobby in lobbies)
+
+        if(lobbies is null) BadRequest(new GetAllLobbiesResponse(new[] { "No active lobbies found. You can start a new game" }));
+
+		// For cyclic dependency
+		foreach (var lobby in lobbies)
         {
             foreach (var info in lobby.LobbyInfos)
             {
@@ -34,7 +37,7 @@ public class LobbyController : ControllerBase
             }
         }
         
-        return Ok(lobbies);
+        return Ok(new GetAllLobbiesResponse(new[] { "Lobbies has been successfully found" }, lobbies));
     }
 
     [HttpGet, Route(ApiRoutes.Lobby.GetById)]
