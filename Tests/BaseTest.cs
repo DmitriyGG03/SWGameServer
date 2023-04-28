@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc.Testing;
+﻿using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Server;
+using SharedLibrary.Contracts.Hubs;
+using SharedLibrary.Models;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
 using System.Net.Http.Json;
@@ -11,13 +15,14 @@ namespace Tests
 {
 	public class BaseTest
 	{
-		protected readonly HttpClient _httpClient;
-
 		protected const string _baseUrl = "https://localhost:7148";
+
+		protected readonly WebApplicationFactory<Program> _appFactory;
+		protected List<HttpClient> _httpClients;
 
 		public BaseTest()
 		{
-			var appFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(host => {
+			_appFactory = new WebApplicationFactory<Program>().WithWebHostBuilder(host => {
 				host.ConfigureServices(services =>
 				{
 					var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<GameDbContext>));
@@ -29,27 +34,33 @@ namespace Tests
 				});
 			});
 
-			_httpClient = appFactory.CreateClient();
+			_httpClients = new List<HttpClient>();
 		}
 
-		public bool Register(string username, string email, string password)
+		public HttpClient RegisterClient(string username, string email, string password)
 		{
-			var response = _httpClient.PostAsJsonAsync($"{_baseUrl}/authentication/register", new RegistrationRequest { Username = username, Email = email, Password = password }).Result;
+			HttpClient client = _appFactory.CreateClient();
+			var response = client.PostAsJsonAsync($"{_baseUrl}/authentication/register", new RegistrationRequest { Username = username, Email = email, Password = password }).Result;
+			
 			if (response.IsSuccessStatusCode)
 			{
-				_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", response.Content.ReadFromJsonAsync<AuthenticationResponse>().Result.Token);
+				client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", response.Content.ReadFromJsonAsync<AuthenticationResponse>().Result.Token);
+				return client;
 			}
-			return response.IsSuccessStatusCode;
+			return client;
 		}
 
-		public bool Login(string email, string password)
+		public HttpClient LoginUser(string email, string password)
 		{
-			var response = _httpClient.PostAsJsonAsync($"{_baseUrl}/authentication/login", new LoginRequest { Email = email, Password = password }).Result;
+			HttpClient client = _appFactory.CreateClient();
+
+			var response = client.PostAsJsonAsync($"{_baseUrl}/authentication/login", new LoginRequest { Email = email, Password = password }).Result;
 			if (response.IsSuccessStatusCode)
 			{
-				_httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", response.Content.ReadFromJsonAsync<AuthenticationResponse>().Result.Token);
+				client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", response.Content.ReadFromJsonAsync<AuthenticationResponse>().Result.Token);
+				return client;
 			}
-			return response.IsSuccessStatusCode;
+			return client;
 		}
 	}
 }
