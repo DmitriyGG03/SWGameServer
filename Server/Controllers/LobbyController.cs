@@ -73,40 +73,11 @@ public class LobbyController : ControllerBase
         
         var result = await _lobbyService.CreateLobbyAsync(lobby);
 
-		// This is an impossible scenario.
-		// TODO: Remote it if there is no good reason to use it. Otherwise, comment out.
-		//
-		//if (result.Success == false)
-		//{
-		//    return BadRequest(new CreateLobbyResponse { LobbyId = Guid.Empty, Info = new []{result.ErrorMessage} });
-		//}
-
         //TODO: Change LobbyId in response to Lobby
 		var response = new CreateLobbyResponse { LobbyId = result.Value, Info = new[] { SuccessMessages.Lobby.Created }};
-
-		//Why? You can just make Ok(new CreateLobbyResponse ..., Info ...)
 		var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
         var locationUrl = $"{baseUrl}/{nameof(HeroController).Replace("Controller", "")}/{ApiRoutes.Lobby.GetById.Replace("{id}", response.LobbyId.ToString())}";
         return Created(locationUrl, response);
     }
 
-
-	//TODO: Rename endpoint to ExitFromLobby
-
-	//TODO: Implement logic that has been described on the Trello board
-	[HttpDelete, Route(ApiRoutes.Lobby.Delete)]
-    public async Task<IActionResult> DeleteLobbyIfThereAreNoUsers(Guid id) 
-    {
-		#region GarbageLogic
-
-		var result = await _lobbyService.DeleteLobbyIfThereAreNoUsers(id);
-        if (result.Success == false)
-        {
-            return BadRequest(new DeleteLobbyResponse { Info = new []{result.ErrorMessage} });
-        }
-        
-        return NoContent();
-
-		#endregion
-	}
 }
