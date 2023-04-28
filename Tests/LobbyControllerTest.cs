@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Client;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
@@ -106,4 +106,3 @@ namespace Tests
 		}
 	}
 }
-

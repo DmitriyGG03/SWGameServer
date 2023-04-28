@@ -6,6 +6,6 @@ namespace SharedLibrary.Responses
 {
     public class CreateLobbyResponse : ResponseBase
     {
-        public Guid LobbyId { get; set; }
+        public Lobby? Lobby { get; set; }
     }
 }

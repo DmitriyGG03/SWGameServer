@@ -25,8 +25,11 @@ public class LobbyController : ControllerBase
     public async Task<IActionResult> GetAllLobbiesAsync()
     {
         var lobbies = await _lobbyService.GetAllLobbiesAsync();
-        // For cyclic dependency
-        foreach (var lobby in lobbies)
+
+        if(lobbies is null) BadRequest(new GetAllLobbiesResponse(new[] { "No active lobbies found. You can start a new game" }));
+
+		// For cyclic dependency
+		foreach (var lobby in lobbies)
         {
             foreach (var info in lobby.LobbyInfos)
             {
@@ -34,11 +37,17 @@ public class LobbyController : ControllerBase
             }
         }
         
-        return Ok(lobbies);
+        return Ok(new GetAllLobbiesResponse(new[] { "Lobbies has been successfully found" }, lobbies));
     }
 
+    //Garbage endpoint
+    
+    //We no longer need getting lobby by Id
+    
+    // TODO: Remote it if there is no good reason to use it.
+    #region Get lobby by id (garbage)
     [HttpGet, Route(ApiRoutes.Lobby.GetById)]
-   public async Task<IActionResult> GetLobbyByIdAsync([FromRoute] Guid id)
+    public async Task<IActionResult> GetLobbyByIdAsync([FromRoute] Guid id)
     {
         var lobby = await _lobbyService.GetLobbyByIdAsync(id);
         if (lobby is null)
@@ -50,6 +59,7 @@ public class LobbyController : ControllerBase
         }
         return Ok(new GetLobbyResponse { Lobby = lobby, Info = null });
     }
+    #endregion
     
     [HttpPost, Route(ApiRoutes.Lobby.Create)]
     public async Task<IActionResult> CreateLobbyAsync(CreateLobbyRequest request)
@@ -63,27 +73,14 @@ public class LobbyController : ControllerBase
         };
         
         var result = await _lobbyService.CreateLobbyAsync(lobby);
-        
-        if (result.Success == false)
+        // solve cyclic dependency
+        foreach (var item in result.Value.LobbyInfos)
         {
-            return BadRequest(new CreateLobbyResponse { LobbyId = Guid.Empty, Info = new []{result.ErrorMessage} });
+            item.Lobby = null;
         }
-        
-        var response = new CreateLobbyResponse { LobbyId = result.Value, Info = new[] { SuccessMessages.Lobby.Created }};
-        var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
-        var locationUrl = $"{baseUrl}/{nameof(HeroController).Replace("Controller", "")}/{ApiRoutes.Lobby.GetById.Replace("{id}", response.LobbyId.ToString())}";
+		var response = new CreateLobbyResponse { Lobby = result.Value, Info = new[] { SuccessMessages.Lobby.Created }};
+		var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
+        var locationUrl = $"{baseUrl}/{nameof(LobbyController).Replace("Controller", "")}/{ApiRoutes.Lobby.GetById.Replace("{id}", response.Lobby.Id.ToString())}";
         return Created(locationUrl, response);
-    }
-    
-    [HttpDelete, Route(ApiRoutes.Lobby.Delete)]
-    public async Task<IActionResult> DeleteLobbyIfThereAreNoUsers(Guid id)
-    {
-        var result = await _lobbyService.DeleteLobbyIfThereAreNoUsers(id);
-        if (result.Success == false)
-        {
-            return BadRequest(new DeleteLobbyResponse { Info = new []{result.ErrorMessage} });
-        }
-        
-        return NoContent();
     }
 }

@@ -26,24 +26,18 @@ public class LobbyService : ILobbyService
         return result;
     }
 
-    public async Task<ServiceResult<Guid>> CreateLobbyAsync(Lobby lobby)
+    public async Task<ServiceResult<Lobby>> CreateLobbyAsync(Lobby lobby)
     {
-        var exists = await _context.Lobbies.FirstOrDefaultAsync(x => x.LobbyName == lobby.LobbyName);
-        if (exists is not null)
-        {
-            return new ServiceResult<Guid>(ErrorMessages.Lobby.SameName);
-        }
-
         if (lobby.LobbyInfos is null)
-        {
-            throw new ArgumentException();
-        }
-        
+            throw new ArgumentException("Oops, for some reason, the user was not added to the lobby");
+
         _context.Lobbies.Add(lobby);
         await _context.SaveChangesAsync();
-        return new ServiceResult<Guid>(lobby.Id);
+
+        return new ServiceResult<Lobby>(lobby);
     }
 
+    #region Delete lobby if there are no users (garbage)
     public async Task<ServiceResult<Guid>> DeleteLobbyIfThereAreNoUsers(Guid id)
     {
         var exists = await _context.Lobbies.Include(x => x.LobbyInfos).FirstOrDefaultAsync(x => x.Id == id);
@@ -61,6 +55,7 @@ public class LobbyService : ILobbyService
         await _context.SaveChangesAsync();
         return new ServiceResult<Guid>(id);
     }
+    #endregion
 
     public async Task<ServiceResult<Lobby>> ConnectUserAsync(int userId, Guid lobbyId)
     {
