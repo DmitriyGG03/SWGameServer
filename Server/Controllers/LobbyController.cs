@@ -40,7 +40,13 @@ public class LobbyController : ControllerBase
         return Ok(new GetAllLobbiesResponse(new[] { "Lobbies has been successfully found" }, lobbies));
     }
 
-    [HttpGet, Route(ApiRoutes.Lobby.GetById)]
+
+	//Garbage endpoint
+
+	//We no longer need getting lobby by Id
+
+	// TODO: Remote it if there is no good reason to use it.
+	[HttpGet, Route(ApiRoutes.Lobby.GetById)]
    public async Task<IActionResult> GetLobbyByIdAsync([FromRoute] Guid id)
     {
         var lobby = await _lobbyService.GetLobbyByIdAsync(id);
@@ -66,27 +72,41 @@ public class LobbyController : ControllerBase
         };
         
         var result = await _lobbyService.CreateLobbyAsync(lobby);
-        
-        if (result.Success == false)
-        {
-            return BadRequest(new CreateLobbyResponse { LobbyId = Guid.Empty, Info = new []{result.ErrorMessage} });
-        }
-        
-        var response = new CreateLobbyResponse { LobbyId = result.Value, Info = new[] { SuccessMessages.Lobby.Created }};
-        var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
+
+		// This is an impossible scenario.
+		// TODO: Remote it if there is no good reason to use it. Otherwise, comment out.
+		//
+		//if (result.Success == false)
+		//{
+		//    return BadRequest(new CreateLobbyResponse { LobbyId = Guid.Empty, Info = new []{result.ErrorMessage} });
+		//}
+
+        //TODO: Change LobbyId in response to Lobby
+		var response = new CreateLobbyResponse { LobbyId = result.Value, Info = new[] { SuccessMessages.Lobby.Created }};
+
+		//Why? You can just make Ok(new CreateLobbyResponse ..., Info ...)
+		var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
         var locationUrl = $"{baseUrl}/{nameof(HeroController).Replace("Controller", "")}/{ApiRoutes.Lobby.GetById.Replace("{id}", response.LobbyId.ToString())}";
         return Created(locationUrl, response);
     }
-    
-    [HttpDelete, Route(ApiRoutes.Lobby.Delete)]
-    public async Task<IActionResult> DeleteLobbyIfThereAreNoUsers(Guid id)
+
+
+	//TODO: Rename endpoint to ExitFromLobby
+
+	//TODO: Implement logic that has been described on the Trello board
+	[HttpDelete, Route(ApiRoutes.Lobby.Delete)]
+    public async Task<IActionResult> DeleteLobbyIfThereAreNoUsers(Guid id) 
     {
-        var result = await _lobbyService.DeleteLobbyIfThereAreNoUsers(id);
+		#region GarbageLogic
+
+		var result = await _lobbyService.DeleteLobbyIfThereAreNoUsers(id);
         if (result.Success == false)
         {
             return BadRequest(new DeleteLobbyResponse { Info = new []{result.ErrorMessage} });
         }
         
         return NoContent();
-    }
+
+		#endregion
+	}
 }

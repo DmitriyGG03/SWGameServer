@@ -28,19 +28,25 @@ public class LobbyService : ILobbyService
 
     public async Task<ServiceResult<Guid>> CreateLobbyAsync(Lobby lobby)
     {
-        var exists = await _context.Lobbies.FirstOrDefaultAsync(x => x.LobbyName == lobby.LobbyName);
-        if (exists is not null)
-        {
-            return new ServiceResult<Guid>(ErrorMessages.Lobby.SameName);
-        }
+		// Why are you doing this check if fild LobbyName is not a primary key or an alternative key?
+		// TODO: Remote it if there is no good reason to use it. Otherwise, comment out.
+        //
+		//var exists = await _context.Lobbies.FirstOrDefaultAsync(x => x.LobbyName == lobby.LobbyName);
+		//if (exists is not null)
+		//{
+		//    return new ServiceResult<Guid>(ErrorMessages.Lobby.SameName);
+		//}
 
-        if (lobby.LobbyInfos is null)
-        {
-            throw new ArgumentException();
-        }
-        
-        _context.Lobbies.Add(lobby);
+		// Why is it needed here?
+		// TODO: Remote it if there is no good reason to use it. Otherwise, comment out.
+        //
+		//if (lobby.LobbyInfos is null)        
+		//    throw new ArgumentException("Oops, for some reason, the user was not added to the lobby");
+
+
+		_context.Lobbies.Add(lobby);
         await _context.SaveChangesAsync();
+
         return new ServiceResult<Guid>(lobby.Id);
     }
 
