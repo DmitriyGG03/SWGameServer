@@ -8,5 +8,11 @@ namespace SharedLibrary.Requests
         public string LobbyName { get; set; }
         [Range(0, 100)]
         public byte MaxUsersCount { get; set; }
+
+        public CreateLobbyRequest(string lobbyName, byte maxUsersCount = 2)
+        {
+            LobbyName = lobbyName;
+            MaxUsersCount = maxUsersCount; 
+        }
     }
 }
