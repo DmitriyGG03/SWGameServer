@@ -1,108 +1,107 @@
-using Microsoft.AspNetCore.SignalR.Client;
-using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
-using SharedLibrary.Requests;
-using System.Data.Common;
-using System.Net.Http.Json;
 using Xunit;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Tests
 {
 	public class LobbyControllerTest : BaseTest
 	{
-		public LobbyControllerTest()
+		LobbyClient _lobbyClient1;
+		LobbyClient _lobbyClient2;
+
+		public LobbyControllerTest() : base()
 		{
-			
+			_lobbyClient1 = new LobbyClient(_appFactory);
+			_lobbyClient2 = new LobbyClient(_appFactory);
 		}
 
 		[Fact]
-		public async Task CreateLobbyTest()
+		public void RegisterTest()
 		{
-			var client = RegisterClient("user1", "test1@gmail.com", "123456789");
-			var result =  await client.PostAsJsonAsync($"{_baseUrl}/Lobby", new CreateLobbyRequest { LobbyName = "Lobby1", MaxUsersCount = 4 });
-			Assert.True(result.IsSuccessStatusCode);
+			Assert.True(_lobbyClient1.RegisterClient("user1", "test1@gmail.com", "123456789"));
 		}
 
 		[Fact]
-		public async Task GetLobbiesTest()
+		public void LoginTest()
 		{
-			var client1 = RegisterClient("user2", "test2@gmail.com", "123456789");
-			var client2 = RegisterClient("user3", "test3@gmail.com", "123456789");
-
-			var result1 = await client1.PostAsJsonAsync($"{_baseUrl}/Lobby", new CreateLobbyRequest { LobbyName = "Lobby2", MaxUsersCount = 4 });
-			var result2 = await client2.GetAsync($"{_baseUrl}/Lobby");
-
-			Assert.True(result2.IsSuccessStatusCode);
+			Assert.True(_lobbyClient1.RegisterClient("user2", "test2@gmail.com", "123456789"));
+			_lobbyClient1.LogOut();
+			Assert.True(_lobbyClient1.LoginClient("test2@gmail.com", "123456789"));
 		}
 
 		[Fact]
-		public async Task GetLobbyByIdTest()
+		public void CreateConnectionTest()
 		{
-			var client1 = RegisterClient("user4", "test4@gmail.com", "123456789");
-			var client2 = RegisterClient("user5", "test5@gmail.com", "123456789");
-
-			var postLobbyResult = await client1.PostAsJsonAsync($"{_baseUrl}/Lobby", new CreateLobbyRequest { LobbyName = "Lobby3", MaxUsersCount = 4 });
-			var response = await client2.GetAsync(postLobbyResult.Headers.Location.ToString().Replace("Hero", "Lobby"));
-			
-			Assert.True(response.IsSuccessStatusCode, response.StatusCode.ToString());
+			_lobbyClient1.RegisterClient("user12", "test12@gmail.com", "123456789");
+			Assert.True(_lobbyClient1.CreateConnection());
 		}
 
 		[Fact]
-		public async Task ConnectToLobbyTest()
+		public void CreateLobbyTest()
 		{
-			var client1 = RegisterClient("user6", "test6@gmail.com", "123456789");
-			var client2 = RegisterClient("user7", "test7@gmail.com", "123456789");
+			Assert.True(_lobbyClient1.RegisterClient("user3", "test3@gmail.com", "123456789"));
+			Assert.True(_lobbyClient1.CreateLobby("Lobby1", 2));
+		}
 
-			var lobbyClient1 = new LobbyClient(_appFactory, client1);
-			var lobbyClient2 = new LobbyClient(_appFactory, client2);
-			
-			var postLobbyResult = await client1.PostAsJsonAsync($"{_baseUrl}/Lobby", new CreateLobbyRequest { LobbyName = "Lobby4", MaxUsersCount = 4 });
+		[Fact]
+		public void GetLobbiesTest()
+		{
+			Assert.True(_lobbyClient1.RegisterClient("user4", "test4@gmail.com", "123456789"));
+			Assert.True(_lobbyClient2.RegisterClient("user5", "test5@gmail.com", "123456789"));
+			Assert.True(_lobbyClient1.CreateLobby("Lobby2", 2));
+			Assert.True(_lobbyClient2.GetLobbies());
+			Assert.NotEmpty(_lobbyClient2.Lobbies);
+		}
 
-			string path = postLobbyResult.Headers.Location.ToString();
-			int pos = path.LastIndexOf("/") + 1;
-			lobbyClient2.ConnectToLobby(new Guid(path.Substring(pos, path.Length - pos)));
+		[Fact]
+		public void ConnectToLobbyTest()
+		{
+			Assert.True(_lobbyClient1.RegisterClient("user6", "test6@gmail.com", "123456789"));
+			Assert.True(_lobbyClient1.CreateLobby("Lobb3", 2));
+
+			Assert.True(_lobbyClient2.RegisterClient("user7", "test7@gmail.com", "123456789"));
+			Assert.True(_lobbyClient2.GetLobbies());
+			Assert.True(_lobbyClient2.CreateConnection());
+			Assert.True(_lobbyClient2.ConnectToLobby(_lobbyClient2.Lobbies.Last().Id));
 
 			Thread.Sleep(5000);
-			Assert.NotNull(lobbyClient2.Lobby);
+			Assert.Equal(_lobbyClient1._ConnectedLobby.Id, _lobbyClient2._ConnectedLobby.Id);
 		}
 
 		[Fact]
-		public async Task ExitFromLobbyTest()
+		public void ExitFromLobbyTest()
 		{
-			var client1 = RegisterClient("user8", "test8@gmail.com", "123456789");
-			var client2 = RegisterClient("user9", "test9@gmail.com", "123456789");
+			Assert.True(_lobbyClient1.RegisterClient("user8", "test8@gmail.com", "123456789"));
+			Assert.True(_lobbyClient1.CreateConnection());
+			Assert.True(_lobbyClient1.CreateLobby("Lobb4", 2));
 
-			var lobbyClient1 = new LobbyClient(_appFactory, client1);
-			var lobbyClient2 = new LobbyClient(_appFactory, client2);
+			Assert.True(_lobbyClient2.RegisterClient("user9", "test9@gmail.com", "123456789"));
+			Assert.True(_lobbyClient2.CreateConnection());
+			Assert.True(_lobbyClient2.GetLobbies());
+			Assert.True(_lobbyClient2.ConnectToLobby(_lobbyClient2.Lobbies.Last().Id));
+			Assert.True(_lobbyClient2.ExitFromLobby(_lobbyClient2.Lobbies.Last().Id));
 
-			var postLobbyResult =  await client1.PostAsJsonAsync($"{_baseUrl}/Lobby", new CreateLobbyRequest { LobbyName = "Lobby5", MaxUsersCount = 4 });
-
-			string path = postLobbyResult.Headers.Location.ToString();
-			int pos = path.LastIndexOf("/") + 1;
-			lobbyClient2.ConnectToLobby(new Guid(path.Substring(pos, path.Length - pos)));
 			Thread.Sleep(5000);
-			lobbyClient2.ExitFromLobby(new Guid(path.Substring(pos, path.Length - pos)));
-			Thread.Sleep(10000);
-			Assert.Null(lobbyClient2.Lobby);
+			Assert.Equal(1, _lobbyClient1._ConnectedLobby.LobbyInfos.Count);
 		}
 
 		[Fact]
-		public async Task CreateSessionTest()
+		public void AutoDeleteLobbyTest()
 		{
-			var client1 = RegisterClient("user10", "test10@gmail.com", "123456789");
-			var lobbyClient1 = new LobbyClient(_appFactory, client1);
+			Assert.True(_lobbyClient1.RegisterClient("user10", "test10@gmail.com", "123456789"));
+			Assert.True(_lobbyClient1.CreateConnection());
+			Assert.True(_lobbyClient1.CreateLobby("Lobb5", 2));
 
-			var postLobbyResult = await client1.PostAsJsonAsync($"{_baseUrl}/Lobby", new CreateLobbyRequest { LobbyName = "Lobby6", MaxUsersCount = 4 });
+			Assert.True(_lobbyClient2.RegisterClient("user11", "test11@gmail.com", "123456789"));
+			Assert.True(_lobbyClient2.CreateConnection());
+
+			Assert.True(_lobbyClient2.GetLobbies());
+			int n = _lobbyClient2.Lobbies.Count;
+
+			Assert.True(_lobbyClient1.ExitFromLobby(_lobbyClient1._ConnectedLobby.Id));
 			Thread.Sleep(5000);
 
-			string path = postLobbyResult.Headers.Location.ToString();
-			int pos = path.LastIndexOf("/") + 1;
-			
-			lobbyClient1.ConnectToLobby(new Guid(path.Substring(pos, path.Length - pos)));
-			Thread.Sleep(5000);
-
-			Assert.Null(lobbyClient1.Hero);
+			Assert.True(_lobbyClient2.GetLobbies());
+			Assert.Equal(n - 1, _lobbyClient2.Lobbies.Count);
 		}
 	}
 }
