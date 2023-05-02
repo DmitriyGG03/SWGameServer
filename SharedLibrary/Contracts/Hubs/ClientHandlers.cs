@@ -12,6 +12,7 @@ namespace SharedLibrary.Contracts.Hubs
             public const string ChangeLobbyDataHandler = "Change lobby data hanlder";
             public const string CreatedSessionHandler = "CreatedSessionHandler";
             public const string ChangeReadyStatus = "ChangeReadyStatus";
+            public const string ChangedColor = "ChangedColor";
         }
     }
 }

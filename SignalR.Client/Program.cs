@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+﻿using System.Drawing;
+using Microsoft.AspNetCore.SignalR.Client;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 
@@ -78,6 +79,16 @@ try
 
         currentLobby = lobby;
     });
+    connection.On<Lobby>(ClientHandlers.Lobby.ChangedColor, (lobby) =>
+    {
+        Console.WriteLine(lobby.LobbyName + ": \n");
+        foreach (var info in lobby.LobbyInfos)
+        {
+            Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready + "; " + info.Color);
+        }
+
+        currentLobby = lobby;
+    });
     connection.On<Hero>(ClientHandlers.Lobby.CreatedSessionHandler, (hero) =>
     {
         Console.WriteLine("Hero name: " + hero.Name);
@@ -131,6 +142,21 @@ try
             if (currentLobby is not null)
             {
                 await connection.InvokeAsync(ServerHandlers.Lobby.ChangeReadyStatus, currentLobby.Id);
+            }
+            else
+            {
+                Console.WriteLine("Current lobby is null");
+            }
+        }
+        else if (message == "change color")
+        {
+            // random color getting 
+            var colors = new List<Color> { Color.Aqua, Color.Bisque, Color.Chocolate, Color.Blue, Color.Goldenrod };
+            var color = colors[Random.Shared.Next(0, colors.Count)];
+            
+            if (currentLobby is not null)
+            {
+                await connection.InvokeAsync(ServerHandlers.Lobby.ChangeColor, currentLobby.Id, color.ToArgb());
             }
             else
             {
