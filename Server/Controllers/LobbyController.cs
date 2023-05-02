@@ -26,7 +26,8 @@ public class LobbyController : ControllerBase
     {
         var lobbies = await _lobbyService.GetAllLobbiesAsync();
 
-        if(lobbies is null) BadRequest(new GetAllLobbiesResponse(new[] { "No active lobbies found. You can start a new game" }));
+        if(lobbies.Any() == false) 
+            return BadRequest(new GetAllLobbiesResponse(new[] { ErrorMessages.Lobby.NoLobbies }));
 
 		// For cyclic dependency
 		foreach (var lobby in lobbies)
@@ -37,7 +38,7 @@ public class LobbyController : ControllerBase
             }
         }
         
-        return Ok(new GetAllLobbiesResponse(new[] { "Lobbies has been successfully found" }, lobbies));
+        return Ok(new GetAllLobbiesResponse(new[] { SuccessMessages.Lobby.Found }, lobbies));
     }
 
     //Garbage endpoint
