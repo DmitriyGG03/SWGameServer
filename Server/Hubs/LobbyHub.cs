@@ -117,7 +117,7 @@ public class LobbyHub : Hub
             foreach (var item in lobby.LobbyInfos)
             {
                 item.Lobby = null;
-                if (item.User != null)
+                if (item.User is not null)
                 {
                     item.User.LobbyInfos = null;
                     item.User.Heroes = null;
