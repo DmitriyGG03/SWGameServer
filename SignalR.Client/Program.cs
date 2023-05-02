@@ -50,6 +50,15 @@ try
         }
         currentLobby = lobby;
     });
+    connection.On<Lobby>(ClientHandlers.Lobby.ChangeReadyStatus, (lobby) =>
+    {
+        Console.WriteLine(lobby.LobbyName + ": \n");
+        foreach (var info in lobby.LobbyInfos)
+        {
+            Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready);
+        }
+        currentLobby = lobby;
+    });
     connection.On<Lobby>(ClientHandlers.Lobby.ExitFromLobbyHandler, (lobby) =>
     {
         Console.WriteLine(lobby.LobbyName + ": \n");
@@ -111,6 +120,17 @@ try
             if (currentLobby is not null)
             {
                 await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, currentLobby);
+            }
+            else
+            {
+                Console.WriteLine("Current lobby is null");
+            }
+        }
+        else if (message == "ready status")
+        {
+            if (currentLobby is not null)
+            {
+                await connection.InvokeAsync(ServerHandlers.Lobby.ChangeReadyStatus, currentLobby.Id);
             }
             else
             {

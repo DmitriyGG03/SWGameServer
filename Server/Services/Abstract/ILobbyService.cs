@@ -12,4 +12,5 @@ public interface ILobbyService
     Task<ServiceResult<Lobby>> ConnectUserAsync(int userId, Guid lobbyId);
     Task<ServiceResult<Lobby>> ExitAsync(int userId, Guid lobbyId);
     Task<ServiceResult<Lobby>> ChangeLobbyDataAsync(Lobby lobby);
+    Task<ServiceResult<Lobby>> ChangeReadyStatusAsync(int userId, Guid lobbyId);
 }

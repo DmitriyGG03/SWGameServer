@@ -49,7 +49,15 @@ public class LobbyHub : Hub
         var result = await _lobbyService.ChangeLobbyDataAsync(lobby);
         await HandleResult(result, ClientHandlers.Lobby.ChangeLobbyDataHandler);
     }
-
+    
+    [Authorize]
+    public async Task ChangeReadyStatus(Guid lobbyId)
+    {
+        var userId = GetUserIdFromContext();
+        var result = await _lobbyService.ChangeReadyStatusAsync(userId, lobbyId);
+        await HandleResult(result, ClientHandlers.Lobby.ChangeReadyStatus);
+    }
+    
     [Authorize]
     public async Task CreateSession(Lobby lobby)
     {

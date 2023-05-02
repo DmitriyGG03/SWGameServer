@@ -22,7 +22,10 @@ public class LobbyService : ILobbyService
 
     public Task<Lobby?> GetLobbyByIdAsync(Guid id)
     {
-        var result =  _context.Lobbies.Include(x => x.LobbyInfos).FirstOrDefaultAsync(l => l.Id == id);
+        var result =  _context.Lobbies
+            .Include(x => x.LobbyInfos)!
+             .ThenInclude(i => i.User)
+            .FirstOrDefaultAsync(l => l.Id == id);
         return result;
     }
 
@@ -102,6 +105,22 @@ public class LobbyService : ILobbyService
             return await DeleteLobbyAsync(lobby, userInfo);
         }
         return await ExitFromLobbyAsync(lobby, userInfo);
+    }
+
+    public async Task<ServiceResult<Lobby>> ChangeReadyStatusAsync(int userId, Guid lobbyId)
+    {
+        var lobby = await GetLobbyByIdAsync(lobbyId);
+        if (lobby is null)
+            return new ServiceResult<Lobby>(ErrorMessages.Lobby.NotFound);
+
+        var userInLobby = IsUserInLobby(userId, lobby);
+        if (userInLobby == false)
+            return new ServiceResult<Lobby>(ErrorMessages.Lobby.UserIsNotInLobby);
+
+        var lobbyInfo = lobby.LobbyInfos.First(x => x.UserId == userId);
+        lobbyInfo.Ready = !lobbyInfo.Ready;
+        await _context.SaveChangesAsync();
+        return new ServiceResult<Lobby>(lobby);
     }
 
     private bool IsUserInLobby(int userId, Lobby lobby)
