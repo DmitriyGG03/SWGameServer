@@ -28,11 +28,15 @@ public class LobbyService : ILobbyService
 
     public async Task<ServiceResult<Lobby>> CreateLobbyAsync(Lobby lobby)
     {
-        if (lobby.LobbyInfos is null)
+        if (lobby.LobbyInfos is null || lobby.LobbyInfos.Any() == false)
             throw new ArgumentException("Oops, for some reason, the user was not added to the lobby");
 
         _context.Lobbies.Add(lobby);
         await _context.SaveChangesAsync();
+
+        var userId = lobby.LobbyInfos.First().UserId;
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        lobby.LobbyInfos.First().User = user;
 
         return new ServiceResult<Lobby>(lobby);
     }
