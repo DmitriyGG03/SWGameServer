@@ -4,7 +4,9 @@ using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
+using System.Diagnostics;
 using System.Net.Http.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace Tests
 {
@@ -14,7 +16,7 @@ namespace Tests
 		private HttpClient _client;
 		private HubConnection? _connection;
 
-		public Lobby? _ConnectedLobby { get; set; }
+		public Lobby? ConnectedLobby { get; set; }
 		public IList<Lobby>? Lobbies { get; set; }
 		public Hero? Hero { get; set; }
 
@@ -68,14 +70,33 @@ namespace Tests
 					options.AccessTokenProvider = () => Task.FromResult(_client.DefaultRequestHeaders.Authorization.Parameter);
 				}).WithAutomaticReconnect().Build();
 
+			_connection.On<string>(ClientHandlers.Lobby.Error, (errorMessage) =>
+			{
+				var message = $"Server error: {errorMessage}";
+			});
 			_connection.On<Lobby>(ClientHandlers.Lobby.ConnectToLobbyHandler, lobby =>
 			{
-				_ConnectedLobby = lobby;
+				ConnectedLobby = lobby;
 			});
 
 			_connection.On<Lobby>(ClientHandlers.Lobby.ExitFromLobbyHandler, (lobby) =>
 			{
-				_ConnectedLobby = lobby;
+				ConnectedLobby = lobby;
+			});
+
+			_connection.On<Lobby>(ClientHandlers.Lobby.ChangeReadyStatus, (lobby) =>
+			{
+				ConnectedLobby = lobby;
+			});
+
+			_connection.On<Lobby>(ClientHandlers.Lobby.ChangeLobbyDataHandler, (lobby) =>
+			{
+				ConnectedLobby = lobby;
+			});
+
+			_connection.On<Hero>(ClientHandlers.Lobby.CreatedSessionHandler, (hero) =>
+			{
+				Hero = hero;
 			});
 			_connection.StartAsync();
 
@@ -91,7 +112,7 @@ namespace Tests
 
 			if(result.Result.IsSuccessStatusCode)
 			{
-				_ConnectedLobby = result.Result.Content.ReadFromJsonAsync<CreateLobbyResponse>().Result.Lobby;
+				ConnectedLobby = result.Result.Content.ReadFromJsonAsync<CreateLobbyResponse>().Result.Lobby;
 				return true;
 			}
 			return false;
@@ -127,6 +148,33 @@ namespace Tests
 				return false;
 
 			_connection.InvokeAsync(ServerHandlers.Lobby.ExitFromLobby, id);
+			return true;
+		}
+
+		public bool CreateSession()
+		{
+			if (_client.DefaultRequestHeaders.Authorization == null || _connection == null)
+				return false;
+
+			_connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, ConnectedLobby);
+			return true;
+		}
+
+		public bool ChangeReadyStatus()
+		{
+			if (_client.DefaultRequestHeaders.Authorization == null || _connection == null)
+				return false;
+
+			_connection.InvokeAsync(ServerHandlers.Lobby.ChangeReadyStatus, ConnectedLobby.Id);
+			return true;
+		}
+
+		public bool ChangeLobbyData(Lobby lobby)
+		{
+			if (_client.DefaultRequestHeaders.Authorization == null || _connection == null)
+				return false;
+
+			_connection.InvokeAsync(ServerHandlers.Lobby.ChangeLobbyData, lobby);
 			return true;
 		}
 	}

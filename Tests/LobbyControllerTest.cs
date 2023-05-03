@@ -64,7 +64,7 @@ namespace Tests
 			Assert.True(_lobbyClient2.ConnectToLobby(_lobbyClient2.Lobbies.Last().Id));
 
 			Thread.Sleep(5000);
-			Assert.Equal(_lobbyClient1._ConnectedLobby.Id, _lobbyClient2._ConnectedLobby.Id);
+			Assert.Equal(_lobbyClient1.ConnectedLobby.Id, _lobbyClient2.ConnectedLobby.Id);
 		}
 
 		[Fact]
@@ -81,7 +81,7 @@ namespace Tests
 			Assert.True(_lobbyClient2.ExitFromLobby(_lobbyClient2.Lobbies.Last().Id));
 
 			Thread.Sleep(5000);
-			Assert.Equal(1, _lobbyClient1._ConnectedLobby.LobbyInfos.Count);
+			Assert.Equal(1, _lobbyClient1.ConnectedLobby.LobbyInfos.Count);
 		}
 
 		[Fact]
@@ -97,11 +97,90 @@ namespace Tests
 			Assert.True(_lobbyClient2.GetLobbies());
 			int n = _lobbyClient2.Lobbies.Count;
 
-			Assert.True(_lobbyClient1.ExitFromLobby(_lobbyClient1._ConnectedLobby.Id));
+			Assert.True(_lobbyClient1.ExitFromLobby(_lobbyClient1.ConnectedLobby.Id));
 			Thread.Sleep(5000);
 
 			Assert.True(_lobbyClient2.GetLobbies());
 			Assert.Equal(n - 1, _lobbyClient2.Lobbies.Count);
+		}
+
+		[Fact]
+		public void CreateSessionTest()
+		{
+			Assert.True(_lobbyClient1.RegisterClient("user13", "test13@gmail.com", "123456789"));
+			Assert.True(_lobbyClient1.CreateConnection());
+			Assert.True(_lobbyClient1.CreateLobby("Lobb5", 2));
+
+			Assert.True(_lobbyClient2.RegisterClient("user14", "test14@gmail.com", "123456789"));
+			Assert.True(_lobbyClient2.CreateConnection());
+			Assert.True(_lobbyClient2.GetLobbies());
+			Assert.True(_lobbyClient2.ConnectToLobby(_lobbyClient2.Lobbies.Last().Id));
+
+			Thread.Sleep(5000);
+
+			Assert.True(_lobbyClient1.ChangeReadyStatus());
+			Assert.True(_lobbyClient2.ChangeReadyStatus());
+
+			Thread.Sleep(5000);
+
+			Assert.True(_lobbyClient1.CreateSession());
+
+			Thread.Sleep(5000);
+
+			Assert.NotNull(_lobbyClient1.Hero);
+			Assert.NotNull(_lobbyClient2.Hero);
+		}
+
+		[Fact]
+		public void ChangeReadyStatusTest()
+		{
+			Assert.True(_lobbyClient1.RegisterClient("user15", "test15@gmail.com", "123456789"));
+			Assert.True(_lobbyClient1.CreateConnection());
+			Assert.True(_lobbyClient1.CreateLobby("Lobb6", 2));
+
+			Assert.True(_lobbyClient2.RegisterClient("user16", "test16@gmail.com", "123456789"));
+			Assert.True(_lobbyClient2.CreateConnection());
+			Assert.True(_lobbyClient2.GetLobbies());
+			Assert.True(_lobbyClient2.ConnectToLobby(_lobbyClient2.Lobbies.Last().Id));
+
+			Thread.Sleep(5000);
+
+			Assert.True(_lobbyClient1.ChangeReadyStatus());
+			Thread.Sleep(5000);
+			Assert.True(_lobbyClient2.ChangeReadyStatus());
+
+			Thread.Sleep(5000);
+
+			Assert.True(_lobbyClient1.ConnectedLobby.LobbyInfos.ToArray()[0].Ready);
+			Assert.True(_lobbyClient1.ConnectedLobby.LobbyInfos.ToArray()[1].Ready);
+
+			Assert.True(_lobbyClient2.ConnectedLobby.LobbyInfos.ToArray()[0].Ready);
+			Assert.True(_lobbyClient2.ConnectedLobby.LobbyInfos.ToArray()[1].Ready);
+		}
+
+		[Fact]
+		public void ChangeLobbyDataTest()
+		{
+			Assert.True(_lobbyClient1.RegisterClient("user17", "test17@gmail.com", "123456789"));
+			Assert.True(_lobbyClient1.CreateConnection());
+			Assert.True(_lobbyClient1.CreateLobby("Lobb7", 2));
+
+			Assert.True(_lobbyClient2.RegisterClient("user18", "test18@gmail.com", "123456789"));
+			Assert.True(_lobbyClient2.CreateConnection());
+			Assert.True(_lobbyClient2.GetLobbies());
+			Assert.True(_lobbyClient2.ConnectToLobby(_lobbyClient2.Lobbies.Last().Id));
+
+			Thread.Sleep(5000);
+
+			Assert.True(_lobbyClient1.ChangeLobbyData(new Lobby()
+			{
+				LobbyName = "New Name",
+				MaxHeroNumbers = 4
+			}));
+			Thread.Sleep(5000);
+
+			Assert.Equal("New Name", _lobbyClient2.ConnectedLobby.LobbyName);
+			Assert.Equal(4, _lobbyClient2.ConnectedLobby.MaxHeroNumbers);
 		}
 	}
 }
