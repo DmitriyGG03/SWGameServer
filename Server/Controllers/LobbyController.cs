@@ -22,11 +22,12 @@ public class LobbyController : ControllerBase
     }
     
     [HttpGet, Route(ApiRoutes.Lobby.GetAll)]
-    public async Task<IActionResult> GetAllLobbiesAsync()
+    public async Task<IActionResult> GetAllLobbies()
     {
         var lobbies = await _lobbyService.GetAllLobbiesAsync();
 
-        if(lobbies is null) BadRequest(new GetAllLobbiesResponse(new[] { "No active lobbies found. You can start a new game" }));
+        if(lobbies.Any() == false) 
+            return BadRequest(new GetAllLobbiesResponse(new[] { ErrorMessages.Lobby.NoLobbies }));
 
 		// For cyclic dependency
 		foreach (var lobby in lobbies)
@@ -37,7 +38,7 @@ public class LobbyController : ControllerBase
             }
         }
         
-        return Ok(new GetAllLobbiesResponse(new[] { "Lobbies has been successfully found" }, lobbies));
+        return Ok(new GetAllLobbiesResponse(new[] { SuccessMessages.Lobby.Found }, lobbies));
     }
 
     //Garbage endpoint
@@ -47,7 +48,7 @@ public class LobbyController : ControllerBase
     // TODO: Remote it if there is no good reason to use it.
     #region Get lobby by id (garbage)
     [HttpGet, Route(ApiRoutes.Lobby.GetById)]
-    public async Task<IActionResult> GetLobbyByIdAsync([FromRoute] Guid id)
+    public async Task<IActionResult> GetLobbyById([FromRoute] Guid id)
     {
         var lobby = await _lobbyService.GetLobbyByIdAsync(id);
         if (lobby is null)
@@ -62,7 +63,7 @@ public class LobbyController : ControllerBase
     #endregion
     
     [HttpPost, Route(ApiRoutes.Lobby.Create)]
-    public async Task<IActionResult> CreateLobbyAsync(CreateLobbyRequest request)
+    public async Task<IActionResult> CreateLobby(CreateLobbyRequest request)
     {
         var userId = int.Parse(User.FindFirst("id").Value);
 
@@ -77,6 +78,8 @@ public class LobbyController : ControllerBase
         foreach (var item in result.Value.LobbyInfos)
         {
             item.Lobby = null;
+            if (item.User is not null) 
+                item.User.LobbyInfos = null;
         }
 		var response = new CreateLobbyResponse { Lobby = result.Value, Info = new[] { SuccessMessages.Lobby.Created }};
 		var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";

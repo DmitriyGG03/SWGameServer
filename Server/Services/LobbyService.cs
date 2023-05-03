@@ -22,17 +22,24 @@ public class LobbyService : ILobbyService
 
     public Task<Lobby?> GetLobbyByIdAsync(Guid id)
     {
-        var result =  _context.Lobbies.Include(x => x.LobbyInfos).FirstOrDefaultAsync(l => l.Id == id);
+        var result =  _context.Lobbies
+            .Include(x => x.LobbyInfos)!
+             .ThenInclude(i => i.User)
+            .FirstOrDefaultAsync(l => l.Id == id);
         return result;
     }
 
     public async Task<ServiceResult<Lobby>> CreateLobbyAsync(Lobby lobby)
     {
-        if (lobby.LobbyInfos is null)
+        if (lobby.LobbyInfos is null || lobby.LobbyInfos.Any() == false)
             throw new ArgumentException("Oops, for some reason, the user was not added to the lobby");
 
         _context.Lobbies.Add(lobby);
         await _context.SaveChangesAsync();
+
+        var userId = lobby.LobbyInfos.First().UserId;
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+        lobby.LobbyInfos.First().User = user;
 
         return new ServiceResult<Lobby>(lobby);
     }
@@ -98,6 +105,44 @@ public class LobbyService : ILobbyService
             return await DeleteLobbyAsync(lobby, userInfo);
         }
         return await ExitFromLobbyAsync(lobby, userInfo);
+    }
+
+    public async Task<ServiceResult<Lobby>> ChangeReadyStatusAsync(int userId, Guid lobbyId)
+    {
+        var result = await GetLobbyAndValidateIfUserThere(userId, lobbyId);
+        if (result.Success == false)
+            return result;
+        var lobby = result.Value;
+
+        var lobbyInfo = lobby.LobbyInfos.First(x => x.UserId == userId);
+        lobbyInfo.Ready = !lobbyInfo.Ready;
+        await _context.SaveChangesAsync();
+        return new ServiceResult<Lobby>(lobby);
+    }
+    public async Task<ServiceResult<Lobby>> ChangeColorAsync(int userId, Guid lobbyId, int argb)
+    {
+        var result = await GetLobbyAndValidateIfUserThere(userId, lobbyId);
+        if (result.Success == false)
+            return result;
+        var lobby = result.Value;
+
+        var lobbyInfo = lobby.LobbyInfos.First(x => x.UserId == userId);
+        lobbyInfo.Argb = argb;
+        await _context.SaveChangesAsync();
+        return new ServiceResult<Lobby>(lobby);
+    }
+
+    private async Task<ServiceResult<Lobby>> GetLobbyAndValidateIfUserThere(int userId, Guid lobbyId)
+    {
+        var lobby = await GetLobbyByIdAsync(lobbyId);
+        if (lobby is null)
+            return new ServiceResult<Lobby>(ErrorMessages.Lobby.NotFound);
+
+        var userInLobby = IsUserInLobby(userId, lobby);
+        if (userInLobby == false)
+            return new ServiceResult<Lobby>(ErrorMessages.Lobby.UserIsNotInLobby);
+
+        return new ServiceResult<Lobby>(lobby);
     }
 
     private bool IsUserInLobby(int userId, Lobby lobby)

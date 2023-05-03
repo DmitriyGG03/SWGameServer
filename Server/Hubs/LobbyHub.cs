@@ -43,6 +43,8 @@ public class LobbyHub : Hub
         await HandleResult(result, ClientHandlers.Lobby.ExitFromLobbyHandler);
     }
 
+    #region Is it still needed?
+
     [Authorize]
     public async Task ChangeLobbyData(Lobby lobby)
     {
@@ -50,6 +52,23 @@ public class LobbyHub : Hub
         await HandleResult(result, ClientHandlers.Lobby.ChangeLobbyDataHandler);
     }
 
+    #endregion
+    
+    [Authorize]
+    public async Task ChangeReadyStatus(Guid lobbyId)
+    {
+        var userId = GetUserIdFromContext();
+        var result = await _lobbyService.ChangeReadyStatusAsync(userId, lobbyId);
+        await HandleResult(result, ClientHandlers.Lobby.ChangeReadyStatus);
+    }
+    [Authorize]
+    public async Task ChangeColor(Guid lobbyId, int argb)
+    {
+        var userId = GetUserIdFromContext();
+        var result = await _lobbyService.ChangeColorAsync(userId, lobbyId, argb);
+        await HandleResult(result, ClientHandlers.Lobby.ChangedColor);
+    }
+    
     [Authorize]
     public async Task CreateSession(Lobby lobby)
     {
@@ -117,7 +136,7 @@ public class LobbyHub : Hub
             foreach (var item in lobby.LobbyInfos)
             {
                 item.Lobby = null;
-                if (item.User != null)
+                if (item.User is not null)
                 {
                     item.User.LobbyInfos = null;
                     item.User.Heroes = null;
