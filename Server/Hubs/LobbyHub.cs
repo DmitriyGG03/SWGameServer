@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.SignalR;
 using Server.Common.Constants;
+using Server.Common.Semaphores;
 using Server.Domain;
 using Server.Services.Abstract;
 using SharedLibrary.Contracts.Hubs;
@@ -57,16 +58,46 @@ public class LobbyHub : Hub
     [Authorize]
     public async Task ChangeReadyStatus(Guid lobbyId)
     {
-        var userId = GetUserIdFromContext();
-        var result = await _lobbyService.ChangeReadyStatusAsync(userId, lobbyId);
-        await HandleResult(result, ClientHandlers.Lobby.ChangeReadyStatus);
+        var semaphore = ApplicationSemaphores.SemaphoreSlimForChangingReadyStatus;
+        await semaphore.WaitAsync();
+
+        try
+        {
+            var userId = GetUserIdFromContext();
+            var result = await _lobbyService.ChangeReadyStatusAsync(userId, lobbyId);
+            await HandleResult(result, ClientHandlers.Lobby.ChangeReadyStatus);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error caused by changing ready status operation");
+            throw;
+        }
+        finally
+        {
+            semaphore.Release();
+        }
     }
     [Authorize]
     public async Task ChangeColor(Guid lobbyId, int argb)
     {
-        var userId = GetUserIdFromContext();
-        var result = await _lobbyService.ChangeColorAsync(userId, lobbyId, argb);
-        await HandleResult(result, ClientHandlers.Lobby.ChangedColor);
+        var semaphore = ApplicationSemaphores.SemaphoreSlimForChangingColor;
+        await semaphore.WaitAsync();
+
+        try
+        {
+            var userId = GetUserIdFromContext();
+            var result = await _lobbyService.ChangeColorAsync(userId, lobbyId, argb);
+            await HandleResult(result, ClientHandlers.Lobby.ChangedColor);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError(e, "Error caused by changing color operation");
+            throw;
+        }
+        finally
+        {
+            semaphore.Release();
+        }
     }
     
     [Authorize]

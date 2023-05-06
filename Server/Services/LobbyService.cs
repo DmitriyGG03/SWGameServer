@@ -1,6 +1,7 @@
 using System.Drawing;
 using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
+using Server.Common.Semaphores;
 using Server.Domain;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
@@ -10,9 +11,12 @@ namespace Server.Services;
 public class LobbyService : ILobbyService
 {
     private readonly GameDbContext _context;
-    public LobbyService(GameDbContext context)
+    private readonly ILogger<LobbyService> _logger;
+
+    public LobbyService(GameDbContext context, ILogger<LobbyService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<List<Lobby>> GetAllLobbiesAsync()
