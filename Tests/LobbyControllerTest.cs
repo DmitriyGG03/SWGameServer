@@ -146,7 +146,6 @@ namespace Tests
 			Thread.Sleep(5000);
 
 			Assert.True(_lobbyClient1.ChangeReadyStatus());
-			Thread.Sleep(5000);
 			Assert.True(_lobbyClient2.ChangeReadyStatus());
 
 			Thread.Sleep(5000);
