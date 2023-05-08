@@ -9,12 +9,14 @@ namespace SharedLibrary.Responses
 {
 	public class GetAllLobbiesResponse : ResponseBase
 	{
-		public IList<Lobby> Lobbies { get; }
+		public IList<Lobby> Lobbies { get; set; }
 
 		public GetAllLobbiesResponse(IEnumerable<string> info, IList<Lobby> lobbies = null!)
 		{
 			Info = info.ToArray();
 			Lobbies = lobbies;
 		}
+
+		public GetAllLobbiesResponse() { }
 	}
 }
