@@ -4,9 +4,8 @@ using System.Text;
 
 namespace SharedLibrary.Responses.Abstract
 {
-	public interface IResponse
+	public interface IAuthenticationResponse
 	{
-		public string[]? Info { get; set; }
 		public string? Token { get; set; }
 	}
 }
