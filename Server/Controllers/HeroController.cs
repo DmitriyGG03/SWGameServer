@@ -78,8 +78,22 @@ public class HeroController : ControllerBase
     {
         var hero = await _heroService.GetByIdAsync(id, cancellationToken);
         if (hero is null)
-            return NotFound();
+            return Ok(new GetHeroResponse { Hero = null, Info = new []{ErrorMessages.Hero.NotFound} });
         
-        return Ok(new GetHeroResponse { Hero = hero, Info = null });
+        SolveCyclicDependency(hero);
+        return Ok(new GetHeroResponse { Hero = hero, Info = new []{SuccessMessages.Hero.Found} });
+    }
+    
+    private void SolveCyclicDependency(Hero heroToSolve)
+    {
+        // solve cyclic dependency
+        heroToSolve.User = null;
+        if (heroToSolve.HeroMap?.Hero is not null)
+        {
+            heroToSolve.HeroMap.Hero = null;
+        }
+
+        if (heroToSolve.Session != null) 
+            heroToSolve.Session.Heroes = null;
     }
 }

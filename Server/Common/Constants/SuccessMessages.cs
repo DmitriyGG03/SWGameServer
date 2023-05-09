@@ -6,6 +6,7 @@ public static class SuccessMessages
     {
         public const string Created = "Hero has been successfully created";
         public const string Updated = "Hero has been successfully updated";
+        public const string Found = "Hero has been successfully found";
     }
     public static class Lobby
     {

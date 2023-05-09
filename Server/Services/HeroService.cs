@@ -52,7 +52,21 @@ public class HeroService : IHeroService
 
     public async Task<Hero?> GetByIdAsync(int heroId, CancellationToken cancellationToken)
     {
-        var hero = await _dbContext.Heroes.FirstOrDefaultAsync(h => h.HeroId == heroId, cancellationToken);
+        var hero = await _dbContext
+            .Heroes
+            .Include(x => x.Session)
+            .Include(x => x.User)
+            .Include(x => x.HeroMap)
+             .ThenInclude(x => x.Planets)
+             .ThenInclude(x => x.Position)
+            .Include(x => x.HeroMap)
+             .ThenInclude(x => x.Connections)
+            .Include(x => x.HeroMap)
+             .ThenInclude(x => x.HomePlanet)
+            .AsSplitQuery()
+            .AsNoTracking()
+            .FirstOrDefaultAsync(h => h.HeroId == heroId, cancellationToken);
+        
         return hero;
     }
 }

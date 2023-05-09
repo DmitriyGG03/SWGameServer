@@ -7,6 +7,10 @@ public static class ErrorMessages
         public const string NotFound = "There is no user with given id";
         public const string HasNoAccess = "User has no access to hero with given id";   
     }
+    public static class Hero
+    {
+        public const string NotFound = "There is no hero with given id";
+    }
     public static class Lobby
     {
         public const string NotFound = "There is no lobby with given id";
