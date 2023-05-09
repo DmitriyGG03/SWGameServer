@@ -164,17 +164,17 @@ public class LobbyService : ILobbyService
     /// <param name="userId">The ID of the user to change the ready status of.</param>
     /// <param name="lobbyId">The ID of the lobby the user is in.</param>
     /// <returns>A service result containing the lobby with the updated ready status.</returns>
-    public async Task<ServiceResult<Lobby>> ChangeReadyStatusAsync(int userId, Guid lobbyId)
+    public async Task<ServiceResult<LobbyInfo>> ChangeReadyStatusAsync(int userId, Guid lobbyId)
     {
         var result = await GetLobbyAndValidateIfUserThere(userId, lobbyId);
         if (result.Success == false)
-            return result;
+            return new ServiceResult<LobbyInfo>(result.ErrorMessage);
         var lobby = result.Value;
 
         var lobbyInfo = lobby.LobbyInfos.First(x => x.UserId == userId);
         lobbyInfo.Ready = !lobbyInfo.Ready;
         await _context.SaveChangesAsync();
-        return new ServiceResult<Lobby>(lobby);
+        return new ServiceResult<LobbyInfo>(lobbyInfo);
     }
     
     /// <summary>
@@ -184,17 +184,17 @@ public class LobbyService : ILobbyService
     /// <param name="lobbyId">The ID of the lobby the user is in.</param>
     /// <param name="argb">The new color in argb format</param>
     /// <returns>A service result containing the lobby with the updated user color.</returns>
-    public async Task<ServiceResult<Lobby>> ChangeColorAsync(int userId, Guid lobbyId, int argb)
+    public async Task<ServiceResult<LobbyInfo>> ChangeColorAsync(int userId, Guid lobbyId, int argb)
     {
         var result = await GetLobbyAndValidateIfUserThere(userId, lobbyId);
         if (result.Success == false)
-            return result;
+            return new ServiceResult<LobbyInfo>(result.ErrorMessage);
         var lobby = result.Value;
 
         var lobbyInfo = lobby.LobbyInfos.First(x => x.UserId == userId);
         lobbyInfo.Argb = argb;
         await _context.SaveChangesAsync();
-        return new ServiceResult<Lobby>(lobby);
+        return new ServiceResult<LobbyInfo>(lobbyInfo);
     }
     
     /// <summary>

@@ -39,8 +39,7 @@ try
     while (true)
     {
         Console.WriteLine("Type message to execute operation: ");
-        // type command, that you want to test: 
-        string message = "ready status";
+        var message = Console.ReadLine();
         
         var result = await ParseMessageAndSendRequestToServerAsync(message, connection, new Lobby { Id = lobbyId });
         if(result == true)
@@ -83,18 +82,7 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
 
         currentLobby1 = lobby;
     });
-    
-    hubConnection.On<Lobby>(ClientHandlers.Lobby.ChangeReadyStatus, (lobby) =>
-    {
-        Console.WriteLine(lobby.LobbyName + ": \n");
-        foreach (var info in lobby.LobbyInfos)
-        {
-            Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready);
-        }
 
-        currentLobby1 = lobby;
-    });
-    
     hubConnection.On<Lobby>(ClientHandlers.Lobby.ExitFromLobbyHandler, (lobby) =>
     {
         Console.WriteLine(lobby.LobbyName + ": \n");
@@ -117,15 +105,14 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         currentLobby1 = lobby;
     });
     
-    hubConnection.On<Lobby>(ClientHandlers.Lobby.ChangedColor, (lobby) =>
+    hubConnection.On<LobbyInfo>(ClientHandlers.Lobby.ChangedColor, (info) =>
     {
-        Console.WriteLine(lobby.LobbyName + ": \n");
-        foreach (var info in lobby.LobbyInfos)
-        {
-            Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready + "; " + info.Color);
-        }
-
-        currentLobby1 = lobby;
+        Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready + "; " + info.Color);
+    });
+    
+    hubConnection.On<LobbyInfo>(ClientHandlers.Lobby.ChangeReadyStatus, (info) =>
+    {
+        Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready + "; " + info.Color);
     });
     
     hubConnection.On<Hero>(ClientHandlers.Lobby.CreatedSessionHandler, (hero) =>
