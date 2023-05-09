@@ -18,5 +18,8 @@ namespace SharedLibrary.Models
         [ForeignKey(nameof(SessionMap))]
         public Guid SessionMapId { get; set; }
         public SessionMap? SessionMap { get; set; }
+
+        public int TurnNumber { get; set; }
+        public int ActiveHeroId { get; set; }
     }
 }

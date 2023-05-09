@@ -44,7 +44,6 @@ namespace Server.Services
             var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
             var map = _mapGenerator.GenerateMap(defaultOptions);
             
-            // await _context.SessionMaps.AddAsync(map, cancellationToken);
             var session = new Session
             {
                 Id = Guid.NewGuid(),
@@ -52,6 +51,8 @@ namespace Server.Services
                 Heroes = new List<Hero>(),
                 SessionMapId = map.Id,
                 SessionMap = map,
+                TurnNumber = 0,
+                ActiveHeroId = 0
             };
             
             await _context.Sessions.AddAsync(session, cancellationToken);
@@ -87,7 +88,7 @@ namespace Server.Services
                     return new ServiceResult<Session>(addingResult.ErrorMessage);
                 }
             }
-            
+
             return new ServiceResult<Session>(session);
         }
     }
