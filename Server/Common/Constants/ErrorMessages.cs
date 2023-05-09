@@ -16,4 +16,8 @@ public static class ErrorMessages
         public const string UsersNotReady = "Not all lobby members are ready";
         public const string NoLobbies = "No active lobbies found. You can start a new game";
     }
+    public static class Session
+    {
+        public const string NotFound = "There is no session with given id";
+    }
 }

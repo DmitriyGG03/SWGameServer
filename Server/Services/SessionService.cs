@@ -91,5 +91,21 @@ namespace Server.Services
 
             return new ServiceResult<Session>(session);
         }
+
+        public async Task<Session?> GetByIdAsync(Guid sessionId, CancellationToken cancellationToken)
+        {
+            var session = await _context.Sessions
+                .Include(x => x.Heroes)
+                 .ThenInclude(x => x.User)
+                .Include(x => x.SessionMap)
+                 .ThenInclude(x => x.Connections)
+                .Include(x => x.SessionMap)
+                 .ThenInclude(x => x.Planets)
+                  .ThenInclude(x => x.Position)
+                .AsSplitQuery()
+                .FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
+            
+            return session;
+        }
     }
 }

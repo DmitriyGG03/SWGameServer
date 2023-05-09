@@ -27,13 +27,14 @@ namespace SharedLibrary.Routes
             public const string Delete = "{id}";
         }
         
+        public static class Session
+        {
+            public const string GetById = "{id}";
+        }
+        
         public static class Map
         {
             public const string GetMap = "{id:int}";
-        }
-        public static class Session
-        {
-            public const string Create = "{id}";
         }
     }
 }

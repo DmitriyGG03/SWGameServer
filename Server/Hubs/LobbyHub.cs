@@ -103,7 +103,6 @@ public class LobbyHub : Hub
     public async Task CreateSession(Lobby lobby)
     {
         var result = await _sessionService.CreateAsync(lobby.Id, CancellationToken.None);
-        // TODO: return hero by client
         await HandleResult(result, ClientHandlers.Lobby.CreatedSessionHandler);
     }
 
@@ -133,11 +132,15 @@ public class LobbyHub : Hub
         if((await ValidateResultIfInvalidSendMessageToCallerAsync(result)) == false)
             return;
 
+        await this.Clients.All.SendAsync(successMethod, result.Value.Id);
+        
+        /* return each hero by each user
         var session = SolveCyclicDependency(result.Value);
         foreach (var item in session.Heroes)
         {
             await this.Clients.User(item.UserId.ToString()).SendAsync(successMethod, item);
         }
+         */
     }
 
     private async Task<bool> ValidateResultIfInvalidSendMessageToCallerAsync<T>(ServiceResult<T> result)
