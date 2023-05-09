@@ -127,8 +127,8 @@ namespace Tests
 
 			Thread.Sleep(5000);
 
-			Assert.NotNull(_lobbyClient1.Hero);
-			Assert.NotNull(_lobbyClient2.Hero);
+			Assert.NotNull(_lobbyClient1.Session);
+			Assert.NotNull(_lobbyClient2.Session);
 		}
 
 		[Fact]
@@ -180,6 +180,33 @@ namespace Tests
 
 			Assert.Equal("New Name", _lobbyClient2.ConnectedLobby.LobbyName);
 			Assert.Equal(4, _lobbyClient2.ConnectedLobby.MaxHeroNumbers);
+		}
+
+		[Fact]
+		public void GetHeroTest()
+		{
+			Assert.True(_lobbyClient1.RegisterClient("user19", "test19@gmail.com", "123456789"));
+			Assert.True(_lobbyClient1.CreateConnection());
+			Assert.True(_lobbyClient1.CreateLobby("Lobb8", 2));
+
+			Assert.True(_lobbyClient2.RegisterClient("user20", "test20@gmail.com", "123456789"));
+			Assert.True(_lobbyClient2.CreateConnection());
+			Assert.True(_lobbyClient2.GetLobbies());
+			Assert.True(_lobbyClient2.ConnectToLobby(_lobbyClient2.Lobbies.Last().Id));
+
+			Thread.Sleep(5000);
+
+			Assert.True(_lobbyClient1.ChangeReadyStatus());
+			Assert.True(_lobbyClient2.ChangeReadyStatus());
+
+			Thread.Sleep(5000);
+
+			Assert.True(_lobbyClient1.CreateSession());
+
+			Thread.Sleep(5000);
+
+			Assert.True(_lobbyClient1.GetHero(_lobbyClient1.Session.Heroes.ToList()[0].HeroId));
+
 		}
 	}
 }

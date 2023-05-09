@@ -21,5 +21,10 @@ namespace SharedLibrary.Models
 
         public int TurnNumber { get; set; }
         public int ActiveHeroId { get; set; }
+
+        public Session()
+        {
+
+        }
     }
 }
