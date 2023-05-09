@@ -5,7 +5,7 @@ namespace Server.Helpers;
 
 public static class AuthenticationHelper
 {
-    public static void ProvideSaltAndHash(this User user, IHashProvider hashProvider)
+    public static void ProvideSaltAndHash(this ApplicationUser user, IHashProvider hashProvider)
     {
         var salt = hashProvider.GenerateSalt();
         user.Salt = Convert.ToBase64String(salt);

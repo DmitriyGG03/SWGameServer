@@ -32,7 +32,7 @@ public class AuthenticationService : IAuthenticationService
 		if(Context.Users.Any(u => u.Email.Equals(email) || !Regex.IsMatch(email, @"^[^@\s]+@[^@\s]+\.(com|net|org|gov)$", RegexOptions.IgnoreCase)))
 			return new AuthenticationResult(new string[] { "Incorrect email format" });
 
-		var user = new User
+		var user = new ApplicationUser
 		{
 			Username = username,
 			PasswordHash = password,
@@ -63,7 +63,7 @@ public class AuthenticationService : IAuthenticationService
 		return new AuthenticationResult(posutiveOperationResult, GenerateJwtToken(AssembleClaimsIdentity(user)));
 	}
 
-	private ClaimsIdentity AssembleClaimsIdentity(User user)
+	private ClaimsIdentity AssembleClaimsIdentity(ApplicationUser user)
 	{
 		var subject = new ClaimsIdentity(new[]
 		{
