@@ -21,5 +21,8 @@ namespace Server.Services.Abstract
         /// <param name="cancellationToken">Token to cancel operation</param>
         /// <returns>Session that was found by given id or null</returns>
         Task<Session?> GetByIdAsync(Guid sessionId, CancellationToken cancellationToken);
+
+        Task<ServiceResult> ResearchOrColonizePlanetAsync(Guid sessionId, Guid planetId,
+            CancellationToken cancellationToken);
     }
 }

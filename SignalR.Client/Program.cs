@@ -7,18 +7,16 @@ var username = Guid.NewGuid().ToString();
 const int port = 7148;
 const string hubName = "lobby";
 string accessToken = string.Empty;
-Guid lobbyId = Guid.Parse("AAA2441D-04B4-4357-BA04-218513A1213C");
+Guid lobbyId = Guid.Parse("25da84c2-7ded-48a0-9baa-029d694a9b40");
 
 Console.WriteLine("Choose the user: ");
 var user = Console.ReadLine();
 
 if(user == "0")
 {
-    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjUiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjQyOTU4NywiZXhwIjoxOTk4MDQ4Nzg3LCJpYXQiOjE2ODI0Mjk1ODd9.LfSP4PpvU8uGIsxV5BqnZRRaByZBvGwFt6rhoRXTvFQ";
-}
-else
-{
-    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjQyOTUzMSwiZXhwIjoxOTk4MDQ4NzMxLCJpYXQiOjE2ODI0Mjk1MzF9.nNGq-E9N_4JaRD6ZdTA4HTlsudWGWt4zVrgodR8z1ns";
+    accessToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQxN2YwZDcyLTcyZmYtNDk5MS1hNTg2LWNkMDg5NmIxMjlhYiIsImhlcm8iOiJudWxsIiwibmJmIjo" +
+        "xNjgzODA1MTg5LCJleHAiOjE5OTk0MjQzODksImlhdCI6MTY4MzgwNTE4OX0.SvzQ_Qwv655cAvqnOLXvA1EAvr1LHVWyT7tp0MSWaV0";
 }
 
 try
@@ -115,17 +113,9 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready + "; " + info.Color);
     });
     
-    hubConnection.On<Hero>(ClientHandlers.Lobby.CreatedSessionHandler, (hero) =>
+    hubConnection.On<Guid>(ClientHandlers.Lobby.CreatedSessionHandler, (sessionId) =>
     {
-        Console.WriteLine("Hero name: " + hero.Name);
-        Console.WriteLine("Planets count: " + hero.HeroMapView.Planets.Count);
-        foreach (var item in hero.HeroMapView.Planets)
-        {
-            Console.WriteLine("X=" + item.Position.X + "; Y=" + item.Position.Y);
-        }
-
-        Console.WriteLine("Home planet cords: " + "X=" + hero.HeroMapView.HomePlanet.Position.X + "; Y=" +
-                          hero.HeroMapView.HomePlanet.Position.Y);
+        Console.WriteLine("Session id: " + sessionId);
     });
     
     return currentLobby1;
@@ -153,14 +143,18 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "create session")
     {
+        await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, new Lobby {Id = lobbyId });
+
+        /*
         if (currentLobby is not null)
         {
-            await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, currentLobby);
+            await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, new Lobby {Id = lobbyId });
         }
         else
         {
             Console.WriteLine("Current lobby is null");
         }
+         */
     }
     else if (message == "ready status")
     {

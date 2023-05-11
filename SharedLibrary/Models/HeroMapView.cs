@@ -11,7 +11,6 @@ namespace SharedLibrary.Models
 	{
 		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
 		public Guid Id { get; set; }
-		[ForeignKey(nameof(Hero))]
 		public Guid HeroId { get; set; }
 		public Hero? Hero { get; set; }
 		

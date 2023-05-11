@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Server.Common.Constants;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
+using SharedLibrary.Requests;
 using SharedLibrary.Responses;
 using SharedLibrary.Routes;
 
@@ -26,6 +27,19 @@ public class SessionController : ControllerBase
         
         SolveCyclicDependency(session);
         return Ok(new GetSessionResponse { Info = new []{SuccessMessages.Session.Found}, Session = session});
+    }
+
+    [HttpPost, Route(ApiRoutes.Session.ResearchColonizePlanet)]
+    public async Task<IActionResult> PostResearchColonizePlanet([FromRoute] Guid sessionId,
+        [FromBody] ResearchColonizePlanetRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _sessionService.ResearchOrColonizePlanetAsync(sessionId, request.PlanetId, cancellationToken);
+        if (result.Success)
+        {
+            return Ok();
+        }
+
+        return BadRequest();
     }
     
     private void SolveCyclicDependency(Session sessionToSolve)

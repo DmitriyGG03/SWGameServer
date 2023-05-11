@@ -30,6 +30,7 @@ namespace SharedLibrary.Routes
         public static class Session
         {
             public const string GetById = "{id}";
+            public const string ResearchColonizePlanet = "researchorcolonize/{sessionId}";
         }
         
         public static class Map

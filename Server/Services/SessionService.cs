@@ -91,7 +91,6 @@ namespace Server.Services
 
             return new ServiceResult<Session>(session);
         }
-
         public async Task<Session?> GetByIdAsync(Guid sessionId, CancellationToken cancellationToken)
         {
             var session = await _context.Sessions
@@ -106,6 +105,23 @@ namespace Server.Services
                 .FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
             
             return session;
+        }
+
+        public async Task<ServiceResult> ResearchOrColonizePlanetAsync(Guid sessionId, Guid planetId,
+            CancellationToken cancellationToken)
+        {
+            var planet = await _context.Planets.FirstOrDefaultAsync(x => x.Id == planetId, cancellationToken);
+            if (planet is null)
+                return new ServiceResult(ErrorMessages.Planet.NotFound);
+
+            if (planet.Status == (int)PlanetStatus.Researched)
+            {
+                planet.Status = (int)PlanetStatus.Colonized;
+            }
+
+            planet.Status = (int)PlanetStatus.Researched;
+            await _context.SaveChangesAsync(cancellationToken);
+            return new ServiceResult();
         }
     }
 }

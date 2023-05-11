@@ -24,4 +24,9 @@ public static class ErrorMessages
     {
         public const string NotFound = "There is no session with given id";
     }
+
+    public static class Planet
+    {
+        public const string NotFound = "There is no planet with given id";
+    }
 }

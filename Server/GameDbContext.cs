@@ -12,6 +12,7 @@ public class GameDbContext : DbContext
     public DbSet<SessionMap> SessionMaps { get; set; }
     public DbSet<Lobby> Lobbies { get; set; }
     public DbSet<LobbyInfo> LobbyInfos { get; set; }
+    public DbSet<Planet> Planets { get; set; }
     
     public GameDbContext(DbContextOptions<GameDbContext> options) : base(options)
     {
