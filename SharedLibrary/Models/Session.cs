@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
-    [Table("Sessions")]
+    [Table("Sessions"), Serializable]
     public class Session
     {
         [Key]

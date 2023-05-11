@@ -5,7 +5,7 @@ using System.Drawing;
 
 namespace SharedLibrary.Models
 {
-	[Table("Heroes")]
+	[Table("Heroes"), Serializable]
 	public class Hero
 	{
 		[Key]
@@ -29,7 +29,7 @@ namespace SharedLibrary.Models
 		
 		[ForeignKey(nameof(HeroMap))]
 		public int? HeroMapId { get; set; }
-		public HeroMap? HeroMap { get; set; }
+		public HeroMapView? HeroMap { get; set; }
 		
 		[ForeignKey(nameof(Session))]
 		public Guid? SessionId { get; set; }

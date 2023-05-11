@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
-    [Table("Lobbies")]
+    [Table("Lobbies"), Serializable]
     public class Lobby
     {
         [Key]

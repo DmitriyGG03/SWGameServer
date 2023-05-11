@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
-    [Table("Points")]
+    [Table("Points"), Serializable]
     public class Point
     {
         public Guid Id { get; set; }

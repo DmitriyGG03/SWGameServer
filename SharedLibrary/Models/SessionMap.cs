@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
-    [Table("SessionMaps")]
+    [Table("SessionMaps"), Serializable]
     public class SessionMap
     {
         public Guid Id { get; set; }

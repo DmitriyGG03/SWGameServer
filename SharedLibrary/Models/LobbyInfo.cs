@@ -6,7 +6,7 @@ using System.Drawing;
 
 namespace SharedLibrary.Models
 {
-    [Table("LobbyInfos")]
+    [Table("LobbyInfos"), Serializable]
     public class LobbyInfo
     {
         [Key]

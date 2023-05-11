@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
-	[Table("HeroMaps")]
-	public class HeroMap
+	[Table("HeroMaps"), Serializable]
+	public class HeroMapView
 	{
 		public int Id { get; set; }
 		public int HeroId { get; set; }

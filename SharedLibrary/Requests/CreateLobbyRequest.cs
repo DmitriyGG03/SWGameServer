@@ -1,7 +1,9 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace SharedLibrary.Requests
 {
+    [Serializable]
     public class CreateLobbyRequest
     {
         [Required]

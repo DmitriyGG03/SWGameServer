@@ -1,10 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
-	[Table("ApplicationUsers")]
+	[Table("ApplicationUsers"), Serializable]
 	public class ApplicationUser
 	{
 		[Key]
