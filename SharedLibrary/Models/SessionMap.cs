@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
@@ -7,6 +8,7 @@ namespace SharedLibrary.Models
     [Table("SessionMaps"), Serializable]
     public class SessionMap
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public Guid Id { get; set; }
         public List<Planet> Planets { get; set; }
         public List<Edge> Connections { get; set; }

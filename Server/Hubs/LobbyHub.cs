@@ -106,9 +106,19 @@ public class LobbyHub : Hub
         await HandleResult(result, ClientHandlers.Lobby.CreatedSessionHandler);
     }
 
-    private int GetUserIdFromContext()
+    private Guid GetUserIdFromContext()
     {
-        return int.Parse(this.Context.User.FindFirst("id").Value);
+        var result = Guid.Empty;
+        string? userId = this.Context.User?.FindFirst("id")?.Value;
+        if (Guid.TryParse(userId, out result) == true)
+        {
+            return result;
+        }
+        else
+        {
+            _logger.LogError($"Can not resolve user id ({userId}), it's not guid type");
+            throw new ArgumentException("Invalid Guid format");
+        }
     }
     private async Task HandleResult(ServiceResult<Lobby> result, string successMethod)
     {

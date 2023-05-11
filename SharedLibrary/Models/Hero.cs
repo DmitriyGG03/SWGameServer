@@ -8,8 +8,8 @@ namespace SharedLibrary.Models
 	[Table("Heroes"), Serializable]
 	public class Hero
 	{
-		[Key]
-		public int HeroId { get; set; }
+		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
+		public Guid HeroId { get; set; }
 		[Required]
 		public string Name { get; set; }
 		[Range(0, int.MaxValue)]
@@ -24,11 +24,11 @@ namespace SharedLibrary.Models
 		public Color Color { get => Color.FromArgb(Argb); }
 
 		[ForeignKey(nameof(User))]
-		public int UserId { get; set; }
+		public Guid UserId { get; set; }
 		public ApplicationUser? User { get; set; }
 		
 		[ForeignKey(nameof(HeroMap))]
-		public int? HeroMapId { get; set; }
+		public Guid? HeroMapId { get; set; }
 		public HeroMapView? HeroMap { get; set; }
 		
 		[ForeignKey(nameof(Session))]

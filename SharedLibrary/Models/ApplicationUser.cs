@@ -8,8 +8,8 @@ namespace SharedLibrary.Models
 	[Table("ApplicationUsers"), Serializable]
 	public class ApplicationUser
 	{
-		[Key]
-		public int Id { get; set; }
+		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
+		public Guid Id { get; set; }
 		public string Username { get; set; }
 		public string PasswordHash { get; set; }
 		public string Salt { get; set; }

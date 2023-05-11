@@ -8,10 +8,11 @@ namespace Server.Services;
 
 public interface IHeroService
 {
-    Task<ServiceResult<Hero>> Update(int id, Hero destination, CancellationToken cancellationToken);
-    Task<ServiceResult<Hero>> Create(int userId, Hero hero, CancellationToken cancellationToken);
-    Task<Hero?> GetByIdAsync(int heroId, CancellationToken cancellationToken);
+    Task<ServiceResult<Hero>> Update(Guid id, Hero destination, CancellationToken cancellationToken);
+    Task<ServiceResult<Hero>> Create(Guid userId, Hero hero, CancellationToken cancellationToken);
+    Task<Hero?> GetByIdAsync(Guid heroId, CancellationToken cancellationToken);
 }
+
 public class HeroService : IHeroService
 {
     private readonly GameDbContext _dbContext;
@@ -20,7 +21,7 @@ public class HeroService : IHeroService
         _dbContext = dbContext;
     }
 
-    public async Task<ServiceResult<Hero>> Update(int userId, Hero destination, CancellationToken cancellationToken)
+    public async Task<ServiceResult<Hero>> Update(Guid userId, Hero destination, CancellationToken cancellationToken)
     {
         var user = await _dbContext.Users.Include(x => x.Heroes).FirstOrDefaultAsync(u => u.Id == userId, cancellationToken)
             ?? throw new ArgumentException(ErrorMessages.User.NotFound);
@@ -35,7 +36,7 @@ public class HeroService : IHeroService
         return new ServiceResult<Hero>(hero);
     }
 
-    public async Task<ServiceResult<Hero>> Create(int userId, Hero hero, CancellationToken cancellationToken)
+    public async Task<ServiceResult<Hero>> Create(Guid userId, Hero hero, CancellationToken cancellationToken)
     {
         var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         
@@ -50,7 +51,7 @@ public class HeroService : IHeroService
         return new ServiceResult<Hero>(hero);
     }
 
-    public async Task<Hero?> GetByIdAsync(int heroId, CancellationToken cancellationToken)
+    public async Task<Hero?> GetByIdAsync(Guid heroId, CancellationToken cancellationToken)
     {
         var hero = await _dbContext
             .Heroes

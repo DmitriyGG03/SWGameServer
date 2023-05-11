@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
@@ -7,8 +8,10 @@ namespace SharedLibrary.Models
 	[Table("HeroMaps"), Serializable]
 	public class HeroMapView
 	{
-		public int Id { get; set; }
-		public int HeroId { get; set; }
+		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
+		public Guid Id { get; set; }
+		[ForeignKey(nameof(Hero))]
+		public Guid HeroId { get; set; }
 		public Hero? Hero { get; set; }
 		
 		[ForeignKey(nameof(HomePlanet))]

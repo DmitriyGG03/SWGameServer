@@ -2,6 +2,7 @@ using System.Drawing;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.Common.Constants;
+using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
@@ -16,9 +17,11 @@ namespace Server.Controllers;
 public class LobbyController : ControllerBase
 {
     private readonly ILobbyService _lobbyService;
-    public LobbyController(ILobbyService lobbyService)
+    private readonly ILogger<LobbyService> _logger;
+    public LobbyController(ILobbyService lobbyService, ILogger<LobbyService> logger)
     {
         _lobbyService = lobbyService;
+        _logger = logger;
     }
     
     [HttpGet, Route(ApiRoutes.Lobby.GetAll)]
@@ -65,7 +68,7 @@ public class LobbyController : ControllerBase
     [HttpPost, Route(ApiRoutes.Lobby.Create)]
     public async Task<IActionResult> CreateLobby(CreateLobbyRequest request)
     {
-        var userId = int.Parse(User.FindFirst("id").Value);
+        var userId = GetUserId();
 
         var lobby = new Lobby { Id = Guid.NewGuid(), LobbyName = request.LobbyName, MaxHeroNumbers = request.MaxUsersCount };
         lobby.LobbyInfos = new List<LobbyInfo>
@@ -85,5 +88,20 @@ public class LobbyController : ControllerBase
 		var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.ToUriComponent()}";
         var locationUrl = $"{baseUrl}/{nameof(LobbyController).Replace("Controller", "")}/{ApiRoutes.Lobby.GetById.Replace("{id}", response.Lobby.Id.ToString())}";
         return Created(locationUrl, response);
+    }
+    
+    private Guid GetUserId()
+    {
+        var result = Guid.Empty;
+        string? userId = User?.FindFirst("id")?.Value;
+        if (Guid.TryParse(userId, out result) == true)
+        {
+            return result;
+        }
+        else
+        {
+            _logger.LogError($"Can not resolve user id ({userId}), it's not guid type");
+            throw new ArgumentException("Invalid Guid format");
+        }
     }
 }

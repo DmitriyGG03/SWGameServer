@@ -34,14 +34,14 @@ public interface ILobbyService
     /// <param name="userId">The ID of the user to connect.</param>
     /// <param name="lobbyId">The ID of the lobby to connect to.</param>
     /// <returns>A service result containing the lobby that the user was connected to.</returns>
-    Task<ServiceResult<Lobby>> ConnectUserAsync(int userId, Guid lobbyId);
+    Task<ServiceResult<Lobby>> ConnectUserAsync(Guid userId, Guid lobbyId);
     /// <summary>
     /// Removes a user from a lobby.
     /// </summary>
     /// <param name="userId">The ID of the user to remove.</param>
     /// <param name="lobbyId">The ID of the lobby to remove the user from.</param>
     /// <returns>A service result containing the lobby that the user was removed from.</returns>
-    Task<ServiceResult<Lobby>> ExitAsync(int userId, Guid lobbyId);
+    Task<ServiceResult<Lobby>> ExitAsync(Guid userId, Guid lobbyId);
     /// <summary>
     /// Updates lobby fields
     /// </summary>
@@ -54,7 +54,7 @@ public interface ILobbyService
     /// <param name="userId">The ID of the user to change the ready status of.</param>
     /// <param name="lobbyId">The ID of the lobby the user is in.</param>
     /// <returns>A service result containing the lobby with the updated ready status.</returns>
-    Task<ServiceResult<LobbyInfo>> ChangeReadyStatusAsync(int userId, Guid lobbyId);
+    Task<ServiceResult<LobbyInfo>> ChangeReadyStatusAsync(Guid userId, Guid lobbyId);
     /// <summary>
     /// Changes the color of a user in a lobby.
     /// </summary>
@@ -62,5 +62,5 @@ public interface ILobbyService
     /// <param name="lobbyId">The ID of the lobby the user is in.</param>
     /// <param name="argb">The new color in argb format</param>
     /// <returns>A service result containing the lobby with the updated user color.</returns>
-    Task<ServiceResult<LobbyInfo>> ChangeColorAsync(int userId, Guid lobbyId, int argb);
+    Task<ServiceResult<LobbyInfo>> ChangeColorAsync(Guid userId, Guid lobbyId, int argb);
 }

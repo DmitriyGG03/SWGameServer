@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
@@ -6,6 +7,7 @@ namespace SharedLibrary.Models
     [Table("Edges"), Serializable]
     public class Edge
     {
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public Guid Id { get; set; }
         [NotMapped]
         public Planet? From { get; set; }
