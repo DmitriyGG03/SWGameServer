@@ -14,9 +14,9 @@ namespace SharedLibrary.Routes
         
         public static class Hero
         {
-            public const string GetById = "{id:int}";
+            public const string GetById = "{id}";
             public const string Create = "";
-            public const string Update = "{id:int}";
+            public const string Update = "{id}";
         }
 
         public static class Lobby
@@ -34,7 +34,7 @@ namespace SharedLibrary.Routes
         
         public static class Map
         {
-            public const string GetMap = "{id:int}";
+            public const string GetMap = "{id}";
         }
     }
 }
