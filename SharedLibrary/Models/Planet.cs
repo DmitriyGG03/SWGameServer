@@ -23,7 +23,7 @@ namespace SharedLibrary.Models
         {
             Id = Guid.NewGuid();
             Position = position;
-            Status = (int) PlanetStatus.Researched;
+            Status = (int) PlanetStatus.Known;
         }
     }
 }

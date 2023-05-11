@@ -7,7 +7,7 @@ var username = Guid.NewGuid().ToString();
 const int port = 7148;
 const string hubName = "lobby";
 string accessToken = string.Empty;
-Guid lobbyId = Guid.Parse("25da84c2-7ded-48a0-9baa-029d694a9b40");
+Guid lobbyId = Guid.Parse("33ee83fc-2e64-4e92-84e0-afb471107c6d");
 
 Console.WriteLine("Choose the user: ");
 var user = Console.ReadLine();
@@ -15,8 +15,7 @@ var user = Console.ReadLine();
 if(user == "0")
 {
     accessToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImQxN2YwZDcyLTcyZmYtNDk5MS1hNTg2LWNkMDg5NmIxMjlhYiIsImhlcm8iOiJudWxsIiwibmJmIjo" +
-        "xNjgzODA1MTg5LCJleHAiOjE5OTk0MjQzODksImlhdCI6MTY4MzgwNTE4OX0.SvzQ_Qwv655cAvqnOLXvA1EAvr1LHVWyT7tp0MSWaV0";
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImM1NTAxMzYwLWZkN2QtNGRlMi04MDI0LTYyODUyZGQ5YmJjMCIsImhlcm8iOiJudWxsIiwibmJmIjoxNjgzODA2ODYzLCJleHAiOjE5OTk0MjYwNjMsImlhdCI6MTY4MzgwNjg2M30.bKaNAdKBJjZpm9xV47ckqPHdotnBEayX95TwnW2S7Z8";
 }
 
 try
