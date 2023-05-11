@@ -118,14 +118,14 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     hubConnection.On<Hero>(ClientHandlers.Lobby.CreatedSessionHandler, (hero) =>
     {
         Console.WriteLine("Hero name: " + hero.Name);
-        Console.WriteLine("Planets count: " + hero.HeroMap.Planets.Count);
-        foreach (var item in hero.HeroMap.Planets)
+        Console.WriteLine("Planets count: " + hero.HeroMapView.Planets.Count);
+        foreach (var item in hero.HeroMapView.Planets)
         {
             Console.WriteLine("X=" + item.Position.X + "; Y=" + item.Position.Y);
         }
 
-        Console.WriteLine("Home planet cords: " + "X=" + hero.HeroMap.HomePlanet.Position.X + "; Y=" +
-                          hero.HeroMap.HomePlanet.Position.Y);
+        Console.WriteLine("Home planet cords: " + "X=" + hero.HeroMapView.HomePlanet.Position.X + "; Y=" +
+                          hero.HeroMapView.HomePlanet.Position.Y);
     });
     
     return currentLobby1;

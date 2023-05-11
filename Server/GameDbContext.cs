@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Server.Migrations;
 using SharedLibrary.Models;
 
 namespace Server;

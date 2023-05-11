@@ -27,9 +27,9 @@ namespace SharedLibrary.Models
 		public Guid UserId { get; set; }
 		public ApplicationUser? User { get; set; }
 		
-		[ForeignKey(nameof(HeroMap))]
+		[ForeignKey(nameof(HeroMapView))]
 		public Guid? HeroMapId { get; set; }
-		public HeroMapView? HeroMap { get; set; }
+		public HeroMapView? HeroMapView { get; set; }
 		
 		[ForeignKey(nameof(Session))]
 		public Guid? SessionId { get; set; }

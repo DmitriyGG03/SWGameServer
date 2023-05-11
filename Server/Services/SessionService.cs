@@ -74,7 +74,7 @@ namespace Server.Services
                 };
                 
                 var homePlanet = map.Planets[Random.Shared.Next(0, map.Planets.Count)];
-                hero.HeroMap = new HeroMapView
+                hero.HeroMapView = new HeroMapView
                 {
                     Planets = map.Planets, Connections = map.Connections, HeroId = hero.HeroId,
                     HomePlanetId = homePlanet.Id, HomePlanet = homePlanet
