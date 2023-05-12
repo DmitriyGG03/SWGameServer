@@ -7,18 +7,15 @@ var username = Guid.NewGuid().ToString();
 const int port = 7148;
 const string hubName = "lobby";
 string accessToken = string.Empty;
-Guid lobbyId = Guid.Parse("AAA2441D-04B4-4357-BA04-218513A1213C");
+Guid lobbyId = Guid.Parse("33ee83fc-2e64-4e92-84e0-afb471107c6d");
 
 Console.WriteLine("Choose the user: ");
 var user = Console.ReadLine();
 
 if(user == "0")
 {
-    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjUiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjQyOTU4NywiZXhwIjoxOTk4MDQ4Nzg3LCJpYXQiOjE2ODI0Mjk1ODd9.LfSP4PpvU8uGIsxV5BqnZRRaByZBvGwFt6rhoRXTvFQ";
-}
-else
-{
-    accessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjQiLCJoZXJvIjoibnVsbCIsIm5iZiI6MTY4MjQyOTUzMSwiZXhwIjoxOTk4MDQ4NzMxLCJpYXQiOjE2ODI0Mjk1MzF9.nNGq-E9N_4JaRD6ZdTA4HTlsudWGWt4zVrgodR8z1ns";
+    accessToken =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImM1NTAxMzYwLWZkN2QtNGRlMi04MDI0LTYyODUyZGQ5YmJjMCIsImhlcm8iOiJudWxsIiwibmJmIjoxNjgzODA2ODYzLCJleHAiOjE5OTk0MjYwNjMsImlhdCI6MTY4MzgwNjg2M30.bKaNAdKBJjZpm9xV47ckqPHdotnBEayX95TwnW2S7Z8";
 }
 
 try
@@ -39,8 +36,7 @@ try
     while (true)
     {
         Console.WriteLine("Type message to execute operation: ");
-        // type command, that you want to test: 
-        string message = "ready status";
+        var message = Console.ReadLine();
         
         var result = await ParseMessageAndSendRequestToServerAsync(message, connection, new Lobby { Id = lobbyId });
         if(result == true)
@@ -83,18 +79,7 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
 
         currentLobby1 = lobby;
     });
-    
-    hubConnection.On<Lobby>(ClientHandlers.Lobby.ChangeReadyStatus, (lobby) =>
-    {
-        Console.WriteLine(lobby.LobbyName + ": \n");
-        foreach (var info in lobby.LobbyInfos)
-        {
-            Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready);
-        }
 
-        currentLobby1 = lobby;
-    });
-    
     hubConnection.On<Lobby>(ClientHandlers.Lobby.ExitFromLobbyHandler, (lobby) =>
     {
         Console.WriteLine(lobby.LobbyName + ": \n");
@@ -117,28 +102,19 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         currentLobby1 = lobby;
     });
     
-    hubConnection.On<Lobby>(ClientHandlers.Lobby.ChangedColor, (lobby) =>
+    hubConnection.On<LobbyInfo>(ClientHandlers.Lobby.ChangedColor, (info) =>
     {
-        Console.WriteLine(lobby.LobbyName + ": \n");
-        foreach (var info in lobby.LobbyInfos)
-        {
-            Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready + "; " + info.Color);
-        }
-
-        currentLobby1 = lobby;
+        Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready + "; " + info.Color);
     });
     
-    hubConnection.On<Hero>(ClientHandlers.Lobby.CreatedSessionHandler, (hero) =>
+    hubConnection.On<LobbyInfo>(ClientHandlers.Lobby.ChangeReadyStatus, (info) =>
     {
-        Console.WriteLine("Hero name: " + hero.Name);
-        Console.WriteLine("Planets count: " + hero.HeroMap.Planets.Count);
-        foreach (var item in hero.HeroMap.Planets)
-        {
-            Console.WriteLine("X=" + item.Position.X + "; Y=" + item.Position.Y);
-        }
-
-        Console.WriteLine("Home planet cords: " + "X=" + hero.HeroMap.HomePlanet.Position.X + "; Y=" +
-                          hero.HeroMap.HomePlanet.Position.Y);
+        Console.WriteLine(info.UserId + ": " + info.User?.Username + "; " + info.Ready + "; " + info.Color);
+    });
+    
+    hubConnection.On<Guid>(ClientHandlers.Lobby.CreatedSessionHandler, (sessionId) =>
+    {
+        Console.WriteLine("Session id: " + sessionId);
     });
     
     return currentLobby1;
@@ -166,14 +142,18 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "create session")
     {
+        await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, new Lobby {Id = lobbyId });
+
+        /*
         if (currentLobby is not null)
         {
-            await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, currentLobby);
+            await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, new Lobby {Id = lobbyId });
         }
         else
         {
             Console.WriteLine("Current lobby is null");
         }
+         */
     }
     else if (message == "ready status")
     {

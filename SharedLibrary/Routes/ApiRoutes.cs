@@ -14,9 +14,9 @@ namespace SharedLibrary.Routes
         
         public static class Hero
         {
-            public const string GetById = "{id:int}";
+            public const string GetById = "{id}";
             public const string Create = "";
-            public const string Update = "{id:int}";
+            public const string Update = "{id}";
         }
 
         public static class Lobby
@@ -27,13 +27,15 @@ namespace SharedLibrary.Routes
             public const string Delete = "{id}";
         }
         
-        public static class Map
-        {
-            public const string GetMap = "{id:int}";
-        }
         public static class Session
         {
-            public const string Create = "{id}";
+            public const string GetById = "{id}";
+            public const string ResearchColonizePlanet = "researchorcolonize/{sessionId}";
+        }
+        
+        public static class Map
+        {
+            public const string GetMap = "{id}";
         }
     }
 }

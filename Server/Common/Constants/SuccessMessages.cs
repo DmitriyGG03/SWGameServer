@@ -6,6 +6,7 @@ public static class SuccessMessages
     {
         public const string Created = "Hero has been successfully created";
         public const string Updated = "Hero has been successfully updated";
+        public const string Found = "Hero has been successfully found";
     }
     public static class Lobby
     {
@@ -13,5 +14,10 @@ public static class SuccessMessages
         public const string Deleted = "Lobby has been successfully deleted";
         public const string Exited = "You have successfully exited the lobby";
         public const string Found = "Lobbies has been successfully found";
+    }
+    
+    public static class Session
+    {
+        public const string Found = "Session has been successfully found";
     }
 }

@@ -21,6 +21,13 @@ namespace Server.Services
             _heroService = heroService;
             _logger = logger;
         }
+        
+        /// <summary>
+        /// Create a new session based on existed lobby
+        /// </summary>
+        /// <param name="lobbyId">Lobby id based on which the session will be created</param>
+        /// <param name="cancellationToken">Token to cancel operation</param>
+        /// <returns>Service result with new created session</returns>
         public async Task<ServiceResult<Session>> CreateAsync(Guid lobbyId, CancellationToken cancellationToken)
         {
             // TODO: session can be created only by owner of lobby 
@@ -37,7 +44,6 @@ namespace Server.Services
             var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
             var map = _mapGenerator.GenerateMap(defaultOptions);
             
-            // await _context.SessionMaps.AddAsync(map, cancellationToken);
             var session = new Session
             {
                 Id = Guid.NewGuid(),
@@ -45,6 +51,8 @@ namespace Server.Services
                 Heroes = new List<Hero>(),
                 SessionMapId = map.Id,
                 SessionMap = map,
+                TurnNumber = 0,
+                ActiveHeroId = 0
             };
             
             await _context.Sessions.AddAsync(session, cancellationToken);
@@ -66,7 +74,7 @@ namespace Server.Services
                 };
                 
                 var homePlanet = map.Planets[Random.Shared.Next(0, map.Planets.Count)];
-                hero.HeroMap = new HeroMap
+                hero.HeroMapView = new HeroMapView
                 {
                     Planets = map.Planets, Connections = map.Connections, HeroId = hero.HeroId,
                     HomePlanetId = homePlanet.Id, HomePlanet = homePlanet
@@ -80,8 +88,40 @@ namespace Server.Services
                     return new ServiceResult<Session>(addingResult.ErrorMessage);
                 }
             }
-            
+
             return new ServiceResult<Session>(session);
+        }
+        public async Task<Session?> GetByIdAsync(Guid sessionId, CancellationToken cancellationToken)
+        {
+            var session = await _context.Sessions
+                .Include(x => x.Heroes)
+                 .ThenInclude(x => x.User)
+                .Include(x => x.SessionMap)
+                 .ThenInclude(x => x.Connections)
+                .Include(x => x.SessionMap)
+                 .ThenInclude(x => x.Planets)
+                  .ThenInclude(x => x.Position)
+                .AsSplitQuery()
+                .FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
+            
+            return session;
+        }
+
+        public async Task<ServiceResult> ResearchOrColonizePlanetAsync(Guid sessionId, Guid planetId,
+            CancellationToken cancellationToken)
+        {
+            var planet = await _context.Planets.FirstOrDefaultAsync(x => x.Id == planetId, cancellationToken);
+            if (planet is null)
+                return new ServiceResult(ErrorMessages.Planet.NotFound);
+
+            if (planet.Status == (int)PlanetStatus.Researched)
+            {
+                planet.Status = (int)PlanetStatus.Colonized;
+            }
+
+            planet.Status = (int)PlanetStatus.Researched;
+            await _context.SaveChangesAsync(cancellationToken);
+            return new ServiceResult();
         }
     }
 }

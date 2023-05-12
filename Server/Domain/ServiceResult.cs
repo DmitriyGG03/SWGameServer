@@ -1,22 +1,33 @@
 ﻿namespace Server.Domain
 {
-    public class ServiceResult<T>
+    public class ServiceResult
     {
-        public T? Value { get; set; }
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }
 
-        public ServiceResult(T value)
+        public ServiceResult()
         {
             Success = true;
-            Value = value;
             ErrorMessage = string.Empty;
         }
         public ServiceResult(string errorMessage)
         {
             Success = false;
-            Value = default(T);
             ErrorMessage = errorMessage;
+        }
+    }
+    
+    public class ServiceResult<T> : ServiceResult
+    {
+        public T? Value { get; set; }
+
+        public ServiceResult(T value) : base()
+        {
+            Value = value;
+        }
+        public ServiceResult(string errorMessage) : base(errorMessage)
+        {
+            Value = default(T);
         }
     }
 }

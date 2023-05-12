@@ -1,12 +1,12 @@
-﻿using System;
+using System;
 using SharedLibrary.Models;
 using SharedLibrary.Responses.Abstract;
 
 namespace SharedLibrary.Responses
 {
     [Serializable]
-    public class GetLobbyResponse : ResponseBase
+    public class GetSessionResponse : ResponseBase
     {
-        public Lobby? Lobby { get; set; }
+        public Session? Session { get; set; }
     }
 }

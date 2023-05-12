@@ -1,5 +1,8 @@
+using System;
+
 namespace SharedLibrary.Models
 {
+    [Serializable]
     public class MapGenerationOptions
     {
         public int Width { get; set; }

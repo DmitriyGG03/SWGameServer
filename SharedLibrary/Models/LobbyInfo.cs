@@ -6,10 +6,10 @@ using System.Drawing;
 
 namespace SharedLibrary.Models
 {
-    [Table("LobbyInfos")]
+    [Table("LobbyInfos"), Serializable]
     public class LobbyInfo
     {
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public Guid Id { get; set; }
         public int Argb { get; set; }
         [NotMapped]
@@ -22,7 +22,7 @@ namespace SharedLibrary.Models
         public Lobby? Lobby { get; set; }
         
         [ForeignKey(nameof(User))]
-        public int UserId { get; set; }
+        public Guid UserId { get; set; }
         public ApplicationUser? User { get; set; }
     }
 }

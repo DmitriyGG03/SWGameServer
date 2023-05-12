@@ -103,60 +103,72 @@ public class LobbyHub : Hub
     public async Task CreateSession(Lobby lobby)
     {
         var result = await _sessionService.CreateAsync(lobby.Id, CancellationToken.None);
-        // TODO: return hero by client
         await HandleResult(result, ClientHandlers.Lobby.CreatedSessionHandler);
     }
 
-    private int GetUserIdFromContext()
+    private Guid GetUserIdFromContext()
     {
-        return int.Parse(this.Context.User.FindFirst("id").Value);
+        var result = Guid.Empty;
+        string? userId = this.Context.User?.FindFirst("id")?.Value;
+        if (Guid.TryParse(userId, out result) == true)
+        {
+            return result;
+        }
+        else
+        {
+            _logger.LogError($"Can not resolve user id ({userId}), it's not guid type");
+            throw new ArgumentException("Invalid Guid format");
+        }
     }
     private async Task HandleResult(ServiceResult<Lobby> result, string successMethod)
     {
-        if (result.Success == false)
-        {
-            if (result.ErrorMessage == SuccessMessages.Lobby.Deleted)
-            {
-                await this.Clients.Caller.SendAsync(ClientHandlers.Lobby.DeleteLobbyHandler, SuccessMessages.Lobby.Deleted);
-                return;
-            }
-            
-            await this.Clients.Caller.SendAsync(ClientHandlers.Lobby.Error, result.ErrorMessage);
+        if((await ValidateResultIfInvalidSendMessageToCallerAsync(result)) == false)
             return;
-        }
-
+        
         var lobby = SolveCyclicDependency(result.Value);
         await this.Clients.All.SendAsync(successMethod, lobby);
     }
+    private async Task HandleResult(ServiceResult<LobbyInfo> result, string successMethod)
+    {
+        if((await ValidateResultIfInvalidSendMessageToCallerAsync(result)) == false)
+            return;
+
+        var lobbyInfo = result.Value;
+        SolveCyclicDependency(lobbyInfo);
+        await this.Clients.All.SendAsync(successMethod, result.Value);
+    }
     private async Task HandleResult(ServiceResult<Session> result, string successMethod)
+    {
+        if((await ValidateResultIfInvalidSendMessageToCallerAsync(result)) == false)
+            return;
+
+        await this.Clients.All.SendAsync(successMethod, result.Value.Id);
+        
+        /* return each hero by each user
+        var session = SolveCyclicDependency(result.Value);
+        foreach (var item in session.Heroes)
+        {
+            await this.Clients.User(item.UserId.ToString()).SendAsync(successMethod, item);
+        }
+         */
+    }
+
+    private async Task<bool> ValidateResultIfInvalidSendMessageToCallerAsync<T>(ServiceResult<T> result)
     {
         if (result.Success == false)
         {
             if (result.ErrorMessage == SuccessMessages.Lobby.Deleted)
             {
                 await this.Clients.Caller.SendAsync(ClientHandlers.Lobby.DeleteLobbyHandler, SuccessMessages.Lobby.Deleted);
-                return;
+                return false;
             }
             
             await this.Clients.Caller.SendAsync(ClientHandlers.Lobby.Error, result.ErrorMessage);
-            return;
+            return false;
         }
 
-        var session = result.Value;
-        foreach (var item in session.Heroes)
-        {
-            // solve cyclic dependency
-            item.User = null;
-            if (item.HeroMap?.Hero is not null)
-            {
-                item.HeroMap.Hero = null;
-            }
-            item.Session = null;
-            
-            await this.Clients.User(item.UserId.ToString()).SendAsync(successMethod, item);
-        }
+        return true;
     }
-
     private Lobby SolveCyclicDependency(Lobby lobbyToSolve)
     {
         var lobby = lobbyToSolve;
@@ -165,15 +177,34 @@ public class LobbyHub : Hub
         {
             foreach (var item in lobby.LobbyInfos)
             {
-                item.Lobby = null;
-                if (item.User is not null)
-                {
-                    item.User.LobbyInfos = null;
-                    item.User.Heroes = null;
-                }
+                SolveCyclicDependency(item);
             }
         }
 
         return lobby;
+    }
+    private Session SolveCyclicDependency(Session sessionToSolve)
+    {
+        foreach (var item in sessionToSolve.Heroes)
+        {
+            // solve cyclic dependency
+            item.User = null;
+            if (item.HeroMapView?.Hero is not null)
+            {
+                item.HeroMapView.Hero = null;
+            }
+            item.Session = null;
+        }
+
+        return sessionToSolve;
+    }
+    private void SolveCyclicDependency(LobbyInfo lobbyInfoToSolve)
+    {
+        lobbyInfoToSolve.Lobby = null;
+        if (lobbyInfoToSolve.User is not null)
+        {
+            lobbyInfoToSolve.User.LobbyInfos = null;
+            lobbyInfoToSolve.User.Heroes = null;
+        }
     }
 }

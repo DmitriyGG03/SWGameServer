@@ -1,15 +1,16 @@
-using SharedLibrary.Models;
+using System;
 using SharedLibrary.Responses.Abstract;
 
 namespace SharedLibrary.Responses
 {
+    [Serializable]
     public class CreateHeroResponse : ResponseBase
     {
-        public int HeroId { get; set; }
+        public Guid HeroId { get; set; }
 
         public CreateHeroResponse()
         {
-            HeroId = -1;
+            HeroId = Guid.Empty;
         }
     }
 }

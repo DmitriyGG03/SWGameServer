@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Server;
 
@@ -11,9 +12,11 @@ using Server;
 namespace Server.Migrations
 {
     [DbContext(typeof(GameDbContext))]
-    partial class GameDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230509092309_updated-session")]
+    partial class updatedsession
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,9 +27,11 @@ namespace Server.Migrations
 
             modelBuilder.Entity("SharedLibrary.Models.ApplicationUser", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -58,8 +63,8 @@ namespace Server.Migrations
                     b.Property<Guid>("FromPlanetId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("HeroMapViewId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("HeroMapId")
+                        .HasColumnType("int");
 
                     b.Property<Guid?>("SessionMapId")
                         .HasColumnType("uniqueidentifier");
@@ -69,7 +74,7 @@ namespace Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("HeroMapViewId");
+                    b.HasIndex("HeroMapId");
 
                     b.HasIndex("SessionMapId");
 
@@ -78,9 +83,11 @@ namespace Server.Migrations
 
             modelBuilder.Entity("SharedLibrary.Models.Hero", b =>
                 {
-                    b.Property<Guid>("HeroId")
+                    b.Property<int>("HeroId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HeroId"));
 
                     b.Property<int>("Argb")
                         .HasColumnType("int");
@@ -88,8 +95,8 @@ namespace Server.Migrations
                     b.Property<byte>("ColonizationShipLimit")
                         .HasColumnType("tinyint");
 
-                    b.Property<Guid?>("HeroMapId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("HeroMapId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -104,12 +111,14 @@ namespace Server.Migrations
                     b.Property<Guid?>("SessionId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("HeroId");
 
-                    b.HasIndex("HeroMapId");
+                    b.HasIndex("HeroMapId")
+                        .IsUnique()
+                        .HasFilter("[HeroMapId] IS NOT NULL");
 
                     b.HasIndex("SessionId");
 
@@ -118,21 +127,21 @@ namespace Server.Migrations
                     b.ToTable("Heroes");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Models.HeroMapView", b =>
+            modelBuilder.Entity("SharedLibrary.Models.HeroMap", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
 
-                    b.Property<Guid>("HeroId")
-                        .HasColumnType("uniqueidentifier");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("HeroId")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("HomePlanetId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("HeroId");
 
                     b.HasIndex("HomePlanetId");
 
@@ -175,8 +184,8 @@ namespace Server.Migrations
                     b.Property<bool>("Ready")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
@@ -193,8 +202,8 @@ namespace Server.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("HeroMapViewId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int?>("HeroMapId")
+                        .HasColumnType("int");
 
                     b.Property<Guid>("PositionId")
                         .HasColumnType("uniqueidentifier");
@@ -204,7 +213,7 @@ namespace Server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("HeroMapViewId");
+                    b.HasIndex("HeroMapId");
 
                     b.HasIndex("PositionId");
 
@@ -270,9 +279,9 @@ namespace Server.Migrations
 
             modelBuilder.Entity("SharedLibrary.Models.Edge", b =>
                 {
-                    b.HasOne("SharedLibrary.Models.HeroMapView", null)
+                    b.HasOne("SharedLibrary.Models.HeroMap", null)
                         .WithMany("Connections")
-                        .HasForeignKey("HeroMapViewId");
+                        .HasForeignKey("HeroMapId");
 
                     b.HasOne("SharedLibrary.Models.SessionMap", null)
                         .WithMany("Connections")
@@ -281,9 +290,9 @@ namespace Server.Migrations
 
             modelBuilder.Entity("SharedLibrary.Models.Hero", b =>
                 {
-                    b.HasOne("SharedLibrary.Models.HeroMapView", "HeroMap")
-                        .WithMany()
-                        .HasForeignKey("HeroMapId");
+                    b.HasOne("SharedLibrary.Models.HeroMap", "HeroMap")
+                        .WithOne("Hero")
+                        .HasForeignKey("SharedLibrary.Models.Hero", "HeroMapId");
 
                     b.HasOne("SharedLibrary.Models.Session", "Session")
                         .WithMany("Heroes")
@@ -302,21 +311,13 @@ namespace Server.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Models.HeroMapView", b =>
+            modelBuilder.Entity("SharedLibrary.Models.HeroMap", b =>
                 {
-                    b.HasOne("SharedLibrary.Models.Hero", "Hero")
-                        .WithMany()
-                        .HasForeignKey("HeroId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("SharedLibrary.Models.Planet", "HomePlanet")
                         .WithMany()
                         .HasForeignKey("HomePlanetId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Hero");
 
                     b.Navigation("HomePlanet");
                 });
@@ -342,9 +343,9 @@ namespace Server.Migrations
 
             modelBuilder.Entity("SharedLibrary.Models.Planet", b =>
                 {
-                    b.HasOne("SharedLibrary.Models.HeroMapView", null)
+                    b.HasOne("SharedLibrary.Models.HeroMap", null)
                         .WithMany("Planets")
-                        .HasForeignKey("HeroMapViewId");
+                        .HasForeignKey("HeroMapId");
 
                     b.HasOne("SharedLibrary.Models.Point", "Position")
                         .WithMany()
@@ -377,9 +378,11 @@ namespace Server.Migrations
                     b.Navigation("LobbyInfos");
                 });
 
-            modelBuilder.Entity("SharedLibrary.Models.HeroMapView", b =>
+            modelBuilder.Entity("SharedLibrary.Models.HeroMap", b =>
                 {
                     b.Navigation("Connections");
+
+                    b.Navigation("Hero");
 
                     b.Navigation("Planets");
                 });

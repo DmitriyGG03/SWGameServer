@@ -18,6 +18,7 @@ namespace Tests
 
 		public Lobby? ConnectedLobby { get; set; }
 		public IList<Lobby>? Lobbies { get; set; }
+		public Session? Session { get; set; }
 		public Hero? Hero { get; set; }
 
 		public LobbyClient(WebApplicationFactory<Program> appFactory)
@@ -84,9 +85,9 @@ namespace Tests
 				ConnectedLobby = lobby;
 			});
 
-			_connection.On<Lobby>(ClientHandlers.Lobby.ChangeReadyStatus, (lobby) =>
+			_connection.On<LobbyInfo>(ClientHandlers.Lobby.ChangeReadyStatus, (lobby) =>
 			{
-				ConnectedLobby = lobby;
+				ConnectedLobby.LobbyInfos.First((u) => u.User.Id == lobby.UserId).Ready = lobby.Ready;
 			});
 
 			_connection.On<Lobby>(ClientHandlers.Lobby.ChangeLobbyDataHandler, (lobby) =>
@@ -94,9 +95,13 @@ namespace Tests
 				ConnectedLobby = lobby;
 			});
 
-			_connection.On<Hero>(ClientHandlers.Lobby.CreatedSessionHandler, (hero) =>
+			_connection.On<Guid>(ClientHandlers.Lobby.CreatedSessionHandler, (id) =>
 			{
-				Hero = hero;
+				var result = _client.GetAsync($"/Session/{id}");
+				if (result.Result.IsSuccessStatusCode)
+				{
+					Session = result.Result.Content.ReadFromJsonAsync<GetSessionResponse>().Result.Session;
+				}
 			});
 			_connection.StartAsync();
 
@@ -175,6 +180,21 @@ namespace Tests
 				return false;
 
 			_connection.InvokeAsync(ServerHandlers.Lobby.ChangeLobbyData, lobby);
+			return true;
+		}
+
+		public bool GetHero(int id)
+		{
+			if (_client.DefaultRequestHeaders.Authorization == null)
+				return false;
+
+			var result = _client.GetAsync($"/Hero/{id}");
+			if (result.Result.IsSuccessStatusCode)
+			{
+				Hero = result.Result.Content.ReadFromJsonAsync<GetHeroResponse>().Result.Hero;
+				return true;
+			}
+
 			return true;
 		}
 	}
