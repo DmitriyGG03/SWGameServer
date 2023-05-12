@@ -42,16 +42,16 @@ public class MapService : IMapService
         return new ServiceResult<SessionMap>(map);
          */
     }
-    public async Task<ServiceResult<List<HeroMap>>> GetHeroMaps(List<Hero> heroes, SessionMap sessionMap, CancellationToken cancellationToken)
+    public async Task<ServiceResult<List<HeroMapView>>> GetHeroMaps(List<Hero> heroes, SessionMap sessionMap, CancellationToken cancellationToken)
     {
         List<Planet> listPlanet = new List<Planet>();
-        var heroMapList = new List<HeroMap>();
+        var heroMapList = new List<HeroMapView>();
 
         var rnd = new Random();
         for (int i = 0; i < heroes.Count; i++)
         {
             Planet planet = new Planet();
-            var heroMap = new HeroMap();
+            var heroMap = new HeroMapView();
             do
             {
                 var rndIndex = rnd.Next(sessionMap.Planets.Count);
@@ -67,6 +67,6 @@ public class MapService : IMapService
             heroMap.HomePlanetId = Guid.NewGuid();
             heroMapList.Add(heroMap);
         }
-        return new ServiceResult<List<HeroMap>>(heroMapList);
+        return new ServiceResult<List<HeroMapView>>(heroMapList);
     }
 }

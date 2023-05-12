@@ -20,7 +20,7 @@ builder.Services.AddSingleton(settings);
 var productionDatabase = builder.Configuration.GetConnectionString(ConnectionKeys.Production);
 var localDatabase = builder.Configuration.GetConnectionString(ConnectionKeys.Local);
 
-builder.Services.AddDbContext<GameDbContext>(o => o.UseSqlServer(localDatabase));
+builder.Services.AddDbContext<GameDbContext>(o => o.UseSqlite(localDatabase));
 
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddSignalR();

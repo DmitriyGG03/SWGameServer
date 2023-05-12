@@ -24,14 +24,14 @@ public class HeroController : ControllerBase
     }
 
     [HttpPut, Route(ApiRoutes.Hero.Update)]
-    public async Task<IActionResult> Update([FromRoute] int id, [FromBody] CreateHeroRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] CreateHeroRequest request, CancellationToken cancellationToken)
     {
         /* this operation is not working
          * var availableHeroId = JsonConvert.DeserializeObject<int>(User.FindFirst("hero").Value);
             if(!availableHeroId.Equals(id)) 
             return Unauthorized();
          */
-        var userId = int.Parse(User.FindFirst("id").Value);
+        var userId = GetUserId();
         // can update only name
         var destination = new Hero { HeroId = id, Name = request.Name, };
         var result = await _heroService.Update(userId, destination, cancellationToken);
@@ -53,7 +53,7 @@ public class HeroController : ControllerBase
     [HttpPost, Route(ApiRoutes.Hero.Create)]
     public async Task<IActionResult> Create(CreateHeroRequest request, CancellationToken cancellationToken)
     {
-        var userId = int.Parse(User.FindFirst("id").Value);
+        var userId = GetUserId();
         
         // we create a hero using a name. if new fields appear in CreateHeroRequest, we must add the value of these fields to the Hero object
         var hero = new Hero { Name = request.Name };
@@ -62,7 +62,7 @@ public class HeroController : ControllerBase
         if (result.Success == false)
         {
             _logger.LogWarning("Can not create hero: " + result.ErrorMessage);
-            return BadRequest(new CreateHeroResponse { HeroId = -1, Info = new[] { result.ErrorMessage }});
+            return BadRequest(new CreateHeroResponse { HeroId = Guid.Empty, Info = new[] { result.ErrorMessage }});
         }
 
         // for cyclic dependency
@@ -74,7 +74,7 @@ public class HeroController : ControllerBase
     }
 
     [HttpGet, Route(ApiRoutes.Hero.GetById)]
-    public async Task<IActionResult> GetById([FromRoute] int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetById([FromRoute] Guid id, CancellationToken cancellationToken)
     {
         var hero = await _heroService.GetByIdAsync(id, cancellationToken);
         if (hero is null)
@@ -88,12 +88,27 @@ public class HeroController : ControllerBase
     {
         // solve cyclic dependency
         heroToSolve.User = null;
-        if (heroToSolve.HeroMap?.Hero is not null)
+        if (heroToSolve.HeroMapView?.Hero is not null)
         {
-            heroToSolve.HeroMap.Hero = null;
+            heroToSolve.HeroMapView.Hero = null;
         }
 
         if (heroToSolve.Session != null) 
             heroToSolve.Session.Heroes = null;
+    }
+
+    private Guid GetUserId()
+    {
+        var result = Guid.Empty;
+        string? userId = User?.FindFirst("id")?.Value;
+        if (Guid.TryParse(userId, out result) == true)
+        {
+            return result;
+        }
+        else
+        {
+            _logger.LogError($"Can not resolve user id ({userId}), it's not guid type");
+            throw new ArgumentException("Invalid Guid format");
+        }
     }
 }

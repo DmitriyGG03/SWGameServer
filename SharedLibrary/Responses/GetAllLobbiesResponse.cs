@@ -7,6 +7,7 @@ using System.Text;
 
 namespace SharedLibrary.Responses
 {
+	[Serializable]
 	public class GetAllLobbiesResponse : ResponseBase
 	{
 		public IList<Lobby> Lobbies { get; set; }

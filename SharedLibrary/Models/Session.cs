@@ -5,10 +5,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SharedLibrary.Models
 {
-    [Table("Sessions")]
+    [Table("Sessions"), Serializable]
     public class Session
     {
-        [Key]
+        [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public Guid Id { get; set; }
         [Required]
         public string Name { get; set; }
