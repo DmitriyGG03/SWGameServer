@@ -52,17 +52,20 @@ namespace Server.Services
                 SessionMapId = map.Id,
                 SessionMap = map,
                 TurnNumber = 0,
-                ActiveHeroId = 0
+                HeroTurnId = Guid.Empty
             };
+            session.TurnTimeLimit = session.CalculateTurnTimeLimit(map.Planets.Count);
             
             await _context.Sessions.AddAsync(session, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
             
             // add heroes
+            var heroes = new List<Hero>();
             foreach (var item in lobbyInfos)
             {
                 var hero = new Hero
                 {
+                    HeroId = Guid.NewGuid(),
                     Name = item.User.Username,
                     Argb = item.Argb,
                     ColonizationShipLimit = 10,
@@ -87,8 +90,18 @@ namespace Server.Services
                     _logger.LogError(addingResult.ErrorMessage);
                     return new ServiceResult<Session>(addingResult.ErrorMessage);
                 }
+                else
+                {
+                    heroes.Add(hero);
+                }
             }
 
+            if (session.HeroTurnId == Guid.Empty)
+            {
+                session.HeroTurnId = heroes.First().HeroId;
+                await UpdateSessionAsync(session, cancellationToken);
+            }
+            
             return new ServiceResult<Session>(session);
         }
         public async Task<Session?> GetByIdAsync(Guid sessionId, CancellationToken cancellationToken)
@@ -122,6 +135,23 @@ namespace Server.Services
             planet.Status = (int)PlanetStatus.Researched;
             await _context.SaveChangesAsync(cancellationToken);
             return new ServiceResult();
+        }
+
+        private async Task<ServiceResult<int>> UpdateSessionAsync(Session designation, CancellationToken cancellationToken)
+        {
+            var session = await _context.Sessions.FirstOrDefaultAsync(x => x.Id == designation.Id, cancellationToken);
+            if (session is null)
+            {
+                throw new InvalidOperationException("Given session does not exist, you can not update it");
+            }
+
+            session.Name = designation.Name;
+            session.TurnNumber = designation.TurnNumber;
+            session.HeroTurnId = designation.HeroTurnId;
+            session.TurnTimeLimit = designation.TurnTimeLimit;
+
+            var result = await _context.SaveChangesAsync(cancellationToken);
+            return new ServiceResult<int>(result);
         }
     }
 }

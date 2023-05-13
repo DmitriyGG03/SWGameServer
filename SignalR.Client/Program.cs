@@ -3,19 +3,24 @@ using Microsoft.AspNetCore.SignalR.Client;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 
-var username = Guid.NewGuid().ToString();
+/* Constants:
+    Access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc3ZTlhM2JhLWIxZTItNDY1Yi1iMjU4LTczMzQ1MjM0ZTE2NSIsImhlcm8iOiJudWxsIiwibmJmIjoxNjgzOTc0NDg4LCJleHAiOjE5OTk1OTM2ODgsImlhdCI6MTY4Mzk3NDQ4OH0.QiZ-LQIi9peuzLmCxAWgsCNoRRf0h9g2_lLqpmUoAIo
+    Lobby id: de7c3558-1a03-40a3-92a3-369a520977ed
+ */
+
 const int port = 7148;
 const string hubName = "lobby";
-string accessToken = string.Empty;
-Guid lobbyId = Guid.Parse("33ee83fc-2e64-4e92-84e0-afb471107c6d");
 
-Console.WriteLine("Choose the user: ");
-var user = Console.ReadLine();
+Console.WriteLine("Enter access token: ");
+var accessToken = Console.ReadLine();
 
-if(user == "0")
+Console.WriteLine("Enter lobby id, that you want to use: ");
+var lobbyIdRaw = Console.ReadLine();
+
+var lobbyId = Guid.Empty;
+if (Guid.TryParse(lobbyIdRaw, out lobbyId) == false)
 {
-    accessToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImM1NTAxMzYwLWZkN2QtNGRlMi04MDI0LTYyODUyZGQ5YmJjMCIsImhlcm8iOiJudWxsIiwibmJmIjoxNjgzODA2ODYzLCJleHAiOjE5OTk0MjYwNjMsImlhdCI6MTY4MzgwNjg2M30.bKaNAdKBJjZpm9xV47ckqPHdotnBEayX95TwnW2S7Z8";
+    throw new ArgumentException("Given lobby id has wrong format");
 }
 
 try
