@@ -42,19 +42,19 @@ namespace Server.Services
                 return new ServiceResult<Session>(ErrorMessages.Lobby.UsersNotReady);
 
             var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
-            var map = _mapGenerator.GenerateMap(defaultOptions);
+            var sessionMap = _mapGenerator.GenerateMap(defaultOptions);
             
             var session = new Session
             {
                 Id = Guid.NewGuid(),
                 Name = lobby.LobbyName,
                 Heroes = new List<Hero>(),
-                SessionMapId = map.Id,
-                SessionMap = map,
+                SessionMapId = sessionMap.Id,
+                SessionMap = sessionMap,
                 TurnNumber = 0,
                 HeroTurnId = Guid.Empty
             };
-            session.TurnTimeLimit = session.CalculateTurnTimeLimit(map.Planets.Count);
+            session.TurnTimeLimit = session.CalculateTurnTimeLimit(sessionMap.Planets.Count);
             
             await _context.Sessions.AddAsync(session, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
@@ -76,17 +76,9 @@ namespace Server.Services
                     UserId = item.UserId
                 };
                 
-                var homePlanet = map.Planets[Random.Shared.Next(0, map.Planets.Count)];
-                hero.HeroMapView = new HeroMapView
-                {
-                    // .Select(x => new Planet { Id = Guid.NewGuid(), Position = x.Position, Status = x.Status, DaysNumber = x.DaysNumber}).ToList()
-                    Planets = map.Planets, 
-                    Connections = map.Connections, 
-                    HeroId = hero.HeroId,
-                    HomePlanetId = homePlanet.Id, 
-                    HomePlanet = homePlanet
-                };
-                
+                var homePlanet = sessionMap.Planets[Random.Shared.Next(0, sessionMap.Planets.Count)];
+                hero.HomePlanetId = homePlanet.Id;
+
                 var addingResult = await _heroService.Create(item.UserId, hero, cancellationToken);
 
                 if (addingResult.Success == false)
@@ -98,6 +90,10 @@ namespace Server.Services
                 {
                     heroes.Add(hero);
                 }
+                
+                var heroPlanetRelationsResult = await GenerateHeroPlanetRelations(heroes, sessionMap.Planets);
+                if (heroPlanetRelationsResult.Success == false)
+                    return new ServiceResult<Session>(heroPlanetRelationsResult.ErrorMessage);
             }
 
             if (session.HeroTurnId == Guid.Empty)
@@ -159,6 +155,36 @@ namespace Server.Services
 
             var result = await _context.SaveChangesAsync(cancellationToken);
             return new ServiceResult<int>(result);
+        }
+
+        private async Task<ServiceResult> GenerateHeroPlanetRelations(List<Hero> heroes, List<Planet> planets)
+        {
+            var relations = new List<HeroPlanetRelation>();
+            foreach (var hero in heroes)
+            {
+                foreach (var planet in planets)
+                {
+                    var relation = new HeroPlanetRelation
+                    {
+                        HeroId = hero.HeroId,
+                        PlanetId = planet.Id,
+                        Status = (int)PlanetStatus.Known,
+                        IterationsLeftToTheNextStatus = 1
+                    };
+                    relations.Add(relation);
+                }
+            }
+
+            await _context.HeroPlanetRelations.AddRangeAsync(relations);
+            var updated = await _context.SaveChangesAsync();
+            if(updated == 0)
+            {
+                var exception = new InvalidDataException("Database records has not been updated");
+                _logger.LogError(exception, "Can not Create planet relations");
+                throw exception;
+            }
+
+            return new ServiceResult();
         }
     }
 }

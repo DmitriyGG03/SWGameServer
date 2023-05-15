@@ -88,10 +88,6 @@ public class HeroController : ControllerBase
     {
         // solve cyclic dependency
         heroToSolve.User = null;
-        if (heroToSolve.HeroMapView?.Hero is not null)
-        {
-            heroToSolve.HeroMapView.Hero = null;
-        }
 
         if (heroToSolve.Session != null) 
             heroToSolve.Session.Heroes = null;

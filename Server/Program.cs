@@ -33,7 +33,6 @@ builder.Services.AddControllers().AddNewtonsoftJson(i =>
 builder.Services.AddScoped<IHeroService, HeroService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IHashProvider, HashProvider>();
-builder.Services.AddScoped<IMapService, MapService>();
 builder.Services.AddScoped<IMapGenerator, DefaultMapGeneratorStrategy>();
 builder.Services.AddScoped<ILobbyService, LobbyService>();
 builder.Services.AddScoped<ISessionService, SessionService>();

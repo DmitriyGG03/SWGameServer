@@ -50,10 +50,6 @@ public class SessionController : ControllerBase
             {
                 // solve cyclic dependency
                 item.User = null;
-                if (item.HeroMapView?.Hero is not null)
-                {
-                    item.HeroMapView.Hero = null;
-                }
 
                 item.Session = null;
             }
