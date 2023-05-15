@@ -13,17 +13,19 @@ namespace SharedLibrary.Models
 
         public float X { get; set; }
         public float Y { get; set; }
-        [NotMapped]
-        public PointF Position
-        {
-            get => new PointF(X, Y);
-        }
-        
         [Range(0, byte.MaxValue)]
         public byte DaysNumber { get; set; }
 
         public Guid? OwnerId { get; set; }
         
+        [NotMapped]
+        public PointF Position
+        {
+            get => new PointF(X, Y);
+        }
+        [NotMapped] 
+        public bool IsEnemy { get; set; }
+
         public Planet()
         {
             Id = Guid.Empty;

@@ -42,6 +42,15 @@ public class SessionController : ControllerBase
         return BadRequest();
     }
     
+    [HttpGet, Route(ApiRoutes.Session.GetHeroMap)]
+    public async Task<IActionResult> GetHeroMap([FromRoute] Guid id, CancellationToken cancellationToken)
+    {
+        var heroMap = await _sessionService.GetHeroMapAsync(id, cancellationToken);
+        if (heroMap is null)
+            return NotFound();
+        return Ok(heroMap);
+    }
+    
     private void SolveCyclicDependency(Session sessionToSolve)
     {
         if (sessionToSolve.Heroes != null)

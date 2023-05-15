@@ -185,12 +185,13 @@ public class LobbyHub : Hub
     }
     private Session SolveCyclicDependency(Session sessionToSolve)
     {
-        foreach (var item in sessionToSolve.Heroes)
-        {
-            // solve cyclic dependency
-            item.User = null;
-            item.Session = null;
-        }
+        if (sessionToSolve.Heroes != null)
+            foreach (var item in sessionToSolve.Heroes)
+            {
+                // solve cyclic dependency
+                item.User = null;
+                item.Session = null;
+            }
 
         return sessionToSolve;
     }

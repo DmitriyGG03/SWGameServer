@@ -78,6 +78,7 @@ namespace Server.Services
                 
                 var homePlanet = sessionMap.Planets[Random.Shared.Next(0, sessionMap.Planets.Count)];
                 hero.HomePlanetId = homePlanet.Id;
+                homePlanet.OwnerId = hero.HeroId;
 
                 var addingResult = await _heroService.Create(item.UserId, hero, cancellationToken);
 
@@ -90,11 +91,11 @@ namespace Server.Services
                 {
                     heroes.Add(hero);
                 }
-                
-                var heroPlanetRelationsResult = await GenerateHeroPlanetRelations(heroes, sessionMap.Planets);
-                if (heroPlanetRelationsResult.Success == false)
-                    return new ServiceResult<Session>(heroPlanetRelationsResult.ErrorMessage);
             }
+            
+            var heroPlanetRelationsResult = await GenerateHeroPlanetRelations(heroes, sessionMap.Planets);
+            if (heroPlanetRelationsResult.Success == false)
+                return new ServiceResult<Session>(heroPlanetRelationsResult.ErrorMessage);
 
             if (session.HeroTurnId == Guid.Empty)
             {
@@ -109,12 +110,6 @@ namespace Server.Services
             var session = await _context.Sessions
                 .Include(x => x.Heroes)
                  .ThenInclude(x => x.User)
-                .Include(x => x.SessionMap)
-                 .ThenInclude(x => x.Connections)
-                .Include(x => x.SessionMap)
-                 .ThenInclude(x => x.Planets)
-                  .ThenInclude(x => x.Position)
-                .AsSplitQuery()
                 .FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
             
             return session;
@@ -138,6 +133,40 @@ namespace Server.Services
              */
             await _context.SaveChangesAsync(cancellationToken);
             return new ServiceResult();
+        }
+
+        public async Task<HeroMapView?> GetHeroMapAsync(Guid heroId, CancellationToken cancellationToken)
+        {
+            var heroPlanets = await _context.HeroPlanetRelations
+                .Include(x => x.Planet)
+                .Where(x => x.HeroId == heroId && x.Status >= (int)PlanetStatus.Known)
+                .ToListAsync(cancellationToken);
+
+            if (heroPlanets.Any() == false)
+                return null;
+
+            var planets = heroPlanets.Select(x =>
+            {
+                if (x.Status == (int)PlanetStatus.Enemy)
+                {
+                    x.Planet.IsEnemy = true;
+                }
+                else
+                {
+                    x.Planet.IsEnemy = false;
+                }
+                
+                return x.Planet;
+            }).ToList();
+            var connections = await GetConnections(planets);
+
+            var heroMap = new HeroMapView
+            {
+                HeroId = heroId,
+                Planets = planets,
+                Connections = connections
+            };
+            return heroMap;
         }
 
         private async Task<ServiceResult<int>> UpdateSessionAsync(Session designation, CancellationToken cancellationToken)
@@ -168,10 +197,24 @@ namespace Server.Services
                     {
                         HeroId = hero.HeroId,
                         PlanetId = planet.Id,
-                        Status = (int)PlanetStatus.Known,
                         IterationsLeftToTheNextStatus = 1
                     };
-                    relations.Add(relation);
+                    
+                    if (planet.OwnerId == null)
+                    {
+                        relation.Status = (int)PlanetStatus.Known;
+                        relations.Add(relation);
+                    }
+                    else if (planet.OwnerId == hero.HomePlanetId)
+                    {
+                        relation.Status = (int)PlanetStatus.Colonized;
+                        relations.Add(relation);
+                    }
+                    else if (planet.OwnerId != hero.HomePlanetId)
+                    {
+                        relation.Status = (int)PlanetStatus.Enemy;
+                        relations.Add(relation);
+                    }
                 }
             }
 
@@ -185,6 +228,19 @@ namespace Server.Services
             }
 
             return new ServiceResult();
+        }
+
+        private async Task<List<Edge>> GetConnections(List<Planet> planets)
+        {
+            var connections = new List<Edge>();
+            foreach (var planet in planets)
+            {
+                var subResult =await _context.Connections
+                    .Where(x => planet.Id == x.FromPlanetId || planet.Id == x.ToPlanetId)
+                    .ToListAsync();
+                connections.AddRange(subResult);
+            }
+            return connections;
         }
     }
 }

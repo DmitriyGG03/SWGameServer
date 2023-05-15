@@ -24,5 +24,7 @@ namespace Server.Services.Abstract
 
         Task<ServiceResult> ResearchOrColonizePlanetAsync(Guid sessionId, Guid planetId,
             CancellationToken cancellationToken);
+
+        Task<HeroMapView?> GetHeroMapAsync(Guid heroId, CancellationToken cancellationToken);
     }
 }
