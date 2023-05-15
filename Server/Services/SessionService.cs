@@ -79,8 +79,12 @@ namespace Server.Services
                 var homePlanet = map.Planets[Random.Shared.Next(0, map.Planets.Count)];
                 hero.HeroMapView = new HeroMapView
                 {
-                    Planets = map.Planets, Connections = map.Connections, HeroId = hero.HeroId,
-                    HomePlanetId = homePlanet.Id, HomePlanet = homePlanet
+                    // .Select(x => new Planet { Id = Guid.NewGuid(), Position = x.Position, Status = x.Status, DaysNumber = x.DaysNumber}).ToList()
+                    Planets = map.Planets, 
+                    Connections = map.Connections, 
+                    HeroId = hero.HeroId,
+                    HomePlanetId = homePlanet.Id, 
+                    HomePlanet = homePlanet
                 };
                 
                 var addingResult = await _heroService.Create(item.UserId, hero, cancellationToken);
@@ -126,7 +130,7 @@ namespace Server.Services
             var planet = await _context.Planets.FirstOrDefaultAsync(x => x.Id == planetId, cancellationToken);
             if (planet is null)
                 return new ServiceResult(ErrorMessages.Planet.NotFound);
-
+            
             if (planet.Status == (int)PlanetStatus.Researched)
             {
                 planet.Status = (int)PlanetStatus.Colonized;
