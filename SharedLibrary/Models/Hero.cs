@@ -18,18 +18,18 @@ namespace SharedLibrary.Models
 		public byte ResearchShipLimit { get; set; }
 		[Range(0, byte.MaxValue)]
 		public byte ColonizationShipLimit { get; set; }
-		
 		public int Argb { get; set; }
 		[NotMapped]
 		public Color Color { get => Color.FromArgb(Argb); }
 
+		
 		[ForeignKey(nameof(User))]
 		public Guid UserId { get; set; }
 		public ApplicationUser? User { get; set; }
 		
-		[ForeignKey(nameof(HeroMapView))]
-		public Guid? HeroMapId { get; set; }
-		public HeroMapView? HeroMapView { get; set; }
+		[ForeignKey(nameof(HomePlanet))]
+		public Guid HomePlanetId { get; set; }
+		public Planet? HomePlanet { get; set; }
 		
 		[ForeignKey(nameof(Session))]
 		public Guid? SessionId { get; set; }

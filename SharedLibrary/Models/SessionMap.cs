@@ -14,9 +14,12 @@ namespace SharedLibrary.Models
         public List<Edge> Connections { get; set; }
         
         public Session? Session { get; set; }
-        
-        /* constructor for deserialization */
-        public SessionMap() { }
+        public SessionMap()
+        {
+            Id = Guid.Empty;
+            Planets = new List<Planet>();
+            Connections = new List<Edge>();
+        }
         public SessionMap(List<Planet> planets, List<Edge> connections)
         {
             Id = Guid.NewGuid();

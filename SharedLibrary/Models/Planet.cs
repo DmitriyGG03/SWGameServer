@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Drawing;
 
 namespace SharedLibrary.Models
 {
@@ -9,21 +10,30 @@ namespace SharedLibrary.Models
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public Guid Id { get; set; }
-        public Point Position { get; set; }
-        [Range(0, Int32.MaxValue)]
-        public int Status { get; set; }
+
+        public float X { get; set; }
+        public float Y { get; set; }
+        [NotMapped]
+        public PointF Position
+        {
+            get => new PointF(X, Y);
+        }
+        
         [Range(0, byte.MaxValue)]
         public byte DaysNumber { get; set; }
-        /* ctor for deserialization */
+
+        public Guid? OwnerId { get; set; }
+        
         public Planet()
         {
-            Status = (int)PlanetStatus.Known;
+            Id = Guid.Empty;
+            X = Y = 0;
         }
-        public Planet(Point position)
+        public Planet(PointF position)
         {
             Id = Guid.NewGuid();
-            Position = position;
-            Status = (int) PlanetStatus.Known;
+            X = position.X;
+            Y = position.Y;
         }
     }
 }

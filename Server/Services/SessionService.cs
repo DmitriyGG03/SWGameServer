@@ -130,13 +130,16 @@ namespace Server.Services
             var planet = await _context.Planets.FirstOrDefaultAsync(x => x.Id == planetId, cancellationToken);
             if (planet is null)
                 return new ServiceResult(ErrorMessages.Planet.NotFound);
-            
-            if (planet.Status == (int)PlanetStatus.Researched)
+
+            throw new NotImplementedException();
+            /*
+             * if (planet.Status == (int)PlanetStatus.Researched)
             {
                 planet.Status = (int)PlanetStatus.Colonized;
             }
 
             planet.Status = (int)PlanetStatus.Researched;
+             */
             await _context.SaveChangesAsync(cancellationToken);
             return new ServiceResult();
         }
