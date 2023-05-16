@@ -82,6 +82,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<LobbyHub>("/hubs/lobby");
+app.MapHub<SessionHub>("/hubs/session");
 app.Run();
 
 //For test

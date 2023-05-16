@@ -22,7 +22,7 @@ namespace Server.Services.Abstract
         /// <returns>Session that was found by given id or null</returns>
         Task<Session?> GetByIdAsync(Guid sessionId, CancellationToken cancellationToken);
 
-        Task<ServiceResult> ResearchOrColonizePlanetAsync(Guid sessionId, Guid planetId,
+        Task<ServiceResult<MessageContainer>> ResearchOrColonizePlanetAsync(Guid sessionId, Guid planetId, Guid heroId,
             CancellationToken cancellationToken);
 
         Task<HeroMapView?> GetHeroMapAsync(Guid heroId, CancellationToken cancellationToken);

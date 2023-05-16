@@ -24,6 +24,11 @@ public static class ErrorMessages
     {
         public const string NotFound = "There is no session with given id";
     }
+    
+    public static class Relation
+    {
+        public const string NotFound = "There is no relation with given parameters";
+    }
 
     public static class Planet
     {

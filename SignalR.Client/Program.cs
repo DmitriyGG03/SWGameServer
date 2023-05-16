@@ -1,7 +1,9 @@
 ﻿using System.Drawing;
+using System.Text.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
+using SharedLibrary.Requests;
 
 /* Constants:
     Access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc3ZTlhM2JhLWIxZTItNDY1Yi1iMjU4LTczMzQ1MjM0ZTE2NSIsImhlcm8iOiJudWxsIiwibmJmIjoxNjgzOTc0NDg4LCJleHAiOjE5OTk1OTM2ODgsImlhdCI6MTY4Mzk3NDQ4OH0.QiZ-LQIi9peuzLmCxAWgsCNoRRf0h9g2_lLqpmUoAIo
@@ -9,18 +11,22 @@ using SharedLibrary.Models;
  */
 
 const int port = 7148;
-const string hubName = "lobby";
+Console.WriteLine("Enter hub name");
+string hubName = Console.ReadLine();
 
 Console.WriteLine("Enter access token: ");
 var accessToken = Console.ReadLine();
 
-Console.WriteLine("Enter lobby id, that you want to use: ");
-var lobbyIdRaw = Console.ReadLine();
-
 var lobbyId = Guid.Empty;
-if (Guid.TryParse(lobbyIdRaw, out lobbyId) == false)
+if (hubName == "lobby")
 {
-    throw new ArgumentException("Given lobby id has wrong format");
+    Console.WriteLine("Enter lobby id, that you want to use: ");
+    var lobbyIdRaw = Console.ReadLine();
+    
+    if (Guid.TryParse(lobbyIdRaw, out lobbyId) == false)
+    {
+        throw new ArgumentException("Given lobby id has wrong format");
+    }
 }
 
 try
@@ -121,7 +127,20 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     {
         Console.WriteLine("Session id: " + sessionId);
     });
-    
+
+    hubConnection.On<HeroMapView>(ClientHandlers.Session.ResearchedPlanet, (heroMap) =>
+    {
+        string json = JsonSerializer.Serialize(heroMap, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    hubConnection.On<string>(ClientHandlers.Session.ColonizedPlanet, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.IterationDone, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
+
     return currentLobby1;
 }
 async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConnection connection, Lobby? currentLobby)
@@ -148,17 +167,6 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     else if (message == "create session")
     {
         await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, new Lobby {Id = lobbyId });
-
-        /*
-        if (currentLobby is not null)
-        {
-            await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, new Lobby {Id = lobbyId });
-        }
-        else
-        {
-            Console.WriteLine("Current lobby is null");
-        }
-         */
     }
     else if (message == "ready status")
     {
@@ -186,6 +194,37 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
             Console.WriteLine("Current lobby is null");
         }
     }
+    else if (message == "healthcheck")
+    {
+        await connection.InvokeAsync(ServerHandlers.Session.HealthCheck);
+    }
+    else if (message == "research or colonize")
+    {
+        Console.WriteLine("Enter planet id: ");
+        var input = Console.ReadLine();
+        var planetId = Guid.Parse(input);
+        Console.WriteLine("Enter hero id: ");
+        input = Console.ReadLine();
+        var heroId = Guid.Parse(input);
+        Console.WriteLine("Enter session id: ");
+        input = Console.ReadLine();
+        var sessionId = Guid.Parse(input);
+        var request = new ResearchColonizePlanetRequest
+        {
+            HeroId = heroId,
+            SessionId = sessionId,
+            PlanetId = planetId
+        };
+        await connection.InvokeAsync(ServerHandlers.Session.PostResearchOrColonizePlanet, request);
+    }
 
     return false;
+}
+
+Action<string> HandleStringMessageOutput()
+{
+    return (message) =>
+    {
+        Console.WriteLine(message);
+    };
 }

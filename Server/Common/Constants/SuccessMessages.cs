@@ -19,5 +19,8 @@ public static class SuccessMessages
     public static class Session
     {
         public const string Found = "Session has been successfully found";
+        public const string Researched = "Successfully researched planet!";
+        public const string Colonized = "Successfully colonized planet!";
+        public const string IterationDone = "Successfully done iteration. Left: ";
     }
 }

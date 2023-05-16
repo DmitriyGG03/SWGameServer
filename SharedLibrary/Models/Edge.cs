@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Serialization;
 
 namespace SharedLibrary.Models
 {
@@ -9,10 +10,10 @@ namespace SharedLibrary.Models
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public Guid Id { get; set; }
-        [NotMapped]
+        [NotMapped, IgnoreDataMember]
         public Planet? From { get; set; }
         public Guid FromPlanetId { get; set; }
-        [NotMapped]
+        [NotMapped, IgnoreDataMember]
         public Planet? To { get; set; }
         public Guid ToPlanetId { get; set; }
         /* ctor for deserialization */

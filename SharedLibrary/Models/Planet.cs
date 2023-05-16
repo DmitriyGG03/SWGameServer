@@ -27,6 +27,8 @@ namespace SharedLibrary.Models
         }
         [NotMapped] 
         public bool IsEnemy { get; set; }
+        [NotMapped] 
+        public int Status { get; set; }
 
         public Planet()
         {
