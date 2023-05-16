@@ -236,7 +236,7 @@ namespace Server.Services
             foreach (var planet in planets)
             {
                 var subResult =await _context.Connections
-                    .Where(x => planet.Id == x.FromPlanetId || planet.Id == x.ToPlanetId)
+                    .Where(x => planet.Id == x.FromPlanetId)
                     .ToListAsync();
                 connections.AddRange(subResult);
             }
