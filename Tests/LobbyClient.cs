@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
-using System.Diagnostics;
 using System.Net.Http.Json;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+
 
 namespace Tests
 {
@@ -14,12 +14,14 @@ namespace Tests
 	{
 		private WebApplicationFactory<Program> _appFactory;
 		private HttpClient _client;
-		private HubConnection? _connection;
+		private HubConnection? _connectionLobby;
+		private HubConnection? _connectionSession;
 
+		public IList<Lobby>? LobbiesList { get; set; }
 		public Lobby? ConnectedLobby { get; set; }
-		public IList<Lobby>? Lobbies { get; set; }
 		public Session? Session { get; set; }
 		public Hero? Hero { get; set; }
+		public HeroMapView? HeroMapView { get; set; }
 
 		public LobbyClient(WebApplicationFactory<Program> appFactory)
 		{
@@ -29,27 +31,29 @@ namespace Tests
 
 		public bool RegisterClient(string username, string email, string password)
 		{
-			var response = _client.PostAsJsonAsync($"authentication/register", 
+			var response = _client.PostAsJsonAsync($"authentication/register",
 				new RegistrationRequest { Username = username, Email = email, Password = password }).Result;
 
-			if (response.IsSuccessStatusCode)
+			if (response.IsSuccessStatusCode && response != null)
 			{
 				_client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", response.Content.ReadFromJsonAsync<AuthenticationResponse>().Result.Token);
 				return true;
 			}
+
 			return false;
 		}
 
 		public bool LoginClient(string email, string password)
 		{
 			var response = _client.PostAsJsonAsync($"authentication/login",
-				new LoginRequest {Email = email, Password = password }).Result;
+				new LoginRequest { Email = email, Password = password }).Result;
 
 			if (response.IsSuccessStatusCode)
 			{
 				_client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", response.Content.ReadFromJsonAsync<AuthenticationResponse>().Result.Token);
 				return true;
 			}
+
 			return false;
 		}
 
@@ -63,7 +67,7 @@ namespace Tests
 			if (_client.DefaultRequestHeaders.Authorization == null)
 				return false;
 
-			_connection = new HubConnectionBuilder().WithUrl(
+			_connectionLobby = new HubConnectionBuilder().WithUrl(
 				$"https://localhost:{7148}/hubs/lobby",
 				options =>
 				{
@@ -71,31 +75,32 @@ namespace Tests
 					options.AccessTokenProvider = () => Task.FromResult(_client.DefaultRequestHeaders.Authorization.Parameter);
 				}).WithAutomaticReconnect().Build();
 
-			_connection.On<string>(ClientHandlers.Lobby.Error, (errorMessage) =>
+			_connectionLobby.On<string>(ClientHandlers.Lobby.Error, (errorMessage) =>
 			{
 				var message = $"Server error: {errorMessage}";
 			});
-			_connection.On<Lobby>(ClientHandlers.Lobby.ConnectToLobbyHandler, lobby =>
+
+			_connectionLobby.On<Lobby>(ClientHandlers.Lobby.ConnectToLobbyHandler, (lobby) =>
 			{
 				ConnectedLobby = lobby;
 			});
 
-			_connection.On<Lobby>(ClientHandlers.Lobby.ExitFromLobbyHandler, (lobby) =>
+			_connectionLobby.On<Lobby>(ClientHandlers.Lobby.ExitFromLobbyHandler, (lobby) =>
 			{
 				ConnectedLobby = lobby;
 			});
 
-			_connection.On<LobbyInfo>(ClientHandlers.Lobby.ChangeReadyStatus, (lobby) =>
+			_connectionLobby.On<LobbyInfo>(ClientHandlers.Lobby.ChangeReadyStatus, (lobby) =>
 			{
-				ConnectedLobby.LobbyInfos.First((u) => u.User.Id == lobby.UserId).Ready = lobby.Ready;
+				ConnectedLobby.LobbyInfos.FirstOrDefault((l) => l.Id == lobby.Id).Ready = lobby.Ready;
 			});
 
-			_connection.On<Lobby>(ClientHandlers.Lobby.ChangeLobbyDataHandler, (lobby) =>
+			_connectionLobby.On<Lobby>(ClientHandlers.Lobby.ChangeLobbyDataHandler, (lobby) =>
 			{
 				ConnectedLobby = lobby;
 			});
 
-			_connection.On<Guid>(ClientHandlers.Lobby.CreatedSessionHandler, (id) =>
+			_connectionLobby.On<Guid>(ClientHandlers.Lobby.CreatedSessionHandler, (id) =>
 			{
 				var result = _client.GetAsync($"/Session/{id}");
 				if (result.Result.IsSuccessStatusCode)
@@ -103,7 +108,40 @@ namespace Tests
 					Session = result.Result.Content.ReadFromJsonAsync<GetSessionResponse>().Result.Session;
 				}
 			});
-			_connection.StartAsync();
+
+			_connectionSession = new HubConnectionBuilder().WithUrl(
+				$"https://localhost:{7148}/hubs/Session",
+				options =>
+				{
+					options.HttpMessageHandlerFactory = _ => _appFactory.Server.CreateHandler();
+					options.AccessTokenProvider = () => Task.FromResult(_client.DefaultRequestHeaders.Authorization.Parameter);
+				}).WithAutomaticReconnect().Build();
+
+			_connectionSession.On<HeroMapView>(ClientHandlers.Session.ResearchedPlanet, (heroMap) =>
+			{
+				HeroMapView = heroMap;
+			});
+			_connectionSession.On<string>(ClientHandlers.Session.ColonizedPlanet, (response) =>
+			{
+				 var message = $"Server response: {response}";
+
+			});
+			_connectionSession.On<string>(ClientHandlers.Session.IterationDone, (response) =>
+			{
+				var message = $"Server response: {response}";
+			});
+			_connectionSession.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, (response) =>
+			{
+				var message = $"Server response: {response}";
+			});
+			_connectionSession.On<string>(ClientHandlers.Session.HealthCheckHandler, (response) =>
+			{
+				var message = $"Server response: {response}";
+
+			});
+
+			_connectionLobby.StartAsync();
+			_connectionSession.StartAsync();
 
 			return true;
 		}
@@ -114,8 +152,7 @@ namespace Tests
 				return false;
 
 			var result = _client.PostAsJsonAsync("Lobby", new CreateLobbyRequest(lobbyName, maxUserCount));
-
-			if(result.Result.IsSuccessStatusCode)
+			if (result.Result.IsSuccessStatusCode)
 			{
 				ConnectedLobby = result.Result.Content.ReadFromJsonAsync<CreateLobbyResponse>().Result.Lobby;
 				return true;
@@ -131,7 +168,7 @@ namespace Tests
 			var result = _client.GetAsync($"/Lobby");
 			if (result.Result.IsSuccessStatusCode)
 			{
-				Lobbies = result.Result.Content.ReadFromJsonAsync<GetAllLobbiesResponse>().Result.Lobbies;
+				LobbiesList = result.Result.Content.ReadFromJsonAsync<GetAllLobbiesResponse>().Result.Lobbies;
 				return true;
 			}
 			return false;
@@ -139,51 +176,51 @@ namespace Tests
 
 		public bool ConnectToLobby(Guid id)
 		{
-			if (_client.DefaultRequestHeaders.Authorization == null || _connection == null)
+			if (_client.DefaultRequestHeaders.Authorization == null || _connectionLobby == null)
 				return false;
 
-			_connection.InvokeAsync(ServerHandlers.Lobby.ConnectToLobby, id);
+			_connectionLobby.InvokeAsync(ServerHandlers.Lobby.ConnectToLobby, id);
 
 			return true;
 		}
 
 		public bool ExitFromLobby(Guid id)
 		{
-			if (_client.DefaultRequestHeaders.Authorization == null || _connection == null)
+			if (_client.DefaultRequestHeaders.Authorization == null || _connectionLobby == null)
 				return false;
 
-			_connection.InvokeAsync(ServerHandlers.Lobby.ExitFromLobby, id);
+			_connectionLobby.InvokeAsync(ServerHandlers.Lobby.ExitFromLobby, id);
 			return true;
 		}
 
 		public bool CreateSession()
 		{
-			if (_client.DefaultRequestHeaders.Authorization == null || _connection == null)
+			if (_client.DefaultRequestHeaders.Authorization == null || _connectionLobby == null)
 				return false;
 
-			_connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, ConnectedLobby);
+			_connectionLobby.InvokeAsync(ServerHandlers.Lobby.CreateSession, ConnectedLobby);
 			return true;
 		}
 
 		public bool ChangeReadyStatus()
 		{
-			if (_client.DefaultRequestHeaders.Authorization == null || _connection == null)
+			if (_client.DefaultRequestHeaders.Authorization == null || _connectionLobby == null)
 				return false;
 
-			_connection.InvokeAsync(ServerHandlers.Lobby.ChangeReadyStatus, ConnectedLobby.Id);
+			_connectionLobby.InvokeAsync(ServerHandlers.Lobby.ChangeReadyStatus, ConnectedLobby.Id);
 			return true;
 		}
 
 		public bool ChangeLobbyData(Lobby lobby)
 		{
-			if (_client.DefaultRequestHeaders.Authorization == null || _connection == null)
+			if (_client.DefaultRequestHeaders.Authorization == null || _connectionLobby == null)
 				return false;
 
-			_connection.InvokeAsync(ServerHandlers.Lobby.ChangeLobbyData, lobby);
+			_connectionLobby.InvokeAsync(ServerHandlers.Lobby.ChangeLobbyData, lobby);
 			return true;
 		}
 
-		public bool GetHero(int id)
+		public bool GetHero(Guid id)
 		{
 			if (_client.DefaultRequestHeaders.Authorization == null)
 				return false;
@@ -195,6 +232,36 @@ namespace Tests
 				return true;
 			}
 
+			return false;
+		}
+
+		public bool GetHeroMapView(Guid id)
+		{
+			if (_client.DefaultRequestHeaders.Authorization == null)
+				return false;
+
+			var result = _client.GetAsync($"session/heromap/{id}");
+			if (result.Result.IsSuccessStatusCode)
+			{
+				HeroMapView = result.Result.Content.ReadFromJsonAsync<HeroMapView>().Result;
+				return true;
+			}
+
+			return false;
+		}
+
+		public bool ReasearchPlanet(Guid id)
+		{
+			if (_client.DefaultRequestHeaders.Authorization == null || _connectionSession == null)
+				return false;
+
+			var request = new ResearchColonizePlanetRequest
+			{
+				HeroId = Hero.HeroId,
+				SessionId = Session.Id,
+				PlanetId = id
+			};
+			_connectionSession.InvokeAsync(ServerHandlers.Session.PostResearchOrColonizePlanet, request);
 			return true;
 		}
 	}
