@@ -143,14 +143,6 @@ public class LobbyHub : Hub
             return;
 
         await this.Clients.All.SendAsync(successMethod, result.Value.Id);
-        
-        /* return each hero by each user
-        var session = SolveCyclicDependency(result.Value);
-        foreach (var item in session.Heroes)
-        {
-            await this.Clients.User(item.UserId.ToString()).SendAsync(successMethod, item);
-        }
-         */
     }
 
     private async Task<bool> ValidateResultIfInvalidSendMessageToCallerAsync<T>(ServiceResult<T> result)
@@ -185,16 +177,13 @@ public class LobbyHub : Hub
     }
     private Session SolveCyclicDependency(Session sessionToSolve)
     {
-        foreach (var item in sessionToSolve.Heroes)
-        {
-            // solve cyclic dependency
-            item.User = null;
-            if (item.HeroMapView?.Hero is not null)
+        if (sessionToSolve.Heroes != null)
+            foreach (var item in sessionToSolve.Heroes)
             {
-                item.HeroMapView.Hero = null;
+                // solve cyclic dependency
+                item.User = null;
+                item.Session = null;
             }
-            item.Session = null;
-        }
 
         return sessionToSolve;
     }

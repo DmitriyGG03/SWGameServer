@@ -8,5 +8,6 @@ namespace SharedLibrary.Responses
     public class GetHeroResponse : ResponseBase
     {
         public Hero? Hero { get; set; }
+        public HeroMapView? Map { get; set; }
     }
 }

@@ -2,8 +2,13 @@ namespace SharedLibrary.Models
 {
     public enum PlanetStatus
     {
-        Known = 0,
-        Researched = 1,
-        Colonized = 2
+        Unknown = 0,
+        Known,
+        Researching,
+        Researched,
+        HasStation,
+        Colonization,
+        Colonized,
+        Enemy
     }
 }

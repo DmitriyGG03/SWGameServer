@@ -8,6 +8,8 @@ namespace SharedLibrary.Models
     [Table("Sessions"), Serializable]
     public class Session
     {
+        private const int MinTurnTime = 30;
+        
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public Guid Id { get; set; }
         [Required]
@@ -20,11 +22,15 @@ namespace SharedLibrary.Models
         public SessionMap? SessionMap { get; set; }
 
         public int TurnNumber { get; set; }
-        public int ActiveHeroId { get; set; }
+        public int TurnTimeLimit { get; set; } = MinTurnTime;
+        public Guid HeroTurnId { get; set; }
 
         public Session()
-        {
+        { }
 
+        public int CalculateTurnTimeLimit(int planetCount)
+        {
+            return MinTurnTime + planetCount / 2;
         }
     }
 }

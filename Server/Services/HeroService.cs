@@ -57,15 +57,6 @@ public class HeroService : IHeroService
             .Heroes
             .Include(x => x.Session)
             .Include(x => x.User)
-            .Include(x => x.HeroMapView)
-             .ThenInclude(x => x.Planets)
-             .ThenInclude(x => x.Position)
-            .Include(x => x.HeroMapView)
-             .ThenInclude(x => x.Connections)
-            .Include(x => x.HeroMapView)
-             .ThenInclude(x => x.HomePlanet)
-            .AsSplitQuery()
-            .AsNoTracking()
             .FirstOrDefaultAsync(h => h.HeroId == heroId, cancellationToken);
         
         return hero;

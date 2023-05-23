@@ -33,7 +33,6 @@ builder.Services.AddControllers().AddNewtonsoftJson(i =>
 builder.Services.AddScoped<IHeroService, HeroService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IHashProvider, HashProvider>();
-builder.Services.AddScoped<IMapService, MapService>();
 builder.Services.AddScoped<IMapGenerator, DefaultMapGeneratorStrategy>();
 builder.Services.AddScoped<ILobbyService, LobbyService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
@@ -59,7 +58,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
             // If the request is for our hub...
             var path = context.HttpContext.Request.Path;
             if (!string.IsNullOrEmpty(accessToken) &&
-                (path.StartsWithSegments("/hubs/lobby")))
+                (path.StartsWithSegments("/hubs")))
             {
                 // Read the token out of the query string
                 context.Token = accessToken;
@@ -83,6 +82,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<LobbyHub>("/hubs/lobby");
+app.MapHub<SessionHub>("/hubs/session");
 app.Run();
 
 //For test

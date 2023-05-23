@@ -1,21 +1,32 @@
 ﻿using System.Drawing;
+using System.Text.Json;
 using Microsoft.AspNetCore.SignalR.Client;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
+using SharedLibrary.Requests;
 
-var username = Guid.NewGuid().ToString();
+/* Constants:
+    Access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc3ZTlhM2JhLWIxZTItNDY1Yi1iMjU4LTczMzQ1MjM0ZTE2NSIsImhlcm8iOiJudWxsIiwibmJmIjoxNjgzOTc0NDg4LCJleHAiOjE5OTk1OTM2ODgsImlhdCI6MTY4Mzk3NDQ4OH0.QiZ-LQIi9peuzLmCxAWgsCNoRRf0h9g2_lLqpmUoAIo
+    Lobby id: de7c3558-1a03-40a3-92a3-369a520977ed
+ */
+
 const int port = 7148;
-const string hubName = "lobby";
-string accessToken = string.Empty;
-Guid lobbyId = Guid.Parse("33ee83fc-2e64-4e92-84e0-afb471107c6d");
+Console.WriteLine("Enter hub name");
+string hubName = Console.ReadLine();
 
-Console.WriteLine("Choose the user: ");
-var user = Console.ReadLine();
+Console.WriteLine("Enter access token: ");
+var accessToken = Console.ReadLine();
 
-if(user == "0")
+var lobbyId = Guid.Empty;
+if (hubName == "lobby")
 {
-    accessToken =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImM1NTAxMzYwLWZkN2QtNGRlMi04MDI0LTYyODUyZGQ5YmJjMCIsImhlcm8iOiJudWxsIiwibmJmIjoxNjgzODA2ODYzLCJleHAiOjE5OTk0MjYwNjMsImlhdCI6MTY4MzgwNjg2M30.bKaNAdKBJjZpm9xV47ckqPHdotnBEayX95TwnW2S7Z8";
+    Console.WriteLine("Enter lobby id, that you want to use: ");
+    var lobbyIdRaw = Console.ReadLine();
+    
+    if (Guid.TryParse(lobbyIdRaw, out lobbyId) == false)
+    {
+        throw new ArgumentException("Given lobby id has wrong format");
+    }
 }
 
 try
@@ -116,7 +127,33 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     {
         Console.WriteLine("Session id: " + sessionId);
     });
+
+    hubConnection.On<HeroMapView>(ClientHandlers.Session.ResearchedPlanet, (heroMap) =>
+    {
+        string json = JsonSerializer.Serialize(heroMap, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
     
+    hubConnection.On<HeroMapView>(ClientHandlers.Session.ReceiveHeroMap, (heroMap) =>
+    {
+        Console.WriteLine("Received hero map");
+        string json = JsonSerializer.Serialize(heroMap, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
+    hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.StartedResearching, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.StartedColonizingPlanet, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.IterationDone, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
+
     return currentLobby1;
 }
 async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConnection connection, Lobby? currentLobby)
@@ -143,17 +180,6 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     else if (message == "create session")
     {
         await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, new Lobby {Id = lobbyId });
-
-        /*
-        if (currentLobby is not null)
-        {
-            await connection.InvokeAsync(ServerHandlers.Lobby.CreateSession, new Lobby {Id = lobbyId });
-        }
-        else
-        {
-            Console.WriteLine("Current lobby is null");
-        }
-         */
     }
     else if (message == "ready status")
     {
@@ -181,6 +207,32 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
             Console.WriteLine("Current lobby is null");
         }
     }
+    else if (message == "healthcheck")
+    {
+        await connection.InvokeAsync(ServerHandlers.Session.HealthCheck);
+    }
+    else if (message == "research or colonize")
+    {
+        var planetId = Guid.Parse("1a274e8a-66a2-41b5-b729-68043712b8cf");
+        var heroId = Guid.Parse("0b770df7-569b-463f-ae5f-e8712f328885");
+        var sessionId = Guid.Parse("f5b94058-3fb8-4147-903d-01cddf03057e");
+        
+        var request = new ResearchColonizePlanetRequest
+        {
+            HeroId = heroId,
+            SessionId = sessionId,
+            PlanetId = planetId
+        };
+        await connection.InvokeAsync(ServerHandlers.Session.PostResearchOrColonizePlanet, request);
+    }
 
     return false;
+}
+
+Action<string> HandleStringMessageOutput()
+{
+    return (message) =>
+    {
+        Console.WriteLine(message);
+    };
 }

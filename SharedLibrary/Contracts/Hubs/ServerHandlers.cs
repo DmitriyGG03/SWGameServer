@@ -14,5 +14,11 @@ namespace SharedLibrary.Contracts.Hubs
             public const string ChangeReadyStatus = "ChangeReadyStatus";
             public const string ChangeColor = "ChangeColor";
         }
+        
+        public static class Session
+        {
+            public const string PostResearchOrColonizePlanet = "PostResearchOrColonizePlanet";
+            public const string HealthCheck = "HealthCheck";
+        }
     }
 }

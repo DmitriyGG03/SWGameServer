@@ -1,27 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 
 namespace SharedLibrary.Models
 {
-	[Table("HeroMaps"), Serializable]
+	[Serializable]
 	public class HeroMapView
 	{
-		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
-		public Guid Id { get; set; }
 		public Guid HeroId { get; set; }
-		public Hero? Hero { get; set; }
-		
-		[ForeignKey(nameof(HomePlanet))]
-		public Guid HomePlanetId { get; set; }
-		public Planet HomePlanet { get; set; }
-		
+
 		public List<Planet> Planets { get; set; }
 		public List<Edge> Connections { get; set; }
-		
-		[NotMapped]
+		/*
+		 [NotMapped]
 		public Dictionary<Guid, byte> ResearchedPlanetsWithDaysNumber
 		{
 			get
@@ -68,5 +60,6 @@ namespace SharedLibrary.Models
 				return Planets.Where(x => x.Status == (int)PlanetStatus.Researched).ToList();
 			}
 		}
+		 */
 	}
 }
