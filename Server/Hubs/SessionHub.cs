@@ -35,13 +35,25 @@ public class SessionHub : Hub
         
         _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value.Message}");
 
-        if (result.Value.Message == SuccessMessages.Session.Researched)
+        if (result.Value.Message == SuccessMessages.Session.StartedResearching)
         {
+            await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizedPlanet,
+                result.Value.Message);
+        }
+        else if (result.Value.Message == SuccessMessages.Session.Researched)
+        {
+            // update hero map
             var heroMap = await _sessionService.GetHeroMapAsync(request.HeroId, CancellationToken.None);
             await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchedPlanet, heroMap);
         }
+        else if (result.Value.Message == SuccessMessages.Session.StartedColonization)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizedPlanet,
+                result.Value.Message);
+        }
         else if (result.Value.Message == SuccessMessages.Session.Colonized)
         {
+            // TODO: update hero map for every hero
             await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizedPlanet,
                 result.Value.Message);
         }

@@ -28,6 +28,8 @@ public class SessionController : ControllerBase
         return Ok(new GetSessionResponse { Info = new []{SuccessMessages.Session.Found}, Session = session});
     }
 
+    #region endpoint for testing functionality
+
     [HttpGet, Route(ApiRoutes.Session.GetHeroMap)]
     public async Task<IActionResult> GetHeroMap([FromRoute] Guid id, CancellationToken cancellationToken)
     {
@@ -36,6 +38,8 @@ public class SessionController : ControllerBase
             return NotFound();
         return Ok(heroMap);
     }
+
+    #endregion
     
     private void SolveCyclicDependency(Session sessionToSolve)
     {

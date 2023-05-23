@@ -21,6 +21,9 @@ public static class SuccessMessages
         public const string Found = "Session has been successfully found";
         public const string Researched = "Successfully researched planet!";
         public const string Colonized = "Successfully colonized planet!";
+        public const string StartedResearching = "Successfully started researching planet! Iterations to research: ";
+        public const string StartedColonization = "Successfully started colonization planet! Iterations to colonize: ";
         public const string IterationDone = "Successfully done iteration. Left: ";
+        public const string CanNotOperateWithGivenPlanet = "Given planet unknown or already colonized";
     }
 }

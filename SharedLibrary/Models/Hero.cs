@@ -16,8 +16,14 @@ namespace SharedLibrary.Models
 		public int Resourses { get; set; }
 		[Range(0, byte.MaxValue)]
 		public byte ResearchShipLimit { get; set; }
+
+		[Range(0, byte.MaxValue)] 
+		public byte AvailableResearchShips { get; set; } = 0;
 		[Range(0, byte.MaxValue)]
 		public byte ColonizationShipLimit { get; set; }
+
+		[Range(0, byte.MaxValue)] 
+		public byte AvailableColonizationShips { get; set; } = 0;
 		public int Argb { get; set; }
 		[NotMapped]
 		public Color Color { get => Color.FromArgb(Argb); }

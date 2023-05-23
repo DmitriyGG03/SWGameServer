@@ -4,8 +4,10 @@ namespace SharedLibrary.Models
     {
         Unknown = 0,
         Known,
+        Researching,
         Researched,
         HasStation,
+        Colonization,
         Colonized,
         Enemy
     }

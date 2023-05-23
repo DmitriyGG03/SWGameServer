@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Server.Common.Constants;
 using Server.Services;
+using Server.Services.Abstract;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
@@ -16,21 +17,17 @@ public class HeroController : ControllerBase
 {
     private readonly IHeroService _heroService;
     private readonly ILogger<HeroController> _logger;
-
-    public HeroController(IHeroService heroService, ILogger<HeroController> logger)
+    private readonly ISessionService _sessionService;
+    public HeroController(IHeroService heroService, ILogger<HeroController> logger, ISessionService sessionService)
     {
         _heroService = heroService;
         _logger = logger;
+        _sessionService = sessionService;
     }
 
     [HttpPut, Route(ApiRoutes.Hero.Update)]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] CreateHeroRequest request, CancellationToken cancellationToken)
     {
-        /* this operation is not working
-         * var availableHeroId = JsonConvert.DeserializeObject<int>(User.FindFirst("hero").Value);
-            if(!availableHeroId.Equals(id)) 
-            return Unauthorized();
-         */
         var userId = GetUserId();
         // can update only name
         var destination = new Hero { HeroId = id, Name = request.Name, };
@@ -81,7 +78,9 @@ public class HeroController : ControllerBase
             return Ok(new GetHeroResponse { Hero = null, Info = new []{ErrorMessages.Hero.NotFound} });
         
         SolveCyclicDependency(hero);
-        return Ok(new GetHeroResponse { Hero = hero, Info = new []{SuccessMessages.Hero.Found} });
+        var heroMap = await _sessionService.GetHeroMapAsync(id, cancellationToken);
+        var response = new GetHeroResponse { Hero = hero, Map = heroMap, Info = new[] { SuccessMessages.Hero.Found } };
+        return Ok(response);
     }
     
     private void SolveCyclicDependency(Hero heroToSolve)
