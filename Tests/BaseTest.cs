@@ -15,7 +15,6 @@ namespace Tests
 				host.ConfigureServices(services => {
 					var descriptor = services.SingleOrDefault(d => d.ServiceType == typeof(DbContextOptions<GameDbContext>));
 					services.Remove(descriptor);
-
 					services.AddDbContext<GameDbContext>(options => {
 						options.UseInMemoryDatabase("InMemoryDB");
 					});
