@@ -213,9 +213,7 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "research or colonize")
     {
-        Console.WriteLine("Do you want use new data?");
-        var newDataUse = Console.ReadLine();
-        var planetId = Guid.Parse("244c0e41-5c80-4136-9f50-dfba65b87c7e");
+        var planetId = Guid.Parse("1a274e8a-66a2-41b5-b729-68043712b8cf");
         var heroId = Guid.Parse("0b770df7-569b-463f-ae5f-e8712f328885");
         var sessionId = Guid.Parse("f5b94058-3fb8-4147-903d-01cddf03057e");
         

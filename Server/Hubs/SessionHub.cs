@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Server.Common.Constants;
+using Server.Domain;
 using Server.Services.Abstract;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Requests;
@@ -27,54 +28,92 @@ public class SessionHub : Hub
     {
         var result = await _sessionService.ResearchOrColonizePlanetAsync(request.SessionId, request.PlanetId, request.HeroId, 
             CancellationToken.None);
+        await HandlePostResearchOrColonizeAsync(result, request);
+    }
+
+    private async Task HandlePostResearchOrColonizeAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
+    {
         if (result.Success == false)
         {
             await this.Clients.Caller.SendAsync(ClientHandlers.Session.PostResearchOrColonizeErrorHandler,
-                result.Value.Message);
+                result.ErrorMessage);
         }
         
         _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value.Message}");
+        await HandleStatusesAsync(result, request);
+    }
 
+    private async Task HandleStatusesAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
+    {
         if (result.Value.Message.StartsWith(SuccessMessages.Session.StartedResearching))
         {
-            await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartedResearching,
-                result.Value.Message);
+            await NotifyStartResearchingAsync(result);
         }
         else if (result.Value.Message == SuccessMessages.Session.Researched)
         {
-            // update hero map
-            var heroMap = await _sessionService.GetHeroMapAsync(request.HeroId, CancellationToken.None);
-            await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchedPlanet, heroMap);
+            await NotifyResearchedPlanetAsync(request);
         }
         else if (result.Value.Message.StartsWith(SuccessMessages.Session.StartedColonization))
         {
-            await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartedColonizingPlanet,
-                result.Value.Message);
+            await NotifyStartColonizationAsync(result);
         }
         else if (result.Value.Message == SuccessMessages.Session.Colonized)
         {
-            var userIdsResult = await _sessionService.GetUserIdWithHeroIdBySessionId(request.SessionId, CancellationToken.None);
-            if (userIdsResult.Success == false)
-            {
-                await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, userIdsResult.ErrorMessage);
-            }            
-            else
-            {
-                foreach (var item in userIdsResult.Value)
-                {
-                    var heroMap = await _sessionService.GetHeroMapAsync(item.Value, CancellationToken.None);
-                    await this.Clients.User(item.Key.ToString()).SendAsync(ClientHandlers.Session.ReceiveHeroMap, heroMap);
-                }
-            }
+            await NotifyColonizedPlanetAsync(request);
         }
         else if (result.Value.Message.StartsWith(SuccessMessages.Session.IterationDone))
         {
-            await this.Clients.Caller.SendAsync(ClientHandlers.Session.IterationDone,
-                result.Value.Message);
+            await NotifyIterationDoneAsync(result);
         }
         else
         {
             throw new InvalidOperationException("Can not handle given status");
         }
+    }
+
+    private async Task NotifyStartResearchingAsync(ServiceResult<MessageContainer> result)
+    {
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartedResearching,
+            result.Value.Message);
+    }
+
+    private async Task NotifyStartColonizationAsync(ServiceResult<MessageContainer> result)
+    {
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartedColonizingPlanet,
+            result.Value.Message);
+    }
+    
+    private async Task NotifyResearchedPlanetAsync(ResearchColonizePlanetRequest request)
+    {
+        var heroMap = await _sessionService.GetHeroMapAsync(request.HeroId, CancellationToken.None);
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchedPlanet, heroMap);
+    }
+
+    private async Task NotifyColonizedPlanetAsync(ResearchColonizePlanetRequest request)
+    {
+        var result = await _sessionService.GetUserIdWithHeroIdBySessionId(request.SessionId, CancellationToken.None);
+        if (result.Success == false)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
+        }            
+        else
+        {
+            await SendHeroMapsToHeroes(result.Value);
+        }
+    }
+
+    private async Task SendHeroMapsToHeroes(Dictionary<Guid, Guid> userIdWithHeroId)
+    {
+        foreach (var item in userIdWithHeroId)
+        {
+            var heroMap = await _sessionService.GetHeroMapAsync(item.Value, CancellationToken.None);
+            await this.Clients.User(item.Key.ToString()).SendAsync(ClientHandlers.Session.ReceiveHeroMap, heroMap);
+        }
+    }
+
+    private async Task NotifyIterationDoneAsync(ServiceResult<MessageContainer> result)
+    {
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.IterationDone,
+            result.Value.Message);
     }
 }
