@@ -143,14 +143,6 @@ public class LobbyHub : Hub
             return;
 
         await this.Clients.All.SendAsync(successMethod, result.Value.Id);
-        
-        /* return each hero by each user
-        var session = SolveCyclicDependency(result.Value);
-        foreach (var item in session.Heroes)
-        {
-            await this.Clients.User(item.UserId.ToString()).SendAsync(successMethod, item);
-        }
-         */
     }
 
     private async Task<bool> ValidateResultIfInvalidSendMessageToCallerAsync<T>(ServiceResult<T> result)

@@ -2,6 +2,7 @@ namespace SharedLibrary.Contracts.Hubs
 {
     public static class ClientHandlers
     {
+        public const string ErrorHandler = "ErrorHandler";
         public static class Lobby
         {
             public const string HealthHandler = "HealthHandler";
@@ -19,8 +20,10 @@ namespace SharedLibrary.Contracts.Hubs
             public const string PostResearchOrColonizeErrorHandler = "PostResearchOrColonizeErrorHandler";
             public const string IterationDone = "IterationDone";
             public const string ResearchedPlanet = "Researched";
-            public const string ColonizedPlanet = "Colonized";
+            public const string StartedColonizingPlanet = "Colonized";
             public const string HealthCheckHandler = "healthcheck";
+            public const string ReceiveHeroMap = "ReceiveHeroMap";
+            public const string StartedResearching = "StartedResearching";
         }
     }
 }

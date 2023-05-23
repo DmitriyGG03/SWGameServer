@@ -112,7 +112,7 @@ namespace Server.Services
                     message = StartPlanetColonization(relation, hero);
                     break;
                 case (int)PlanetStatus.Colonization:
-                    message = ContinuePlanetColonization(relation, hero);
+                    message = await ContinuePlanetColonizationAsync(relation, hero, cancellationToken);
                     break;
                 default:
                     return new ServiceResult<MessageContainer>(new MessageContainer { Message = SuccessMessages.Session.CanNotOperateWithGivenPlanet });
@@ -134,7 +134,7 @@ namespace Server.Services
 
             var planets = heroPlanets.Select(x =>
             {
-                if (x.Status == (int)PlanetStatus.Enemy)
+                if (x.Status is (int)PlanetStatus.Enemy)
                 {
                     x.Planet.IsEnemy = true;
                 }
@@ -155,6 +155,24 @@ namespace Server.Services
                 Connections = connections
             };
             return heroMap;
+        }
+
+        public async Task<ServiceResult<Dictionary<Guid, Guid>>> GetUserIdWithHeroIdBySessionId(Guid sessionId, CancellationToken cancellationToken)
+        {
+            var session = await _context.Sessions
+                .Include(x => x.Heroes)
+                .FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
+            if (session is null)
+            {
+                return new ServiceResult<Dictionary<Guid, Guid>>(ErrorMessages.Session.NotFound);
+            }
+
+            if (session.Heroes is null)
+                throw new InvalidOperationException("Can not get user id's, cause heroes in session is null");
+
+            return new ServiceResult<Dictionary<Guid, Guid>>(session.Heroes
+                .Select(x => new {x.UserId, x.HeroId})
+                .ToDictionary(t => t.UserId, t => t.HeroId));
         }
 
         private async Task<ServiceResult<int>> UpdateSessionAsync(Session designation,
@@ -233,7 +251,7 @@ namespace Server.Services
             return connections;
         }
 
-        private string ContinuePlanetColonization(HeroPlanetRelation relation, Hero hero)
+        private async Task<string> ContinuePlanetColonizationAsync(HeroPlanetRelation relation, Hero hero, CancellationToken cancellationToken)
         {
             var message = String.Empty;
             if (relation.IterationsLeftToTheNextStatus == 1)
@@ -242,6 +260,8 @@ namespace Server.Services
                 relation.IterationsLeftToTheNextStatus = 1;
                 message = SuccessMessages.Session.Colonized;
                 hero.AvailableColonizationShips += 1;
+                await SetOthersRelationToEnemyAsync(relation, hero.HeroId);
+                await SetOwnerIdToPlanetAsync(relation.PlanetId, relation.HeroId, cancellationToken);
             }
             else
             {
@@ -250,6 +270,21 @@ namespace Server.Services
             }
 
             return message;
+        }
+
+        private async Task SetOthersRelationToEnemyAsync(HeroPlanetRelation relation, Guid heroId)
+        {
+            var otherRelations = await _context.HeroPlanetRelations
+                .Where(x => x.PlanetId == relation.PlanetId)
+                .ToListAsync();
+
+            foreach (var item in otherRelations)
+            {
+                if(item.HeroId == relation.HeroId)
+                    continue;
+                
+                item.Status = (int)PlanetStatus.Enemy;
+            }
         }
         
         private string StartPlanetColonization(HeroPlanetRelation relation, Hero hero)
@@ -371,6 +406,15 @@ namespace Server.Services
             }
 
             return heroes;
+        }
+
+        private async Task SetOwnerIdToPlanetAsync(Guid planetId, Guid ownerId, CancellationToken cancellationToken)
+        {
+            var planet = await _context.Planets.FirstOrDefaultAsync(x => x.Id == planetId, cancellationToken);
+            if (planet is null)
+                throw new InvalidOperationException("Can not sen owner id to not existing planet");
+
+            planet.OwnerId = ownerId;
         }
     }
 }

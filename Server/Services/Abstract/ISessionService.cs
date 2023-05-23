@@ -26,5 +26,8 @@ namespace Server.Services.Abstract
             CancellationToken cancellationToken);
 
         Task<HeroMapView?> GetHeroMapAsync(Guid heroId, CancellationToken cancellationToken);
+
+        Task<ServiceResult<Dictionary<Guid, Guid>>> GetUserIdWithHeroIdBySessionId(Guid sessionId,
+            CancellationToken cancellationToken);
     }
 }

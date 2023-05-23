@@ -35,9 +35,9 @@ public class SessionHub : Hub
         
         _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value.Message}");
 
-        if (result.Value.Message == SuccessMessages.Session.StartedResearching)
+        if (result.Value.Message.StartsWith(SuccessMessages.Session.StartedResearching))
         {
-            await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizedPlanet,
+            await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartedResearching,
                 result.Value.Message);
         }
         else if (result.Value.Message == SuccessMessages.Session.Researched)
@@ -46,16 +46,26 @@ public class SessionHub : Hub
             var heroMap = await _sessionService.GetHeroMapAsync(request.HeroId, CancellationToken.None);
             await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchedPlanet, heroMap);
         }
-        else if (result.Value.Message == SuccessMessages.Session.StartedColonization)
+        else if (result.Value.Message.StartsWith(SuccessMessages.Session.StartedColonization))
         {
-            await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizedPlanet,
+            await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartedColonizingPlanet,
                 result.Value.Message);
         }
         else if (result.Value.Message == SuccessMessages.Session.Colonized)
         {
-            // TODO: update hero map for every hero
-            await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizedPlanet,
-                result.Value.Message);
+            var userIdsResult = await _sessionService.GetUserIdWithHeroIdBySessionId(request.SessionId, CancellationToken.None);
+            if (userIdsResult.Success == false)
+            {
+                await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, userIdsResult.ErrorMessage);
+            }            
+            else
+            {
+                foreach (var item in userIdsResult.Value)
+                {
+                    var heroMap = await _sessionService.GetHeroMapAsync(item.Value, CancellationToken.None);
+                    await this.Clients.User(item.Key.ToString()).SendAsync(ClientHandlers.Session.ReceiveHeroMap, heroMap);
+                }
+            }
         }
         else if (result.Value.Message.StartsWith(SuccessMessages.Session.IterationDone))
         {
@@ -64,7 +74,7 @@ public class SessionHub : Hub
         }
         else
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException("Can not handle given status");
         }
     }
 }
