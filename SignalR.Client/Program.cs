@@ -238,7 +238,11 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     else if (message == "next-turn")
     {
         var sessionId = Guid.Parse("f5b94058-3fb8-4147-903d-01cddf03057e");
-        await connection.InvokeAsync(ServerHandlers.Session.NextTurn, new NextTurnRequest { SessionId = sessionId});
+        Console.WriteLine("Are you 1 or 2 user?");
+        var userNumber = Console.ReadLine();
+        var heroId = Guid.Empty;
+        heroId = Guid.Parse(userNumber == "1" ? "5b93fabf-0c50-4553-9aca-c93271c121e3" : "0b770df7-569b-463f-ae5f-e8712f328885");
+        await connection.InvokeAsync(ServerHandlers.Session.NextTurn, new NextTurnRequest { SessionId = sessionId, HeroId = heroId});
     }
 
     return false;

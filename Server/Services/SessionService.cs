@@ -103,17 +103,17 @@ namespace Server.Services
             return new ServiceResult<MessageContainer>(new MessageContainer { Message = message });
         }
 
-        public async Task<ServiceResult<Session>> MakeNextTurnAsync(Guid sessionId, CancellationToken cancellationToken)
+        public async Task<ServiceResult<Session>> MakeNextTurnAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken)
         {
             var session = await GetByIdAsync(sessionId, cancellationToken);
             if (session is null)
                 return new ServiceResult<Session>(ErrorMessages.Session.NotFound);
-
-            if (session.Heroes is null)
-            {
-                throw new NullReferenceException("You probably changed GetByIdAsync method in session service. Heroes can not be null there");
-            }
+            if (session.HeroTurnId != heroId)
+                return new ServiceResult<Session>(ErrorMessages.Session.NotHeroTurn);
             
+            if (session.Heroes is null)
+                throw new NullReferenceException("You probably changed GetByIdAsync method in session service. Heroes can not be null there");
+
             var heroes = session.Heroes.OrderBy(x => x.Name).ToList();
             int nextHeroIndex = session.TurnNumber % heroes.Count;
             var hero = heroes[nextHeroIndex];

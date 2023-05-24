@@ -31,7 +31,7 @@ public class SessionHub : Hub
     [Authorize]
     public async Task MakeNextTurn(NextTurnRequest request)
     {
-        ServiceResult<Session> result = await _sessionService.MakeNextTurnAsync(request.SessionId, CancellationToken.None);
+        ServiceResult<Session> result = await _sessionService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
         await HandleSessionResultAndNotifyClients(result);
     }
 
@@ -64,9 +64,11 @@ public class SessionHub : Hub
             await this.Clients.Caller.SendAsync(ClientHandlers.Session.PostResearchOrColonizeErrorHandler,
                 result.ErrorMessage);
         }
-        
-        _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value.Message}");
-        await HandleStatusesAsync(result, request);
+        else
+        {
+            _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value.Message}");
+            await HandleStatusesAsync(result, request);
+        }
     }
 
     private async Task HandleStatusesAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
