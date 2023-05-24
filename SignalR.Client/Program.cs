@@ -147,6 +147,16 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine(json);
     });
     
+    hubConnection.On<Session>(ClientHandlers.Session.ReceiveSession, (session) =>
+    {
+        Console.WriteLine("Received session");
+        string json = JsonSerializer.Serialize(session, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.StartedResearching, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.StartedColonizingPlanet, HandleStringMessageOutput());
@@ -224,6 +234,11 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
             PlanetId = planetId
         };
         await connection.InvokeAsync(ServerHandlers.Session.PostResearchOrColonizePlanet, request);
+    }
+    else if (message == "next-turn")
+    {
+        var sessionId = Guid.Parse("f5b94058-3fb8-4147-903d-01cddf03057e");
+        await connection.InvokeAsync(ServerHandlers.Session.NextTurn, new NextTurnRequest { SessionId = sessionId});
     }
 
     return false;

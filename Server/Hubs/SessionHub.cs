@@ -71,6 +71,9 @@ public class SessionHub : Hub
 
     private async Task HandleStatusesAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
     {
+        if (result.Value is null)
+            throw new NullReferenceException("Somehow value is null. Result is not succeeded");
+        
         if (result.Value.Message.StartsWith(SuccessMessages.Session.StartedResearching))
         {
             await NotifyStartResearchingAsync(result);
@@ -93,7 +96,7 @@ public class SessionHub : Hub
         }
         else
         {
-            throw new InvalidOperationException("Can not handle given status");
+            await NotifyUnhandledStatusAsync();
         }
     }
 
@@ -141,5 +144,11 @@ public class SessionHub : Hub
     {
         await this.Clients.Caller.SendAsync(ClientHandlers.Session.IterationDone,
             result.Value.Message);
+    }
+    
+    private async Task NotifyUnhandledStatusAsync()
+    {
+        await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler,
+            "We are sorry but now we can not handle given status. Selected planet probably already colonized");
     }
 }
