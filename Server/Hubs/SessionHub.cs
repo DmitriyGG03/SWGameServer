@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Server.Common.Constants;
 using Server.Domain;
+using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Contracts.Hubs;
+using SharedLibrary.Models;
 using SharedLibrary.Requests;
 
 namespace Server.Hubs;
@@ -12,23 +14,47 @@ public class SessionHub : Hub
 {
     private readonly ISessionService _sessionService;
     private readonly ILogger<SessionHub> _logger;
-    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger)
+    private readonly CyclicDependencySolver _cyclicDependencySolver;
+    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger, CyclicDependencySolver cyclicDependencySolver)
     {
         _sessionService = sessionService;
         _logger = logger;
+        _cyclicDependencySolver = cyclicDependencySolver;
     }
-    
+
     [Authorize]
     public async Task HealthCheck()
     {
         await this.Clients.Caller.SendAsync(ClientHandlers.Session.HealthCheckHandler, "session hub is online");
     }
+
+    [Authorize]
+    public async Task MakeNextTurn(NextTurnRequest request)
+    {
+        ServiceResult<Session> result = await _sessionService.MakeNextTurnAsync(request.SessionId, CancellationToken.None);
+        await HandleSessionResultAndNotifyClients(result);
+    }
+
     [Authorize]
     public async Task PostResearchOrColonizePlanet(ResearchColonizePlanetRequest request)
     {
         var result = await _sessionService.ResearchOrColonizePlanetAsync(request.SessionId, request.PlanetId, request.HeroId, 
             CancellationToken.None);
         await HandlePostResearchOrColonizeAsync(result, request);
+    }
+
+    private async Task HandleSessionResultAndNotifyClients(ServiceResult<Session> result)
+    {
+        if (result.Success == false)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
+        }
+        else
+        {
+            var session = result.Value;
+            _cyclicDependencySolver.Solve(session);
+            await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
+        }
     }
 
     private async Task HandlePostResearchOrColonizeAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)

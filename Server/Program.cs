@@ -37,6 +37,8 @@ builder.Services.AddScoped<IMapGenerator, DefaultMapGeneratorStrategy>();
 builder.Services.AddScoped<ILobbyService, LobbyService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 
+builder.Services.AddSingleton<CyclicDependencySolver>();
+
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(o =>

@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Localization;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
 using Server.Domain;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
-using System.Drawing;
 
 namespace Server.Services
 {
@@ -84,42 +82,47 @@ namespace Server.Services
             Guid heroId,
             CancellationToken cancellationToken)
         {
+            var turnIdResult = await GetSessionAndValidateTurnId(sessionId, heroId, cancellationToken);
+            if (turnIdResult.Success == false)
+                return new ServiceResult<MessageContainer>(turnIdResult.ErrorMessage);
+
             var relation = await _context.HeroPlanetRelations.FirstOrDefaultAsync(x => x.HeroId == heroId &&
                 x.PlanetId == planetId &&
                 x.Status >= (int)PlanetStatus.Known, cancellationToken);
 
             if (relation is null)
-            {
                 return new ServiceResult<MessageContainer>(ErrorMessages.Relation.NotFound);
-            }
-            
+
             var hero = await _context.Heroes.FirstOrDefaultAsync(x => x.HeroId == heroId, cancellationToken);
             if (hero is null)
-            {
                 return new ServiceResult<MessageContainer>(ErrorMessages.Hero.NotFound);
-            }
-            
-            string message = String.Empty;
-            switch (relation.Status)
-            {
-                case (int)PlanetStatus.Known:
-                    message = StartResearchPlanet(relation, hero, cancellationToken);
-                    break;
-                case (int)PlanetStatus.Researching:
-                    message = await ContinuePlanetResearchingAsync(relation, hero, cancellationToken);
-                    break;
-                case (int)PlanetStatus.Researched:
-                    message = StartPlanetColonization(relation, hero);
-                    break;
-                case (int)PlanetStatus.Colonization:
-                    message = await ContinuePlanetColonizationAsync(relation, hero, cancellationToken);
-                    break;
-                default:
-                    return new ServiceResult<MessageContainer>(new MessageContainer { Message = SuccessMessages.Session.CanNotOperateWithGivenPlanet });
-            }
+
+            string message = await HandleResearchOrColonizeByRelationStatusAsync(relation, hero, cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
             return new ServiceResult<MessageContainer>(new MessageContainer { Message = message });
+        }
+
+        public async Task<ServiceResult<Session>> MakeNextTurnAsync(Guid sessionId, CancellationToken cancellationToken)
+        {
+            var session = await GetByIdAsync(sessionId, cancellationToken);
+            if (session is null)
+                return new ServiceResult<Session>(ErrorMessages.Session.NotFound);
+
+            if (session.Heroes is null)
+            {
+                throw new NullReferenceException("You probably changed GetByIdAsync method in session service. Heroes can not be null there");
+            }
+            
+            var heroes = session.Heroes.OrderBy(x => x.Name).ToList();
+            int nextHeroIndex = session.TurnNumber % heroes.Count;
+            var hero = heroes[nextHeroIndex];
+            
+            session.HeroTurnId = hero.HeroId;
+            session.TurnNumber += 1;
+            await UpdateSessionAsync(session, cancellationToken);
+
+            return new ServiceResult<Session>(session);
         }
 
         public async Task<HeroMapView?> GetHeroMapAsync(Guid heroId, CancellationToken cancellationToken)
@@ -174,7 +177,43 @@ namespace Server.Services
                 .Select(x => new {x.UserId, x.HeroId})
                 .ToDictionary(t => t.UserId, t => t.HeroId));
         }
+        
+        private async Task<string> HandleResearchOrColonizeByRelationStatusAsync(HeroPlanetRelation relation, 
+            Hero hero, CancellationToken cancellationToken)
+        {
+            var message = String.Empty;
+            switch (relation.Status)
+            {
+                case (int)PlanetStatus.Known:
+                    message = StartResearchPlanet(relation, hero, cancellationToken);
+                    break;
+                case (int)PlanetStatus.Researching:
+                    message = await ContinuePlanetResearchingAsync(relation, hero, cancellationToken);
+                    break;
+                case (int)PlanetStatus.Researched:
+                    message = StartPlanetColonization(relation, hero);
+                    break;
+                case (int)PlanetStatus.Colonization:
+                    message = await ContinuePlanetColonizationAsync(relation, hero, cancellationToken);
+                    break;
+                default:
+                    return SuccessMessages.Session.CanNotOperateWithGivenPlanet;
+            }
 
+            return message;
+        }
+
+        private async Task<ServiceResult> GetSessionAndValidateTurnId(Guid sessionId, Guid heroId,
+            CancellationToken cancellationToken)
+        {
+            var session = await GetByIdAsync(sessionId, cancellationToken);
+            if (session is null)
+                return new ServiceResult(ErrorMessages.Session.NotFound);
+            if (session.HeroTurnId != heroId)
+                return new ServiceResult(ErrorMessages.Session.NotHeroTurn);
+            
+            return new ServiceResult();
+        }
         private async Task<ServiceResult<int>> UpdateSessionAsync(Session designation,
             CancellationToken cancellationToken)
         {

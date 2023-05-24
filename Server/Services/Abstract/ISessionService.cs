@@ -29,5 +29,7 @@ namespace Server.Services.Abstract
 
         Task<ServiceResult<Dictionary<Guid, Guid>>> GetUserIdWithHeroIdBySessionId(Guid sessionId,
             CancellationToken cancellationToken);
+
+        Task<ServiceResult<Session>> MakeNextTurnAsync(Guid sessionId, CancellationToken cancellationToken);
     }
 }
