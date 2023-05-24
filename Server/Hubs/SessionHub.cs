@@ -61,17 +61,17 @@ public class SessionHub : Hub
     {
         if (result.Success == false)
         {
-            await this.Clients.Caller.SendAsync(ClientHandlers.Session.PostResearchOrColonizeErrorHandler,
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler,
                 result.ErrorMessage);
         }
         else
         {
             _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value.Message}");
-            await HandleStatusesAsync(result, request);
+            await HandleSuccessStatusesAsync(result, request);
         }
     }
 
-    private async Task HandleStatusesAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
+    private async Task HandleSuccessStatusesAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
     {
         if (result.Value is null)
             throw new NullReferenceException("Somehow value is null. Result is not succeeded");
