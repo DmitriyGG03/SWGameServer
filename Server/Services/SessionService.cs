@@ -24,10 +24,7 @@ namespace Server.Services
 
         public async Task<ServiceResult<Session>> CreateAsync(Guid lobbyId, CancellationToken cancellationToken)
         {
-            var lobby = await _context.Lobbies
-                .Include(x => x.LobbyInfos)
-                 .ThenInclude(x => x.User)
-                .FirstOrDefaultAsync(l => l.Id == lobbyId, cancellationToken);
+            var lobby = await GetLobbyByIdWithLobbyInfosAsync(lobbyId, cancellationToken);
             if (lobby == null)
                 return new ServiceResult<Session>(ErrorMessages.Lobby.NotFound);
 
@@ -35,20 +32,8 @@ namespace Server.Services
             if (lobbyInfos.Any(x => x.Ready == false))
                 return new ServiceResult<Session>(ErrorMessages.Lobby.UsersNotReady);
 
-            var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
-            var sessionMap = _mapGenerator.GenerateMap(defaultOptions);
-
-            var session = new Session
-            {
-                Id = Guid.NewGuid(),
-                Name = lobby.LobbyName,
-                Heroes = new List<Hero>(),
-                SessionMapId = sessionMap.Id,
-                SessionMap = sessionMap,
-                TurnNumber = 0,
-                HeroTurnId = Guid.Empty
-            };
-            session.TurnTimeLimit = session.CalculateTurnTimeLimit(sessionMap.Planets.Count);
+            var sessionMap = GenerateSessionMap();
+            var session = CreateSessionAndCalculateTurnTimeLimit(lobby, sessionMap);
 
             await _context.Sessions.AddAsync(session, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
@@ -72,7 +57,7 @@ namespace Server.Services
         {
             var session = await _context.Sessions
                 .Include(x => x.Heroes)
-                .ThenInclude(x => x.User)
+                 .ThenInclude(x => x.User)
                 .FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
 
             return session;
@@ -178,6 +163,38 @@ namespace Server.Services
                 .ToDictionary(t => t.UserId, t => t.HeroId));
         }
         
+        private static Session CreateSessionAndCalculateTurnTimeLimit(Lobby lobby, SessionMap sessionMap)
+        {
+            var session = new Session
+            {
+                Id = Guid.NewGuid(),
+                Name = lobby.LobbyName,
+                Heroes = new List<Hero>(),
+                SessionMapId = sessionMap.Id,
+                SessionMap = sessionMap,
+                TurnNumber = 0,
+                HeroTurnId = Guid.Empty
+            };
+            session.TurnTimeLimit = session.CalculateTurnTimeLimit(sessionMap.Planets.Count);
+            return session;
+        }
+        
+        private async Task<Lobby?> GetLobbyByIdWithLobbyInfosAsync(Guid lobbyId, CancellationToken cancellationToken)
+        {
+            var lobby = await _context.Lobbies
+                .Include(x => x.LobbyInfos)!
+                .ThenInclude(x => x.User)
+                .FirstOrDefaultAsync(l => l.Id == lobbyId, cancellationToken);
+            return lobby;
+        }
+        
+        private SessionMap GenerateSessionMap()
+        {
+            var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
+            var sessionMap = _mapGenerator.GenerateMap(defaultOptions);
+            return sessionMap;
+        }
+        
         private async Task<string> HandleResearchOrColonizeByRelationStatusAsync(HeroPlanetRelation relation, 
             Hero hero, CancellationToken cancellationToken)
         {
@@ -214,6 +231,7 @@ namespace Server.Services
             
             return new ServiceResult();
         }
+        
         private async Task<ServiceResult<int>> UpdateSessionAsync(Session designation,
             CancellationToken cancellationToken)
         {
