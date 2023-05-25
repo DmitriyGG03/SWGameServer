@@ -47,20 +47,17 @@ public class AuthenticationService : IAuthenticationService
 		string accessToken = GenerateJwtToken(AssembleClaimsIdentity(user));
 		string[] operationResult = new[] { "New user has been successfully created" };
 
-        return new AuthenticationResult(operationResult, accessToken);
+        return new AuthenticationResult(operationResult, user, accessToken);
 	}
 	public AuthenticationResult Login(string email, string password)
 	{
 		var user = Context.Users.FirstOrDefault(u => u.Email == email);
-
-		string[] negativeOperationResult = new[] { "Email or password is incorrect" };
-		string[] posutiveOperationResult = new[] { "Login is successful" };
-
+		
 		if (user == null ||
-			user.PasswordHash != _hashProvider.ComputeHash(password, user.Salt)) 
-			return new AuthenticationResult(negativeOperationResult);
+		    user.PasswordHash != _hashProvider.ComputeHash(password, user.Salt)) 
+			return new AuthenticationResult(new[] { "Email or password is incorrect" });
 
-		return new AuthenticationResult(posutiveOperationResult, GenerateJwtToken(AssembleClaimsIdentity(user)));
+		return new AuthenticationResult(new[] { "Login is successful" }, user, GenerateJwtToken(AssembleClaimsIdentity(user)));
 	}
 
 	private ClaimsIdentity AssembleClaimsIdentity(ApplicationUser user)

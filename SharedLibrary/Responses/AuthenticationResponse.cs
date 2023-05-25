@@ -8,6 +8,7 @@ namespace SharedLibrary.Responses
 	[Serializable]
 	public class AuthenticationResponse : ResponseBase, IAuthenticationResponse
 	{
+		public Guid UserId { get; set; }
 		public string? Token { get; set; }
 
 		public AuthenticationResponse()
@@ -17,6 +18,12 @@ namespace SharedLibrary.Responses
 		{
 			Info = info.ToArray();
 			Token = token;
+		}
+		public AuthenticationResponse(IEnumerable<string> info, Guid userId, string? token = null)
+		{
+			Info = info.ToArray();
+			Token = token;
+			UserId = userId;
 		}
 	}
 }

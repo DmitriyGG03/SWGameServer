@@ -36,6 +36,6 @@ public class AuthenticationController : ControllerBase
         if (result.Success == false) 
 			return BadRequest(new AuthenticationResponse(result.OperationInfo));
 
-        return Ok(new AuthenticationResponse(result.OperationInfo, result.AccessToken));
+        return Ok(new AuthenticationResponse(result.OperationInfo, result.User.Id, result.AccessToken));
     }
 }
