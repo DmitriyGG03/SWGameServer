@@ -7,6 +7,7 @@ using Server.Services;
 using Server.Services.Abstract;
 using System.Text;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.OpenApi.Models;
 using Server.Common.Constants;
 using Server.Hubs;
 using Server.Hubs.Providers;
@@ -70,11 +71,39 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
     };
 });
 
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { 
+        Title = "Game Server API", 
+        Version = "v1" 
+    });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme {
+        In = ParameterLocation.Header, 
+        Description = "Please insert JWT with Bearer into field",
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey 
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement {
+        { 
+            new OpenApiSecurityScheme 
+            { 
+                Reference = new OpenApiReference 
+                { 
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer" 
+                } 
+            },
+            new string[] { } 
+        } 
+    });
+});
+
 var app = builder.Build(); // Создает обьект WebApplication
 
 if (app.Environment.IsDevelopment()) 
 {
-    
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
@@ -83,8 +112,10 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
 app.MapHub<LobbyHub>("/hubs/lobby");
 app.MapHub<SessionHub>("/hubs/session");
+
 app.Run();
 
 //For test

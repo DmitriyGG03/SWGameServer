@@ -17,7 +17,8 @@ namespace SharedLibrary.Models
         public float Y { get; set; }
         [Range(0, byte.MaxValue)]
         public byte DaysNumber { get; set; }
-
+        [Range(0, int.MaxValue)]
+        public int Size { get; set; }
         public Guid? OwnerId { get; set; }
         
         [NotMapped, JsonIgnore, IgnoreDataMember]
@@ -34,12 +35,21 @@ namespace SharedLibrary.Models
         {
             Id = Guid.Empty;
             X = Y = 0;
+            Size = new Random().Next(1, 1000);
         }
         public Planet(PointF position)
         {
             Id = Guid.NewGuid();
             X = position.X;
             Y = position.Y;
+            Size = new Random().Next(1, 1000);
+        }
+        public Planet(PointF position, int size)
+        {
+            Id = Guid.NewGuid();
+            X = position.X;
+            Y = position.Y;
+            Size = size;
         }
     }
 }
