@@ -7,6 +7,12 @@ namespace Server.Services;
 
 public class DefaultMapGeneratorStrategy : IMapGenerator
 {
+    private readonly IPlanetNameGenerator _planetNameGenerator;
+    public DefaultMapGeneratorStrategy(IPlanetNameGenerator planetNameGenerator)
+    {
+        _planetNameGenerator = planetNameGenerator;
+    }
+
     public SessionMap GenerateMap(MapGenerationOptions options)
     {
         if (options == null)
@@ -32,7 +38,8 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
                 position = Geometry.GenerateRandomPoint(options.Width, options.Height);
             }
 
-            var planet = new Planet(position);
+            string planetName = _planetNameGenerator.GeneratePlanetNameBasedOnUniqueIndex(i);
+            var planet = new Planet(position, Random.Shared.Next(1, 1000), planetName);
             planets.Add(planet);
         }
 

@@ -11,6 +11,7 @@ using Microsoft.OpenApi.Models;
 using Server.Common.Constants;
 using Server.Hubs;
 using Server.Hubs.Providers;
+using Server.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,8 +38,10 @@ builder.Services.AddScoped<IHashProvider, HashProvider>();
 builder.Services.AddScoped<IMapGenerator, DefaultMapGeneratorStrategy>();
 builder.Services.AddScoped<ILobbyService, LobbyService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
-
 builder.Services.AddSingleton<CyclicDependencySolver>();
+
+builder.Services.AddSingleton<IPlanetNameRepository, PlanetNameRepository>();
+builder.Services.AddSingleton<IPlanetNameGenerator, PlanetNameGenerator>();
 
 builder.Services.AddHttpContextAccessor();
 
