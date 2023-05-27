@@ -103,8 +103,8 @@ namespace Server.Services
             int nextHeroIndex = session.TurnNumber % heroes.Count;
             var hero = heroes[nextHeroIndex];
             
-            session.HeroTurnId = hero.HeroId;
             session.TurnNumber += 1;
+            session.HeroTurnId = hero.HeroId;
             await UpdateSessionAsync(session, cancellationToken);
 
             return new ServiceResult<Session>(session);
