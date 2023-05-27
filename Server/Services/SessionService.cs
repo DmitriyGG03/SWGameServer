@@ -1,10 +1,8 @@
-﻿using Microsoft.AspNetCore.Localization;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
 using Server.Domain;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
-using System.Drawing;
 
 namespace Server.Services
 {
@@ -376,7 +374,7 @@ namespace Server.Services
                 {
                     HeroId = Guid.NewGuid(),
                     Name = item.User.Username,
-                    Argb = item.Argb,
+                    ColorStatus = item.ColorStatus,
                     ColonizationShipLimit = 10,
                     AvailableColonizationShips = 10,
                     ResearchShipLimit = 10,

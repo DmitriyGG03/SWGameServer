@@ -182,17 +182,18 @@ public class LobbyService : ILobbyService
     /// </summary>
     /// <param name="userId">The ID of the user to change the ready status of.</param>
     /// <param name="lobbyId">The ID of the lobby the user is in.</param>
-    /// <param name="argb">The new color in argb format</param>
+    /// <param name="colorStatus">The new color in argb format</param>
     /// <returns>A service result containing the lobby with the updated user color.</returns>
-    public async Task<ServiceResult<LobbyInfo>> ChangeColorAsync(Guid userId, Guid lobbyId, int argb)
+    public async Task<ServiceResult<LobbyInfo>> ChangeColorAsync(Guid userId, Guid lobbyId, int colorStatus)
     {
         var result = await GetLobbyAndValidateIfUserThere(userId, lobbyId);
         if (result.Success == false)
             return new ServiceResult<LobbyInfo>(result.ErrorMessage);
         var lobby = result.Value;
-
+        
         var lobbyInfo = lobby.LobbyInfos.First(x => x.UserId == userId);
-        lobbyInfo.Argb = argb;
+        lobbyInfo.ColorStatus = colorStatus;
+        
         await _context.SaveChangesAsync();
         return new ServiceResult<LobbyInfo>(lobbyInfo);
     }
@@ -235,7 +236,7 @@ public class LobbyService : ILobbyService
             User = user,
             LobbyLeader = false,
             Ready = false,
-            Argb = Color.Red.ToArgb()
+            ColorStatus = (int)ColorStatus.Red
         };
         
         lobby.LobbyInfos.Add(lobbyInfo);

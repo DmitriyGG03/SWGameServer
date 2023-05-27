@@ -24,9 +24,7 @@ namespace SharedLibrary.Models
 
 		[Range(0, byte.MaxValue)] 
 		public byte AvailableColonizationShips { get; set; } = 0;
-		public int Argb { get; set; }
-		[NotMapped]
-		public Color Color { get => Color.FromArgb(Argb); }
+		public int ColorStatus { get; set; }
 
 		
 		[ForeignKey(nameof(User))]
