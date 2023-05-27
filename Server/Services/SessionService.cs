@@ -99,11 +99,11 @@ namespace Server.Services
             if (session.Heroes is null)
                 throw new NullReferenceException("You probably changed GetByIdAsync method in session service. Heroes can not be null there");
 
+            session.TurnNumber += 1;
             var heroes = session.Heroes.OrderBy(x => x.Name).ToList();
             int nextHeroIndex = session.TurnNumber % heroes.Count;
             var hero = heroes[nextHeroIndex];
             
-            session.TurnNumber += 1;
             session.HeroTurnId = hero.HeroId;
             await UpdateSessionAsync(session, cancellationToken);
 
