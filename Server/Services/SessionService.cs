@@ -433,7 +433,7 @@ namespace Server.Services
                 {
                     HeroId = Guid.NewGuid(),
                     Name = item.User.Username,
-                    Argb = item.Argb,
+                    ColorStatus = item.ColorStatus,
                     ColonizationShipLimit = 10,
                     AvailableColonizationShips = 10,
                     ResearchShipLimit = 10,

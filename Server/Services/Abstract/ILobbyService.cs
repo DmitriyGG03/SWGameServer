@@ -60,7 +60,7 @@ public interface ILobbyService
     /// </summary>
     /// <param name="userId">The ID of the user to change the ready status of.</param>
     /// <param name="lobbyId">The ID of the lobby the user is in.</param>
-    /// <param name="argb">The new color in argb format</param>
+    /// <param name="colorStatus">The new color in argb format</param>
     /// <returns>A service result containing the lobby with the updated user color.</returns>
-    Task<ServiceResult<LobbyInfo>> ChangeColorAsync(Guid userId, Guid lobbyId, int argb);
+    Task<ServiceResult<LobbyInfo>> ChangeColorAsync(Guid userId, Guid lobbyId, int colorStatus);
 }

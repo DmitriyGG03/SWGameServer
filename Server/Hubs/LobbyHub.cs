@@ -80,7 +80,7 @@ public class LobbyHub : Hub
         }
     }
     [Authorize]
-    public async Task ChangeColor(Guid lobbyId, int argb)
+    public async Task ChangeColor(Guid lobbyId, int colorStatus)
     {
         var semaphore = ApplicationSemaphores.SemaphoreSlimForChangingColor;
         await semaphore.WaitAsync();
@@ -88,7 +88,7 @@ public class LobbyHub : Hub
         try
         {
             var userId = GetUserIdFromContext();
-            var result = await _lobbyService.ChangeColorAsync(userId, lobbyId, argb);
+            var result = await _lobbyService.ChangeColorAsync(userId, lobbyId, colorStatus);
             await HandleResult(result, ClientHandlers.Lobby.ChangedColor);
         }
         catch (Exception e)

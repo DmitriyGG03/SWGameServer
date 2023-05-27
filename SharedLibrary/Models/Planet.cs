@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
 using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 
 namespace SharedLibrary.Models
 {
@@ -23,7 +22,7 @@ namespace SharedLibrary.Models
         public string PlanetName { get; set; }
         public Guid? OwnerId { get; set; }
         
-        [NotMapped, JsonIgnore, IgnoreDataMember]
+        [NotMapped, IgnoreDataMember]
         public PointF Position
         {
             get => new PointF(X, Y);
