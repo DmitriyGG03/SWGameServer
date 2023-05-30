@@ -151,7 +151,7 @@ public class LobbyHub : Hub
         {
             if (result.ErrorMessage == SuccessMessages.Lobby.Deleted)
             {
-                await this.Clients.Caller.SendAsync(ClientHandlers.Lobby.DeleteLobbyHandler, SuccessMessages.Lobby.Deleted);
+                await this.Clients.All.SendAsync(ClientHandlers.Lobby.DeleteLobbyHandler, SuccessMessages.Lobby.Deleted);
                 return false;
             }
             
