@@ -24,10 +24,7 @@ namespace Server.Services
 
         public async Task<ServiceResult<Session>> CreateAsync(Guid lobbyId, CancellationToken cancellationToken)
         {
-            var lobby = await _context.Lobbies
-                .Include(x => x.LobbyInfos)
-                 .ThenInclude(x => x.User)
-                .FirstOrDefaultAsync(l => l.Id == lobbyId, cancellationToken);
+            var lobby = await GetLobbyByIdWithLobbyInfosAsync(lobbyId, cancellationToken);
             if (lobby == null)
                 return new ServiceResult<Session>(ErrorMessages.Lobby.NotFound);
 
@@ -35,20 +32,8 @@ namespace Server.Services
             if (lobbyInfos.Any(x => x.Ready == false))
                 return new ServiceResult<Session>(ErrorMessages.Lobby.UsersNotReady);
 
-            var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
-            var sessionMap = _mapGenerator.GenerateMap(defaultOptions);
-
-            var session = new Session
-            {
-                Id = Guid.NewGuid(),
-                Name = lobby.LobbyName,
-                Heroes = new List<Hero>(),
-                SessionMapId = sessionMap.Id,
-                SessionMap = sessionMap,
-                TurnNumber = 0,
-                HeroTurnId = Guid.Empty
-            };
-            session.TurnTimeLimit = session.CalculateTurnTimeLimit(sessionMap.Planets.Count);
+            var sessionMap = GenerateSessionMap();
+            var session = CreateSessionAndCalculateTurnTimeLimit(lobby, sessionMap);
 
             await _context.Sessions.AddAsync(session, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
@@ -72,7 +57,7 @@ namespace Server.Services
         {
             var session = await _context.Sessions
                 .Include(x => x.Heroes)
-                .ThenInclude(x => x.User)
+                 .ThenInclude(x => x.User)
                 .FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
 
             return session;
@@ -82,42 +67,47 @@ namespace Server.Services
             Guid heroId,
             CancellationToken cancellationToken)
         {
+            var turnIdResult = await GetSessionAndValidateTurnId(sessionId, heroId, cancellationToken);
+            if (turnIdResult.Success == false)
+                return new ServiceResult<MessageContainer>(turnIdResult.ErrorMessage);
+
             var relation = await _context.HeroPlanetRelations.FirstOrDefaultAsync(x => x.HeroId == heroId &&
                 x.PlanetId == planetId &&
                 x.Status >= (int)PlanetStatus.Known, cancellationToken);
 
             if (relation is null)
-            {
                 return new ServiceResult<MessageContainer>(ErrorMessages.Relation.NotFound);
-            }
-            
+
             var hero = await _context.Heroes.FirstOrDefaultAsync(x => x.HeroId == heroId, cancellationToken);
             if (hero is null)
-            {
                 return new ServiceResult<MessageContainer>(ErrorMessages.Hero.NotFound);
-            }
-            
-            string message = String.Empty;
-            switch (relation.Status)
-            {
-                case (int)PlanetStatus.Known:
-                    message = StartResearchPlanet(relation, hero, cancellationToken);
-                    break;
-                case (int)PlanetStatus.Researching:
-                    message = await ContinuePlanetResearchingAsync(relation, hero, cancellationToken);
-                    break;
-                case (int)PlanetStatus.Researched:
-                    message = StartPlanetColonization(relation, hero);
-                    break;
-                case (int)PlanetStatus.Colonization:
-                    message = await ContinuePlanetColonizationAsync(relation, hero, cancellationToken);
-                    break;
-                default:
-                    return new ServiceResult<MessageContainer>(new MessageContainer { Message = SuccessMessages.Session.CanNotOperateWithGivenPlanet });
-            }
+
+            string message = await HandleResearchOrColonizeByRelationStatusAsync(relation, hero, cancellationToken);
 
             await _context.SaveChangesAsync(cancellationToken);
             return new ServiceResult<MessageContainer>(new MessageContainer { Message = message });
+        }
+
+        public async Task<ServiceResult<Session>> MakeNextTurnAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken)
+        {
+            var session = await GetByIdAsync(sessionId, cancellationToken);
+            if (session is null)
+                return new ServiceResult<Session>(ErrorMessages.Session.NotFound);
+            if (session.HeroTurnId != heroId)
+                return new ServiceResult<Session>(ErrorMessages.Session.NotHeroTurn);
+            
+            if (session.Heroes is null)
+                throw new NullReferenceException("You probably changed GetByIdAsync method in session service. Heroes can not be null there");
+
+            session.TurnNumber += 1;
+            var heroes = session.Heroes.OrderBy(x => x.Name).ToList();
+            int nextHeroIndex = session.TurnNumber % heroes.Count;
+            var hero = heroes[nextHeroIndex];
+            
+            session.HeroTurnId = hero.HeroId;
+            await UpdateSessionAsync(session, cancellationToken);
+
+            return new ServiceResult<Session>(session);
         }
 
         public async Task<HeroMapView?> GetHeroMapAsync(Guid heroId, CancellationToken cancellationToken)
@@ -172,7 +162,76 @@ namespace Server.Services
                 .Select(x => new {x.UserId, x.HeroId})
                 .ToDictionary(t => t.UserId, t => t.HeroId));
         }
+        
+        private static Session CreateSessionAndCalculateTurnTimeLimit(Lobby lobby, SessionMap sessionMap)
+        {
+            var session = new Session
+            {
+                Id = Guid.NewGuid(),
+                Name = lobby.LobbyName,
+                Heroes = new List<Hero>(),
+                SessionMapId = sessionMap.Id,
+                SessionMap = sessionMap,
+                TurnNumber = 0,
+                HeroTurnId = Guid.Empty
+            };
+            session.TurnTimeLimit = session.CalculateTurnTimeLimit(sessionMap.Planets.Count);
+            return session;
+        }
+        
+        private async Task<Lobby?> GetLobbyByIdWithLobbyInfosAsync(Guid lobbyId, CancellationToken cancellationToken)
+        {
+            var lobby = await _context.Lobbies
+                .Include(x => x.LobbyInfos)!
+                .ThenInclude(x => x.User)
+                .FirstOrDefaultAsync(l => l.Id == lobbyId, cancellationToken);
+            return lobby;
+        }
+        
+        private SessionMap GenerateSessionMap()
+        {
+            var defaultOptions = new MapGenerationOptions(800, 600, 50, 25, 60);
+            var sessionMap = _mapGenerator.GenerateMap(defaultOptions);
+            return sessionMap;
+        }
+        
+        private async Task<string> HandleResearchOrColonizeByRelationStatusAsync(HeroPlanetRelation relation, 
+            Hero hero, CancellationToken cancellationToken)
+        {
+            var message = String.Empty;
+            switch (relation.Status)
+            {
+                case (int)PlanetStatus.Known:
+                    message = StartResearchPlanet(relation, hero, cancellationToken);
+                    break;
+                case (int)PlanetStatus.Researching:
+                    message = await ContinuePlanetResearchingAsync(relation, hero, cancellationToken);
+                    break;
+                case (int)PlanetStatus.Researched:
+                    message = StartPlanetColonization(relation, hero);
+                    break;
+                case (int)PlanetStatus.Colonization:
+                    message = await ContinuePlanetColonizationAsync(relation, hero, cancellationToken);
+                    break;
+                default:
+                    return SuccessMessages.Session.CanNotOperateWithGivenPlanet;
+            }
 
+            return message;
+        }
+
+        private async Task<ServiceResult> GetSessionAndValidateTurnId(Guid sessionId, Guid heroId,
+            CancellationToken cancellationToken)
+        {
+            var session = await GetByIdAsync(sessionId, cancellationToken);
+            if (session is null)
+                return new ServiceResult(ErrorMessages.Session.NotFound);
+            if (session.HeroTurnId != heroId)
+                return new ServiceResult(ErrorMessages.Session.NotHeroTurn);
+            
+            return new ServiceResult();
+        }
+        
         private async Task<ServiceResult<int>> UpdateSessionAsync(Session designation,
             CancellationToken cancellationToken)
         {

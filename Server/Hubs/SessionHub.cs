@@ -2,8 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Server.Common.Constants;
 using Server.Domain;
+using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Contracts.Hubs;
+using SharedLibrary.Models;
 using SharedLibrary.Requests;
 
 namespace Server.Hubs;
@@ -12,17 +14,27 @@ public class SessionHub : Hub
 {
     private readonly ISessionService _sessionService;
     private readonly ILogger<SessionHub> _logger;
-    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger)
+    private readonly CyclicDependencySolver _cyclicDependencySolver;
+    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger, CyclicDependencySolver cyclicDependencySolver)
     {
         _sessionService = sessionService;
         _logger = logger;
+        _cyclicDependencySolver = cyclicDependencySolver;
     }
-    
+
     [Authorize]
     public async Task HealthCheck()
     {
         await this.Clients.Caller.SendAsync(ClientHandlers.Session.HealthCheckHandler, "session hub is online");
     }
+
+    [Authorize]
+    public async Task MakeNextTurn(NextTurnRequest request)
+    {
+        ServiceResult<Session> result = await _sessionService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
+        await HandleSessionResultAndNotifyClients(result);
+    }
+
     [Authorize]
     public async Task PostResearchOrColonizePlanet(ResearchColonizePlanetRequest request)
     {
@@ -31,20 +43,39 @@ public class SessionHub : Hub
         await HandlePostResearchOrColonizeAsync(result, request);
     }
 
+    private async Task HandleSessionResultAndNotifyClients(ServiceResult<Session> result)
+    {
+        if (result.Success == false)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
+        }
+        else
+        {
+            var session = result.Value;
+            _cyclicDependencySolver.Solve(session);
+            await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
+        }
+    }
+
     private async Task HandlePostResearchOrColonizeAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
     {
         if (result.Success == false)
         {
-            await this.Clients.Caller.SendAsync(ClientHandlers.Session.PostResearchOrColonizeErrorHandler,
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler,
                 result.ErrorMessage);
         }
-        
-        _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value.Message}");
-        await HandleStatusesAsync(result, request);
+        else
+        {
+            _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value.Message}");
+            await HandleSuccessStatusesAsync(result, request);
+        }
     }
 
-    private async Task HandleStatusesAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
+    private async Task HandleSuccessStatusesAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
     {
+        if (result.Value is null)
+            throw new NullReferenceException("Somehow value is null. Result is not succeeded");
+        
         if (result.Value.Message.StartsWith(SuccessMessages.Session.StartedResearching))
         {
             await NotifyStartResearchingAsync(result);
@@ -67,7 +98,7 @@ public class SessionHub : Hub
         }
         else
         {
-            throw new InvalidOperationException("Can not handle given status");
+            await NotifyUnhandledStatusAsync();
         }
     }
 
@@ -115,5 +146,11 @@ public class SessionHub : Hub
     {
         await this.Clients.Caller.SendAsync(ClientHandlers.Session.IterationDone,
             result.Value.Message);
+    }
+    
+    private async Task NotifyUnhandledStatusAsync()
+    {
+        await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler,
+            "We are sorry but now we can not handle given status. Selected planet probably already colonized");
     }
 }

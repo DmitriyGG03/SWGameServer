@@ -147,6 +147,16 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine(json);
     });
     
+    hubConnection.On<Session>(ClientHandlers.Session.ReceiveSession, (session) =>
+    {
+        Console.WriteLine("Received session");
+        string json = JsonSerializer.Serialize(session, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.StartedResearching, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.StartedColonizingPlanet, HandleStringMessageOutput());
@@ -213,9 +223,9 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "research or colonize")
     {
-        var planetId = Guid.Parse("1a274e8a-66a2-41b5-b729-68043712b8cf");
-        var heroId = Guid.Parse("0b770df7-569b-463f-ae5f-e8712f328885");
-        var sessionId = Guid.Parse("f5b94058-3fb8-4147-903d-01cddf03057e");
+        var planetId = Guid.Parse("0b4778b1-780f-4bc9-82e6-a860d5516a6c");
+        var heroId = Guid.Parse("ebe9eac1-104a-4f09-9d17-31ee0ee38858");
+        var sessionId = Guid.Parse("5d98b407-7092-4813-b2c5-fe7c2182ed85");
         
         var request = new ResearchColonizePlanetRequest
         {
@@ -224,6 +234,15 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
             PlanetId = planetId
         };
         await connection.InvokeAsync(ServerHandlers.Session.PostResearchOrColonizePlanet, request);
+    }
+    else if (message == "next-turn")
+    {
+        var sessionId = Guid.Parse("f5b94058-3fb8-4147-903d-01cddf03057e");
+        Console.WriteLine("Are you 1 or 2 user?");
+        var userNumber = Console.ReadLine();
+        var heroId = Guid.Empty;
+        heroId = Guid.Parse(userNumber == "1" ? "5b93fabf-0c50-4553-9aca-c93271c121e3" : "0b770df7-569b-463f-ae5f-e8712f328885");
+        await connection.InvokeAsync(ServerHandlers.Session.NextTurn, new NextTurnRequest { SessionId = sessionId, HeroId = heroId});
     }
 
     return false;

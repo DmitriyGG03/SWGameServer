@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using Server.Common.Constants;
 using Server.Common.Semaphores;
 using Server.Domain;
+using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
@@ -14,11 +15,13 @@ public class LobbyHub : Hub
     private readonly ILogger<LobbyHub> _logger;
     private readonly ILobbyService _lobbyService;
     private readonly ISessionService _sessionService;
-    public LobbyHub(ILogger<LobbyHub> logger, ILobbyService lobbyService, GameDbContext context, ISessionService sessionService)
+    private readonly CyclicDependencySolver _cyclicDependencySolver;
+    public LobbyHub(ILogger<LobbyHub> logger, ILobbyService lobbyService, GameDbContext context, ISessionService sessionService, CyclicDependencySolver cyclicDependencySolver)
     {
         _logger = logger;
         _lobbyService = lobbyService;
         _sessionService = sessionService;
+        _cyclicDependencySolver = cyclicDependencySolver;
     }
 
     [Authorize]
@@ -124,8 +127,9 @@ public class LobbyHub : Hub
     {
         if((await ValidateResultIfInvalidSendMessageToCallerAsync(result)) == false)
             return;
-        
-        var lobby = SolveCyclicDependency(result.Value);
+
+        var lobby = result.Value;
+        _cyclicDependencySolver.Solve(lobby);
         await this.Clients.All.SendAsync(successMethod, lobby);
     }
     private async Task HandleResult(ServiceResult<LobbyInfo> result, string successMethod)
@@ -134,7 +138,7 @@ public class LobbyHub : Hub
             return;
 
         var lobbyInfo = result.Value;
-        SolveCyclicDependency(lobbyInfo);
+        _cyclicDependencySolver.Solve(lobbyInfo);
         await this.Clients.All.SendAsync(successMethod, result.Value);
     }
     private async Task HandleResult(ServiceResult<Session> result, string successMethod)
@@ -160,40 +164,5 @@ public class LobbyHub : Hub
         }
 
         return true;
-    }
-    private Lobby SolveCyclicDependency(Lobby lobbyToSolve)
-    {
-        var lobby = lobbyToSolve;
-        // for cyclic dependency
-        if (lobby.LobbyInfos != null)
-        {
-            foreach (var item in lobby.LobbyInfos)
-            {
-                SolveCyclicDependency(item);
-            }
-        }
-
-        return lobby;
-    }
-    private Session SolveCyclicDependency(Session sessionToSolve)
-    {
-        if (sessionToSolve.Heroes != null)
-            foreach (var item in sessionToSolve.Heroes)
-            {
-                // solve cyclic dependency
-                item.User = null;
-                item.Session = null;
-            }
-
-        return sessionToSolve;
-    }
-    private void SolveCyclicDependency(LobbyInfo lobbyInfoToSolve)
-    {
-        lobbyInfoToSolve.Lobby = null;
-        if (lobbyInfoToSolve.User is not null)
-        {
-            lobbyInfoToSolve.User.LobbyInfos = null;
-            lobbyInfoToSolve.User.Heroes = null;
-        }
     }
 }

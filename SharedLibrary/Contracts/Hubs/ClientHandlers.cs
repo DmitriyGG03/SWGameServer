@@ -24,6 +24,7 @@ namespace SharedLibrary.Contracts.Hubs
             public const string HealthCheckHandler = "healthcheck";
             public const string ReceiveHeroMap = "ReceiveHeroMap";
             public const string StartedResearching = "StartedResearching";
+            public const string ReceiveSession = "ReceiveSession";
         }
     }
 }

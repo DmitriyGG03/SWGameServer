@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.Common.Constants;
+using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
 using SharedLibrary.Responses;
@@ -11,10 +12,11 @@ namespace Server.Controllers;
 public class SessionController : ControllerBase
 {
     private readonly ISessionService _sessionService;
-
-    public SessionController(ISessionService sessionService)
+    private readonly CyclicDependencySolver _cyclicDependencySolver;
+    public SessionController(ISessionService sessionService, CyclicDependencySolver cyclicDependencySolver)
     {
         _sessionService = sessionService;
+        _cyclicDependencySolver = cyclicDependencySolver;
     }
 
     [HttpGet, Route(ApiRoutes.Session.GetById)]
@@ -24,7 +26,7 @@ public class SessionController : ControllerBase
         if (session is null)
             return Ok(new GetSessionResponse { Info = new []{ErrorMessages.Session.NotFound}, Session = null});
         
-        SolveCyclicDependency(session);
+        _cyclicDependencySolver.Solve(session);
         return Ok(new GetSessionResponse { Info = new []{SuccessMessages.Session.Found}, Session = session});
     }
 
@@ -40,21 +42,5 @@ public class SessionController : ControllerBase
     }
 
     #endregion
-    
-    private void SolveCyclicDependency(Session sessionToSolve)
-    {
-        if (sessionToSolve.Heroes != null)
-        {
-            foreach (var item in sessionToSolve.Heroes)
-            {
-                // solve cyclic dependency
-                item.User = null;
 
-                item.Session = null;
-            }
-        }
-
-        if (sessionToSolve.SessionMap != null) 
-            sessionToSolve.SessionMap.Session = null;
-    }
 }

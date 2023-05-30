@@ -25,6 +25,7 @@ public static class ErrorMessages
         public const string NotFound = "There is no session with given id";
         public const string NotEnoughResearchShips = "Given hero does not have enough research ships";
         public const string NotEnoughColonizationShips = "Given hero does not have enough colonization ships";
+        public const string NotHeroTurn = "We are sorry, but now it isn't your turn";
     }
     
     public static class Relation
