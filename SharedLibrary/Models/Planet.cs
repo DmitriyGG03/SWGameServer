@@ -19,6 +19,8 @@ namespace SharedLibrary.Models
         [Range(0, int.MaxValue)]
         public int Size { get; set; }
 
+        public PlanetType PlanetType { get; set; }
+
         public string PlanetName { get; set; }
         public Guid? OwnerId { get; set; }
         
@@ -47,13 +49,14 @@ namespace SharedLibrary.Models
             Size = new Random().Next(1, 1000);
             PlanetName = String.Empty;
         }
-        public Planet(PointF position, int size, string planetName)
+        public Planet(PointF position, int size, string planetName, PlanetType type)
         {
             Id = Guid.NewGuid();
             X = position.X;
             Y = position.Y;
             Size = size;
             PlanetName = planetName;
+            PlanetType = type;
         }
     }
 }
