@@ -434,19 +434,23 @@ namespace Server.Services
                     HeroId = Guid.NewGuid(),
                     Name = item.User.Username,
                     ColorStatus = item.ColorStatus,
-                    ColonizationShipLimit = 10,
-                    AvailableColonizationShips = 10,
-                    ResearchShipLimit = 10,
-                    AvailableResearchShips = 10,
+                    ColonizationShipLimit = 1,
+                    AvailableColonizationShips = 1,
+                    ResearchShipLimit = 1,
+                    AvailableResearchShips = 1,
                     Resourses = 10,
+                    AvailableSoldiers = int.MinValue,
+                    SoldiersLimit = int.MinValue,
                     SessionId = session.Id,
                     Session = session,
                     UserId = item.UserId
                 };
-
+                
                 var homePlanet = sessionMap.Planets[Random.Shared.Next(0, sessionMap.Planets.Count)];
                 hero.HomePlanetId = homePlanet.Id;
                 homePlanet.OwnerId = hero.HeroId;
+                hero.SetSoldiersLimitBasedOnPlanetSize(homePlanet.Size);
+                hero.InitializeAvailableSoldiers();
 
                 var addingResult = await _heroService.Create(item.UserId, hero, cancellationToken);
 

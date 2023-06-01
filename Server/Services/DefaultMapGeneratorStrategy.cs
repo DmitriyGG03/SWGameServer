@@ -41,7 +41,7 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
             string planetName = _planetNameGenerator.GeneratePlanetNameBasedOnUniqueIndex(i);
             
             var planetType = (PlanetType)Random.Shared.Next(0, (int)PlanetType.Venus);
-            var planet = new Planet(position, Random.Shared.Next(1, 1000), planetName, planetType);
+            var planet = new Planet(position, Random.Shared.Next(1, 26), planetName, planetType);
             planets.Add(planet);
         }
 

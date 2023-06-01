@@ -46,7 +46,7 @@ namespace SharedLibrary.Models
             Id = Guid.NewGuid();
             X = position.X;
             Y = position.Y;
-            Size = new Random().Next(1, 1000);
+            Size = new Random().Next(1, 26);
             PlanetName = String.Empty;
         }
         public Planet(PointF position, int size, string planetName, PlanetType type)

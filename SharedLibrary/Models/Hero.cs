@@ -25,7 +25,11 @@ namespace SharedLibrary.Models
 		[Range(0, byte.MaxValue)] 
 		public byte AvailableColonizationShips { get; set; } = 0;
 		public int ColorStatus { get; set; }
-
+		
+		[Range(0, int.MaxValue)]
+		public int AvailableSoldiers { get; set; }
+		[Range(0, int.MaxValue)]
+		public int SoldiersLimit { get; set; }
 		
 		[ForeignKey(nameof(User))]
 		public Guid UserId { get; set; }
@@ -38,6 +42,30 @@ namespace SharedLibrary.Models
 		[ForeignKey(nameof(Session))]
 		public Guid? SessionId { get; set; }
 		public Session? Session { get; set; }
+
+		public void InitializeAvailableSoldiers()
+		{
+			AvailableSoldiers = SoldiersLimit;
+		}
+		public int SetSoldiersLimitBasedOnPlanetSize(int planetSize)
+		{
+			int coefficient = 0;
+			if (planetSize < 10)
+			{
+				coefficient = 8;
+			}
+			else if (planetSize < 20)
+			{
+				coefficient = 6;
+			}
+			else
+			{
+				coefficient = 5;
+			}
+
+			SoldiersLimit = planetSize * coefficient;
+			return SoldiersLimit;
+		}
 	}
 }
 
