@@ -14,8 +14,6 @@ namespace SharedLibrary.Models
 
         public float X { get; set; }
         public float Y { get; set; }
-        [Range(0, byte.MaxValue)]
-        public byte DaysNumber { get; set; }
         [Range(0, int.MaxValue)]
         public int Size { get; set; }
 
@@ -33,6 +31,8 @@ namespace SharedLibrary.Models
         public bool IsEnemy { get; set; }
         [NotMapped] 
         public int Status { get; set; }
+        [NotMapped] 
+        public int IterationsLeftToNextStatus { get; set; }
 
         public Planet()
         {

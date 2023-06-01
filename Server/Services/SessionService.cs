@@ -71,9 +71,11 @@ namespace Server.Services
             if (turnIdResult.Success == false)
                 return new ServiceResult<MessageContainer>(turnIdResult.ErrorMessage);
 
-            var relation = await _context.HeroPlanetRelations.FirstOrDefaultAsync(x => x.HeroId == heroId &&
-                x.PlanetId == planetId &&
-                x.Status >= (int)PlanetStatus.Known, cancellationToken);
+            var relation = await _context.HeroPlanetRelations
+                .Include(x => x.Planet)
+                .FirstOrDefaultAsync(x => x.HeroId == heroId &&
+                    x.PlanetId == planetId &&
+                    x.Status >= (int)PlanetStatus.Known, cancellationToken);
 
             if (relation is null)
                 return new ServiceResult<MessageContainer>(ErrorMessages.Relation.NotFound);
@@ -131,6 +133,7 @@ namespace Server.Services
                     x.Planet.IsEnemy = false;
                 }
 
+                x.Planet.IterationsLeftToNextStatus = x.IterationsLeftToTheNextStatus;
                 x.Planet.Status = x.Status;
                 return x.Planet;
             }).ToList();
