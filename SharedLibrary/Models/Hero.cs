@@ -47,7 +47,26 @@ namespace SharedLibrary.Models
 		{
 			AvailableSoldiers = SoldiersLimit;
 		}
+		
 		public int SetSoldiersLimitBasedOnPlanetSize(int planetSize)
+		{
+			SoldiersLimit = CalculateSoldiersLimitByPlanetType(planetSize);
+			return SoldiersLimit;
+		}
+		
+		public void AddColonizationShip()
+		{
+			AvailableColonizationShips += 1;
+		}
+
+		public void UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(int planetSize)
+		{
+			int currentSoldiersLimit = CalculateSoldiersLimitByPlanetType(planetSize);
+			SoldiersLimit += currentSoldiersLimit;
+			AvailableSoldiers += (int)(0.5 * currentSoldiersLimit);
+		}
+
+		private int CalculateSoldiersLimitByPlanetType(int planetSize)
 		{
 			int coefficient = 0;
 			if (planetSize < 10)
@@ -63,8 +82,7 @@ namespace SharedLibrary.Models
 				coefficient = 5;
 			}
 
-			SoldiersLimit = planetSize * coefficient;
-			return SoldiersLimit;
+			return coefficient * planetSize;
 		}
 	}
 }
