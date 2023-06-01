@@ -310,23 +310,45 @@ namespace Server.Services
 
         private async Task<string> ContinuePlanetColonizationAsync(HeroPlanetRelation relation, Hero hero, CancellationToken cancellationToken)
         {
-            var message = String.Empty;
             if (relation.IterationsLeftToTheNextStatus == 1)
             {
-                relation.Status = (int)PlanetStatus.Colonized;
-                relation.IterationsLeftToTheNextStatus = 1;
-                message = SuccessMessages.Session.Colonized;
-                hero.AvailableColonizationShips += 1;
-                await SetOthersRelationToEnemyAsync(relation, hero.HeroId);
-                await SetOwnerIdToPlanetAsync(relation.PlanetId, relation.HeroId, cancellationToken);
+                return await ColonizePlanetAsync(relation, hero, cancellationToken);
             }
             else
             {
                 relation.IterationsLeftToTheNextStatus -= 1;
-                message = SuccessMessages.Session.IterationDone + relation.IterationsLeftToTheNextStatus;
+                return SuccessMessages.Session.IterationDone + relation.IterationsLeftToTheNextStatus;
             }
+        }
 
-            return message;
+        private async Task<string> ColonizePlanetAsync(HeroPlanetRelation relation, Hero hero, CancellationToken cancellationToken)
+        {
+            relation.Status = (int)PlanetStatus.Colonized;
+            relation.IterationsLeftToTheNextStatus = 1;
+
+            hero.AddColonizationShip();
+            var planetSize = await GetPlanetSizeAsync(relation, cancellationToken);
+            hero.UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(planetSize);
+
+            await SetOthersRelationToEnemyAsync(relation, hero.HeroId);
+            await SetOwnerIdToPlanetAsync(relation.PlanetId, relation.HeroId, cancellationToken);
+            return SuccessMessages.Session.Colonized;
+        }
+
+        private async Task<int> GetPlanetSizeAsync(HeroPlanetRelation relation, CancellationToken cancellationToken)
+        {
+            int planetSize = 0;
+            if (relation.Planet is null)
+                planetSize = await GetPlanetSizeBasedOnIdAsync(relation.PlanetId, cancellationToken);
+            else
+                planetSize = relation.Planet.Size;
+            return planetSize;
+        }
+
+        private async Task<int> GetPlanetSizeBasedOnIdAsync(Guid planetId, CancellationToken cancellationToken)
+        {
+            var planet = await _context.Planets.FirstAsync(x => x.Id == planetId, cancellationToken);
+            return planet.Size;
         }
 
         private async Task SetOthersRelationToEnemyAsync(HeroPlanetRelation relation, Guid heroId)
@@ -434,19 +456,23 @@ namespace Server.Services
                     HeroId = Guid.NewGuid(),
                     Name = item.User.Username,
                     ColorStatus = item.ColorStatus,
-                    ColonizationShipLimit = 10,
-                    AvailableColonizationShips = 10,
-                    ResearchShipLimit = 10,
-                    AvailableResearchShips = 10,
-                    Resourses = 10,
+                    ColonizationShipLimit = 1,
+                    AvailableColonizationShips = 1,
+                    ResearchShipLimit = 1,
+                    AvailableResearchShips = 1,
+                    Resourses = 1000,
+                    AvailableSoldiers = int.MinValue,
+                    SoldiersLimit = int.MinValue,
                     SessionId = session.Id,
                     Session = session,
                     UserId = item.UserId
                 };
-
+                
                 var homePlanet = sessionMap.Planets[Random.Shared.Next(0, sessionMap.Planets.Count)];
                 hero.HomePlanetId = homePlanet.Id;
                 homePlanet.OwnerId = hero.HeroId;
+                hero.SetSoldiersLimitBasedOnPlanetSize(homePlanet.Size);
+                hero.InitializeAvailableSoldiers();
 
                 var addingResult = await _heroService.Create(item.UserId, hero, cancellationToken);
 
