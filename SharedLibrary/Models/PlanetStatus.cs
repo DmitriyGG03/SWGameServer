@@ -7,7 +7,7 @@ namespace SharedLibrary.Models
         Researching,
         Researched,
         HasStation,
-        Colonization,
+        Colonizing,
         Colonized,
         Enemy
     }

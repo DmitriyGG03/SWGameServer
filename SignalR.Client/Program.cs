@@ -223,7 +223,7 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "research or colonize")
     {
-        var planetId = Guid.Parse("01e34fea-14dd-437f-9e36-ce5fea0d5f7d");
+        var planetId = Guid.Parse("02d325b3-a37e-4e9c-915e-cc6d6866f7c8");
         var heroId = Guid.NewGuid();
             
         Console.WriteLine("Are you 1 or 2 user?");
@@ -241,11 +241,11 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "next-turn")
     {
-        var sessionId = Guid.Parse("f5b94058-3fb8-4147-903d-01cddf03057e");
+        var sessionId = Guid.Parse("e112cae3-cd9f-4f0a-8260-90317473353f");
         Console.WriteLine("Are you 1 or 2 user?");
         var userNumber = Console.ReadLine();
         var heroId = Guid.Empty;
-        heroId = Guid.Parse(userNumber == "1" ? "5b93fabf-0c50-4553-9aca-c93271c121e3" : "0b770df7-569b-463f-ae5f-e8712f328885");
+        heroId = Guid.Parse(userNumber == "1" ? "8130b2ca-d231-45ed-82b7-bae43e7c53dc" : "bdfb8efb-ea7e-44fa-bb0f-52e9ed1b34e1");
         await connection.InvokeAsync(ServerHandlers.Session.NextTurn, new NextTurnRequest { SessionId = sessionId, HeroId = heroId});
     }
 

@@ -213,7 +213,7 @@ namespace Server.Services
                 case (int)PlanetStatus.Researched:
                     message = StartPlanetColonization(relation, hero);
                     break;
-                case (int)PlanetStatus.Colonization:
+                case (int)PlanetStatus.Colonizing:
                     message = await ContinuePlanetColonizationAsync(relation, hero, cancellationToken);
                     break;
                 default:
@@ -327,7 +327,7 @@ namespace Server.Services
         private async Task<string> ColonizePlanetAsync(HeroPlanetRelation relation, Hero hero, CancellationToken cancellationToken)
         {
             relation.Status = (int)PlanetStatus.Colonized;
-            relation.IterationsLeftToTheNextStatus = 1;
+            relation.IterationsLeftToTheNextStatus = -1;
 
             hero.AddColonizationShip();
             var planetSize = await GetPlanetSizeAsync(relation, cancellationToken);
@@ -376,7 +376,7 @@ namespace Server.Services
                 return ErrorMessages.Session.NotEnoughColonizationShips;
             }
             
-            relation.Status = (int)PlanetStatus.Colonization;
+            relation.Status = (int)PlanetStatus.Colonizing;
             relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
             hero.AvailableColonizationShips -= 1;
             return SuccessMessages.Session.StartedColonization + relation.IterationsLeftToTheNextStatus;
@@ -444,6 +444,7 @@ namespace Server.Services
 
             _context.HeroPlanetRelations.UpdateRange(relationsToKnow);
         }
+        
         private int CalculateIterationsToNextStatus()
         {
             return Random.Shared.Next(1, 5);
