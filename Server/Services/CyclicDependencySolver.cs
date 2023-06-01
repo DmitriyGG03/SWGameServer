@@ -37,4 +37,12 @@ public class CyclicDependencySolver
             }
         }
     }
+
+    public void Solve(IEnumerable<Lobby> lobbies)
+    {
+        foreach (var lobby in lobbies)
+        {
+            Solve(lobby);
+        }
+    }
 }

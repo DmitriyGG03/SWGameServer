@@ -17,11 +17,14 @@ namespace Server.Controllers;
 public class LobbyController : ControllerBase
 {
     private readonly ILobbyService _lobbyService;
+    private readonly CyclicDependencySolver _cyclicDependencySolver;
     private readonly ILogger<LobbyService> _logger;
-    public LobbyController(ILobbyService lobbyService, ILogger<LobbyService> logger)
+    
+    public LobbyController(ILobbyService lobbyService, ILogger<LobbyService> logger, CyclicDependencySolver cyclicDependencySolver)
     {
         _lobbyService = lobbyService;
         _logger = logger;
+        _cyclicDependencySolver = cyclicDependencySolver;
     }
     
     [HttpGet, Route(ApiRoutes.Lobby.GetAll)]
@@ -32,15 +35,7 @@ public class LobbyController : ControllerBase
         if(lobbies.Any() == false) 
             return BadRequest(new GetAllLobbiesResponse(new[] { ErrorMessages.Lobby.NoLobbies }));
 
-		// For cyclic dependency
-		foreach (var lobby in lobbies)
-        {
-            foreach (var info in lobby.LobbyInfos)
-            {
-                info.Lobby = null;
-            }
-        }
-        
+		_cyclicDependencySolver.Solve(lobbies);
         return Ok(new GetAllLobbiesResponse(new[] { SuccessMessages.Lobby.Found }, lobbies));
     }
 
@@ -56,11 +51,8 @@ public class LobbyController : ControllerBase
         var lobby = await _lobbyService.GetLobbyByIdAsync(id);
         if (lobby is null)
             return NotFound();
-        // For cyclic dependency
-        foreach (var info in lobby.LobbyInfos)
-        {
-            info.Lobby = null;
-        }
+        
+        _cyclicDependencySolver.Solve(lobby);
         return Ok(new GetLobbyResponse { Lobby = lobby, Info = null });
     }
     #endregion
