@@ -14,10 +14,10 @@ namespace SharedLibrary.Models
         public Guid PlanetId { get; set; }
         public Planet? Planet { get; set; }
         
-        // connection status
-        public int Status { get; set; }
+        public PlanetStatus Status { get; set; }
         // number of iterations to colonize or research planet
         [Column("IterationsLeft")]
         public int IterationsLeftToTheNextStatus { get; set; }
+        public Fortification FortificationLevel { get; set; }
     }
 }

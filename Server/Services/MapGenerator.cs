@@ -75,10 +75,6 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
                     if (!tooClose)
                     {
                         connections.Add(connection);
-                        /* - Useless code?
-                         planet.Connections.Add(neighbor);
-                         neighbor.Connections.Add(planet);
-                        */
                     }
                 }
             }

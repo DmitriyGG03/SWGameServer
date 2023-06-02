@@ -40,9 +40,7 @@ namespace Server.Services
 
             List<Hero> heroes = await CreateHeroesBasedOnLobbyInfosAndAddThemToDbAsync(lobbyInfos, session, sessionMap, cancellationToken);
 
-            var heroPlanetRelationsResult = await GenerateHeroPlanetRelations(heroes, sessionMap.Planets);
-            if (heroPlanetRelationsResult.Success == false)
-                return new ServiceResult<Session>(heroPlanetRelationsResult.ErrorMessage);
+            await GenerateHeroPlanetRelationsAsync(heroes, sessionMap.Planets, sessionMap.Connections);
 
             if (session.HeroTurnId == Guid.Empty)
             {
@@ -51,6 +49,89 @@ namespace Server.Services
             }
 
             return new ServiceResult<Session>(session);
+        }
+
+        private async Task GenerateHeroPlanetRelationsAsync(List<Hero> heroes, List<Planet> planets,
+            List<Edge> connections)
+        {
+            if (heroes.Any(hero => hero.HomePlanet is null))
+                throw new ArgumentException("We can not generate hero planets relation if at least one hero does not have home planet");
+            if (connections.Any(x => x.From is null || x.To is null))
+                throw new ArgumentException("Connections must have planets");
+
+            var relations = new List<HeroPlanetRelation>();
+            foreach (var hero in heroes)
+            {
+                var knownRelationsPerHero = GenerateRelations(hero.HeroId, hero.HomePlanet, planets, connections);
+                relations.AddRange(knownRelationsPerHero);
+            }
+            
+            await _context.HeroPlanetRelations.AddRangeAsync(relations);
+            var updated = await _context.SaveChangesAsync();
+            if (updated == 0)
+            {
+                var exception = new InvalidDataException("Database records has not been updated");
+                _logger.LogError(exception, "Can not Create planet relations");
+                throw exception;
+            }
+        }
+
+        private List<HeroPlanetRelation> GenerateRelations(Guid heroId, Planet homePlanet, List<Planet> planets, List<Edge> connections)
+        {
+            var relations = new List<HeroPlanetRelation>();
+            relations.Add(new HeroPlanetRelation
+            {
+                HeroId = heroId,
+                PlanetId = homePlanet.Id,
+                FortificationLevel = Fortification.None,
+                Status = PlanetStatus.Colonized,
+                IterationsLeftToTheNextStatus = 1
+            });
+
+            List<Planet> neighbors = GetNeighborsPlanet(homePlanet.Id, connections);
+            foreach (var planet in neighbors)
+            {
+                relations.Add(new HeroPlanetRelation
+                {
+                    HeroId = heroId,
+                    PlanetId = planet.Id,
+                    FortificationLevel = Fortification.None,
+                    Status = PlanetStatus.Known,
+                    IterationsLeftToTheNextStatus = 1
+                });
+            }
+
+
+            var otherPlanets = new List<Planet>();
+            foreach (var planet in planets)
+            {
+                if(neighbors.Any(x => x.Id == planet.Id) || planet.Id == homePlanet.Id)
+                    continue;
+
+                otherPlanets.Add(planet);
+            }
+            
+            foreach (var planet in otherPlanets)
+            {
+                relations.Add(new HeroPlanetRelation
+                {
+                    HeroId = heroId,
+                    PlanetId = planet.Id,
+                    FortificationLevel = Fortification.None,
+                    Status = PlanetStatus.Unknown,
+                    IterationsLeftToTheNextStatus = 1
+                });
+            }
+
+            return relations;
+        }
+
+        private List<Planet> GetNeighborsPlanet(Guid planetId, List<Edge> connections)
+        {
+            return connections
+                .Where(x => x.FromPlanetId == planetId)
+                .Select(x => x.To)
+                .ToList();
         }
 
         public async Task<Session?> GetByIdAsync(Guid sessionId, CancellationToken cancellationToken)
@@ -75,7 +156,7 @@ namespace Server.Services
                 .Include(x => x.Planet)
                 .FirstOrDefaultAsync(x => x.HeroId == heroId &&
                     x.PlanetId == planetId &&
-                    x.Status >= (int)PlanetStatus.Known, cancellationToken);
+                    x.Status >= PlanetStatus.Known, cancellationToken);
 
             if (relation is null)
                 return new ServiceResult<MessageContainer>(ErrorMessages.Relation.NotFound);
@@ -116,7 +197,7 @@ namespace Server.Services
         {
             var heroPlanets = await _context.HeroPlanetRelations
                 .Include(x => x.Planet)
-                .Where(x => x.HeroId == heroId && x.Status >= (int)PlanetStatus.Known)
+                .Where(x => x.HeroId == heroId && x.Status >= PlanetStatus.Known)
                 .ToListAsync(cancellationToken);
 
             if (heroPlanets.Any() == false)
@@ -124,7 +205,7 @@ namespace Server.Services
 
             var planets = heroPlanets.Select(x =>
             {
-                if (x.Status is (int)PlanetStatus.Enemy)
+                if (x.Planet.OwnerId is not null && x.Planet.OwnerId.Value != heroId)
                 {
                     x.Planet.IsEnemy = true;
                 }
@@ -133,11 +214,14 @@ namespace Server.Services
                     x.Planet.IsEnemy = false;
                 }
 
+                x.Planet.FortificationLevel = x.FortificationLevel;
                 x.Planet.IterationsLeftToNextStatus = x.IterationsLeftToTheNextStatus;
                 x.Planet.Status = x.Status;
                 return x.Planet;
             }).ToList();
-            var connections = await GetConnections(planets);
+
+            var rootPlanets = planets.Where(x => x.Status >= PlanetStatus.Researched).ToList();
+            var connections = await GetConnections(rootPlanets);
 
             var heroMap = new HeroMapView
             {
@@ -204,16 +288,16 @@ namespace Server.Services
             var message = String.Empty;
             switch (relation.Status)
             {
-                case (int)PlanetStatus.Known:
+                case PlanetStatus.Known:
                     message = StartResearchPlanet(relation, hero, cancellationToken);
                     break;
-                case (int)PlanetStatus.Researching:
+                case PlanetStatus.Researching:
                     message = await ContinuePlanetResearchingAsync(relation, hero, cancellationToken);
                     break;
-                case (int)PlanetStatus.Researched:
+                case PlanetStatus.Researched:
                     message = StartPlanetColonization(relation, hero);
                     break;
-                case (int)PlanetStatus.Colonizing:
+                case PlanetStatus.Colonizing:
                     message = await ContinuePlanetColonizationAsync(relation, hero, cancellationToken);
                     break;
                 default:
@@ -252,59 +336,16 @@ namespace Server.Services
             var result = await _context.SaveChangesAsync(cancellationToken);
             return new ServiceResult<int>(result);
         }
-
-        private async Task<ServiceResult> GenerateHeroPlanetRelations(List<Hero> heroes, List<Planet> planets)
-        {
-            var relations = new List<HeroPlanetRelation>();
-            foreach (var hero in heroes)
-            {
-                foreach (var planet in planets)
-                {
-                    var relation = new HeroPlanetRelation
-                    {
-                        HeroId = hero.HeroId,
-                        PlanetId = planet.Id,
-                        IterationsLeftToTheNextStatus = 1
-                    };
-
-                    if (planet.OwnerId == null)
-                    {
-                        relation.Status = (int)PlanetStatus.Known;
-                        relations.Add(relation);
-                    }
-                    else if (planet.OwnerId == hero.HeroId)
-                    {
-                        relation.Status = (int)PlanetStatus.Colonized;
-                        relations.Add(relation);
-                    }
-                    else if (planet.OwnerId != hero.HeroId)
-                    {
-                        relation.Status = (int)PlanetStatus.Enemy;
-                        relations.Add(relation);
-                    }
-                }
-            }
-
-            await _context.HeroPlanetRelations.AddRangeAsync(relations);
-            var updated = await _context.SaveChangesAsync();
-            if (updated == 0)
-            {
-                var exception = new InvalidDataException("Database records has not been updated");
-                _logger.LogError(exception, "Can not Create planet relations");
-                throw exception;
-            }
-
-            return new ServiceResult();
-        }
-
+        
         private async Task<List<Edge>> GetConnections(List<Planet> planets)
         {
             var connections = new List<Edge>();
             foreach (var planet in planets)
             {
                 var subResult = await _context.Connections
-                    .Where(x => planet.Id == x.FromPlanetId)
+                    .Where(x => x.FromPlanetId == planet.Id)
                     .ToListAsync();
+                
                 connections.AddRange(subResult);
             }
 
@@ -326,14 +367,13 @@ namespace Server.Services
 
         private async Task<string> ColonizePlanetAsync(HeroPlanetRelation relation, Hero hero, CancellationToken cancellationToken)
         {
-            relation.Status = (int)PlanetStatus.Colonized;
+            relation.Status = PlanetStatus.Colonized;
             relation.IterationsLeftToTheNextStatus = -1;
 
             hero.AddColonizationShip();
             var planetSize = await GetPlanetSizeAsync(relation, cancellationToken);
             hero.UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(planetSize);
 
-            await SetOthersRelationToEnemyAsync(relation, hero.HeroId);
             await SetOwnerIdToPlanetAsync(relation.PlanetId, relation.HeroId, cancellationToken);
             return SuccessMessages.Session.Colonized;
         }
@@ -354,21 +394,6 @@ namespace Server.Services
             return planet.Size;
         }
 
-        private async Task SetOthersRelationToEnemyAsync(HeroPlanetRelation relation, Guid heroId)
-        {
-            var otherRelations = await _context.HeroPlanetRelations
-                .Where(x => x.PlanetId == relation.PlanetId)
-                .ToListAsync();
-
-            foreach (var item in otherRelations)
-            {
-                if(item.HeroId == relation.HeroId)
-                    continue;
-                
-                item.Status = (int)PlanetStatus.Enemy;
-            }
-        }
-        
         private string StartPlanetColonization(HeroPlanetRelation relation, Hero hero)
         {
             if (hero.AvailableColonizationShips == 0)
@@ -376,7 +401,7 @@ namespace Server.Services
                 return ErrorMessages.Session.NotEnoughColonizationShips;
             }
             
-            relation.Status = (int)PlanetStatus.Colonizing;
+            relation.Status = PlanetStatus.Colonizing;
             relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
             hero.AvailableColonizationShips -= 1;
             return SuccessMessages.Session.StartedColonization + relation.IterationsLeftToTheNextStatus;
@@ -390,7 +415,7 @@ namespace Server.Services
                 return ErrorMessages.Session.NotEnoughResearchShips;
             }
             
-            relation.Status = (int)PlanetStatus.Researching;
+            relation.Status = PlanetStatus.Researching;
             relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
             hero.AvailableResearchShips -= 1;
             
@@ -403,8 +428,8 @@ namespace Server.Services
             var message = String.Empty;
             if (relation.IterationsLeftToTheNextStatus == 1)
             {
-                relation.Status = (int)PlanetStatus.Researched;
-                relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
+                relation.Status = PlanetStatus.Researched;
+                relation.IterationsLeftToTheNextStatus = 1;
 
                 await UpdateNeighborsRelationStatusAndNotSaveChangesAsync(relation.PlanetId, hero.HeroId, cancellationToken);
                 hero.AvailableResearchShips += 1;
@@ -422,22 +447,30 @@ namespace Server.Services
         private async Task UpdateNeighborsRelationStatusAndNotSaveChangesAsync(Guid planetId, Guid heroId,
             CancellationToken cancellationToken)
         {
-            List<Guid> neighborPlanetsId = await _context.Connections
-                .Where(x => x.ToPlanetId == planetId)
+            var neighborPlanetsIds = await _context.Connections
+                .Where(x => x.FromPlanetId == planetId) 
                 .Select(x => x.ToPlanetId)
                 .ToListAsync(cancellationToken);
+            var neighborPlanets = new List<Planet>();
+            foreach (var id in neighborPlanetsIds)
+            {
+                var planet = await _context.Planets.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+                if (planet is null)
+                    throw new InvalidOperationException();
+                neighborPlanets.Add(planet);
+            }
 
             var relationsToKnow = new List<HeroPlanetRelation>();
-            foreach (var id in neighborPlanetsId)
+            foreach (var planet in neighborPlanets)
             {
                 var relationToKnow = await _context.HeroPlanetRelations.FirstOrDefaultAsync(x =>
                     x.HeroId == heroId &&
-                    x.PlanetId == id &&
-                    x.Status == (int)PlanetStatus.Unknown, cancellationToken);
+                    x.PlanetId == planet.Id &&
+                    x.Status == PlanetStatus.Unknown, cancellationToken);
 
                 if (relationToKnow is not null)
                 {
-                    relationToKnow.Status = (int)PlanetStatus.Known;
+                    relationToKnow.Status = PlanetStatus.Known;
                     relationsToKnow.Add(relationToKnow);
                 }
             }
@@ -474,6 +507,7 @@ namespace Server.Services
                 
                 var homePlanet = sessionMap.Planets[Random.Shared.Next(0, sessionMap.Planets.Count)];
                 hero.HomePlanetId = homePlanet.Id;
+                hero.HomePlanet = homePlanet;
                 homePlanet.OwnerId = hero.HeroId;
                 hero.SetSoldiersLimitBasedOnPlanetSize(homePlanet.Size);
                 hero.InitializeAvailableSoldiers();

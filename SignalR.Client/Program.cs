@@ -5,10 +5,10 @@ using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
 
-/* Constants:
-    Access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc3ZTlhM2JhLWIxZTItNDY1Yi1iMjU4LTczMzQ1MjM0ZTE2NSIsImhlcm8iOiJudWxsIiwibmJmIjoxNjgzOTc0NDg4LCJleHAiOjE5OTk1OTM2ODgsImlhdCI6MTY4Mzk3NDQ4OH0.QiZ-LQIi9peuzLmCxAWgsCNoRRf0h9g2_lLqpmUoAIo
-    Lobby id: de7c3558-1a03-40a3-92a3-369a520977ed
- */
+var sessionId = Guid.Parse("5779b88f-d03e-45b9-9b49-bdeaf341aef5");
+string hero1 = "6fc45431-b808-4467-84ff-1c03b2e0e726";
+string hero2 = "ae45eff8-8587-412a-bb14-2e6b49c729ab";
+var planetId = Guid.Parse("68096382-a320-4785-b5f8-65e430373f89");
 
 const int port = 7148;
 Console.WriteLine("Enter hub name");
@@ -223,13 +223,11 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "research or colonize")
     {
-        var planetId = Guid.Parse("02d325b3-a37e-4e9c-915e-cc6d6866f7c8");
         var heroId = Guid.NewGuid();
             
         Console.WriteLine("Are you 1 or 2 user?");
         var userNumber = Console.ReadLine();
-        heroId = Guid.Parse(userNumber == "1" ? "8130b2ca-d231-45ed-82b7-bae43e7c53dc" : "bdfb8efb-ea7e-44fa-bb0f-52e9ed1b34e1");
-        var sessionId = Guid.Parse("e112cae3-cd9f-4f0a-8260-90317473353f");
+        heroId = Guid.Parse(userNumber == "1" ? hero1 : hero2);
         
         var request = new ResearchColonizePlanetRequest
         {
@@ -241,11 +239,10 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "next-turn")
     {
-        var sessionId = Guid.Parse("e112cae3-cd9f-4f0a-8260-90317473353f");
         Console.WriteLine("Are you 1 or 2 user?");
         var userNumber = Console.ReadLine();
         var heroId = Guid.Empty;
-        heroId = Guid.Parse(userNumber == "1" ? "8130b2ca-d231-45ed-82b7-bae43e7c53dc" : "bdfb8efb-ea7e-44fa-bb0f-52e9ed1b34e1");
+        heroId = Guid.Parse(userNumber == "1" ? hero1 : hero2);
         await connection.InvokeAsync(ServerHandlers.Session.NextTurn, new NextTurnRequest { SessionId = sessionId, HeroId = heroId});
     }
 
