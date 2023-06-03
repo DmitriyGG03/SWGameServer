@@ -91,6 +91,10 @@ public class GameService : IGameService
         {
             return new ServiceResult<Battle>(ErrorMessages.Session.NotEnoughSoldiers);
         }
+        else
+        {
+            attacker.AvailableSoldiers -= attackerSoldiersCount;
+        }
 
         var heroPlanetRelation = await _context.HeroPlanetRelations
             .Include(x => x.Hero)
@@ -128,6 +132,8 @@ public class GameService : IGameService
             return new ServiceResult<Battle>(ErrorMessages.Hero.NotFound);
         if (hero.AvailableSoldiers < countOfSoldiers)
             return new ServiceResult<Battle>(ErrorMessages.Session.NotEnoughSoldiers);
+        else
+            hero.AvailableSoldiers -= countOfSoldiers;
 
         var battle = await _context.Battles
             .Include(x => x.AttackedPlanet)
