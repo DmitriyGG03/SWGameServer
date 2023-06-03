@@ -9,7 +9,7 @@ using SharedLibrary.Responses;
 var sessionId = Guid.Parse("4eac29ce-a57b-4c58-8925-10facad36480");
 string hero1 = "d8b9cc89-6820-4f13-9e17-8ef5d0ed5cd6";
 string hero2 = "7c57de2c-218f-40b4-ad08-fef266cccaff";
-var planetId = Guid.Parse("7341ac5e-0e9e-4c3a-8b38-7c7622b2f01c");
+var planetId = Guid.Parse("f9de020a-598d-4de0-8cea-05a52bff157a");
 
 const int port = 7148;
 Console.WriteLine("Enter hub name");
