@@ -1,4 +1,4 @@
-namespace SharedLibrary.Models
+namespace SharedLibrary.Models.Enums
 {
     public enum PlanetStatus
     {

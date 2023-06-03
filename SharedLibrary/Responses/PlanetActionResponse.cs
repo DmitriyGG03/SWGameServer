@@ -1,4 +1,5 @@
 using SharedLibrary.Models;
+using SharedLibrary.Models.Enums;
 
 namespace SharedLibrary.Responses
 {

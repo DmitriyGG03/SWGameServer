@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using SharedLibrary.Models.Enums;
 
 namespace SharedLibrary.Models
 {

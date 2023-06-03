@@ -7,6 +7,7 @@ using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
+using SharedLibrary.Models.Enums;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
 

@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
 using System.Runtime.Serialization;
+using SharedLibrary.Models.Enums;
 
 namespace SharedLibrary.Models
 {
@@ -21,6 +22,9 @@ namespace SharedLibrary.Models
 
         public string PlanetName { get; set; }
         public Guid? OwnerId { get; set; }
+
+        public ResourceType ResourceType { get; set; }
+        public int ResourceCount { get; set; }
         
         [NotMapped, IgnoreDataMember]
         public PointF Position
@@ -51,7 +55,7 @@ namespace SharedLibrary.Models
             Size = new Random().Next(1, 26);
             PlanetName = String.Empty;
         }
-        public Planet(PointF position, int size, string planetName, PlanetType type)
+        public Planet(PointF position, int size, string planetName, PlanetType type, ResourceType resourceType, int resourceCount)
         {
             Id = Guid.NewGuid();
             X = position.X;
@@ -59,6 +63,8 @@ namespace SharedLibrary.Models
             Size = size;
             PlanetName = planetName;
             PlanetType = type;
+            ResourceType = resourceType;
+            ResourceCount = resourceCount;
         }
     }
 }

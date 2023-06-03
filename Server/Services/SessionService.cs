@@ -3,6 +3,7 @@ using Server.Common.Constants;
 using Server.Domain;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
+using SharedLibrary.Models.Enums;
 
 namespace Server.Services
 {

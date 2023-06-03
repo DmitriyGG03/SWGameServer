@@ -5,6 +5,7 @@ using Server.Domain.GameLogic;
 using Server.Repositories;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
+using SharedLibrary.Models.Enums;
 
 namespace Server.Services;
 
