@@ -14,6 +14,8 @@ public class CyclicDependencySolver
                 item.Session = null;
             }
         }
+
+        sessionToSolve.SessionMap = null;
     }
     
     public void Solve(LobbyInfo lobbyInfoToSolve)
