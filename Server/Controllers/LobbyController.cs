@@ -5,6 +5,7 @@ using Server.Common.Constants;
 using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
+using SharedLibrary.Models.Enums;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
 using SharedLibrary.Routes;

@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
+using SharedLibrary.Models.Enums;
 
 namespace SharedLibrary.Models
 {
@@ -10,7 +11,7 @@ namespace SharedLibrary.Models
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public Guid Id { get; set; }
-        public int ColorStatus { get; set; }
+        public ColorStatus ColorStatus { get; set; }
         public bool Ready { get; set; }
         public bool LobbyLeader { get; set; }
         

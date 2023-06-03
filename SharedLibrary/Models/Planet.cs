@@ -19,6 +19,10 @@ namespace SharedLibrary.Models
         public int Size { get; set; }
 
         public PlanetType PlanetType { get; set; }
+        public ColorStatus ColorStatus { get; set; } = ColorStatus.Undefined;
+
+        public int Health { get; set; }
+        public int HealthLimit { get; set; }
 
         public string PlanetName { get; set; }
         public Guid? OwnerId { get; set; }
@@ -55,7 +59,10 @@ namespace SharedLibrary.Models
             Size = new Random().Next(1, 26);
             PlanetName = String.Empty;
         }
-        public Planet(PointF position, int size, string planetName, PlanetType type, ResourceType resourceType, int resourceCount)
+        public Planet(PointF position, int size, string planetName, PlanetType type, 
+            ResourceType resourceType, 
+            int resourceCount,
+            int health)
         {
             Id = Guid.NewGuid();
             X = position.X;
@@ -65,6 +72,32 @@ namespace SharedLibrary.Models
             PlanetType = type;
             ResourceType = resourceType;
             ResourceCount = resourceCount;
+            Health = HealthLimit = health;
+        }
+
+        public static int CalculateHealthLimit(int planetSize)
+        {
+            if (planetSize <= 5)
+            {
+                return planetSize * 15;
+            }
+            else if (planetSize <= 10)
+            {
+                return planetSize * 12;
+            }
+            else if (planetSize <= 20)
+            {
+                return planetSize * 16;
+            }
+            else
+            {
+                return planetSize * 17;
+            }
+        }
+
+        public int CalculateHealOnTheNextTurn()
+        {
+            return (int)(HealthLimit * 0.2);
         }
     }
 }

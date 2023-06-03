@@ -5,6 +5,7 @@ using Server.Common.Semaphores;
 using Server.Domain;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
+using SharedLibrary.Models.Enums;
 
 namespace Server.Services;
 
@@ -192,7 +193,7 @@ public class LobbyService : ILobbyService
         var lobby = result.Value;
         
         var lobbyInfo = lobby.LobbyInfos.First(x => x.UserId == userId);
-        lobbyInfo.ColorStatus = colorStatus;
+        lobbyInfo.ColorStatus = (ColorStatus)colorStatus;
         
         await _context.SaveChangesAsync();
         return new ServiceResult<LobbyInfo>(lobbyInfo);

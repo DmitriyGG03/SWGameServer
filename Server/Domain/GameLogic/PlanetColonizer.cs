@@ -79,11 +79,12 @@ public class PlanetColonizer : IPlanetAction
         relation.IterationsLeftToTheNextStatus = 1;
 
         hero.AvailableColonizationShips += 1;
-        // planet can not be null -> check ctor
         var planetSize = _planet.Size;
         hero.UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(planetSize);
 
         _planet.OwnerId = hero.HeroId;
+        _planet.ColorStatus = hero.ColorStatus;
+        
         return new PlanetActionResult(_relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
     }
 }
