@@ -15,11 +15,13 @@ public class SessionHub : Hub
     private readonly ISessionService _sessionService;
     private readonly ILogger<SessionHub> _logger;
     private readonly CyclicDependencySolver _cyclicDependencySolver;
-    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger, CyclicDependencySolver cyclicDependencySolver)
+    private readonly IHeroMapService _heroMapService;
+    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService)
     {
         _sessionService = sessionService;
         _logger = logger;
         _cyclicDependencySolver = cyclicDependencySolver;
+        _heroMapService = heroMapService;
     }
 
     [Authorize]
@@ -116,13 +118,13 @@ public class SessionHub : Hub
     
     private async Task NotifyResearchedPlanetAsync(ResearchColonizePlanetRequest request)
     {
-        var heroMap = await _sessionService.GetHeroMapAsync(request.HeroId, CancellationToken.None);
+        var heroMap = await _heroMapService.GetHeroMapAsync(request.HeroId, CancellationToken.None);
         await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchedPlanet, heroMap);
     }
 
     private async Task NotifyColonizedPlanetAsync(ResearchColonizePlanetRequest request)
     {
-        var result = await _sessionService.GetUserIdWithHeroIdBySessionId(request.SessionId, CancellationToken.None);
+        var result = await _sessionService.GetUserIdWithHeroIdBySessionIdAsync(request.SessionId, CancellationToken.None);
         if (result.Success == false)
         {
             await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
@@ -137,7 +139,7 @@ public class SessionHub : Hub
     {
         foreach (var item in userIdWithHeroId)
         {
-            var heroMap = await _sessionService.GetHeroMapAsync(item.Value, CancellationToken.None);
+            var heroMap = await _heroMapService.GetHeroMapAsync(item.Value, CancellationToken.None);
             await this.Clients.User(item.Key.ToString()).SendAsync(ClientHandlers.Session.ReceiveHeroMap, heroMap);
         }
     }

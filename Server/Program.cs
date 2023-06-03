@@ -39,9 +39,12 @@ builder.Services.AddScoped<IMapGenerator, DefaultMapGeneratorStrategy>();
 builder.Services.AddScoped<ILobbyService, LobbyService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddSingleton<CyclicDependencySolver>();
+builder.Services.AddScoped<IHeroMapService, HeroMapService>();
+builder.Services.AddScoped<IGameService, GameService>();
 
 builder.Services.AddSingleton<IPlanetNameRepository, PlanetNameRepository>();
 builder.Services.AddSingleton<IPlanetNameGenerator, PlanetNameGenerator>();
+builder.Services.AddScoped<IGameObjectsRepository, GameObjectRepository>();
 
 builder.Services.AddHttpContextAccessor();
 

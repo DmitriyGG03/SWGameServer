@@ -53,11 +53,6 @@ namespace SharedLibrary.Models
 			SoldiersLimit = CalculateSoldiersLimitByPlanetType(planetSize);
 			return SoldiersLimit;
 		}
-		
-		public void AddColonizationShip()
-		{
-			AvailableColonizationShips += 1;
-		}
 
 		public void UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(int planetSize)
 		{
