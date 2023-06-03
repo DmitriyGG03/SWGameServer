@@ -114,6 +114,12 @@ public class SessionHub : Hub
         if (result.Value is null)
             throw new NullReferenceException("Somehow value is null. Result is not succeeded");
         
+        if (result.Value.FortificationLevel > Fortification.None)
+        {
+            await NotifyUpdatedFortificationStatusAsync(result);
+            return;
+        }
+        
         if (result.Value.RelationStatus == PlanetStatus.Researching)
         {
             await NotifyStartResearchingAsync(result);
@@ -129,10 +135,6 @@ public class SessionHub : Hub
         else if (result.Value.RelationStatus == PlanetStatus.Colonized)
         {
             await NotifyColonizedPlanetAsync(request);
-        }
-        else if (result.Value.FortificationLevel > Fortification.None)
-        {
-            await NotifyUpdatedFortificationStatusAsync(result);
         }
         else
         {

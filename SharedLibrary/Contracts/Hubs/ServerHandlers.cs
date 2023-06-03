@@ -20,6 +20,7 @@ namespace SharedLibrary.Contracts.Hubs
             public const string PostResearchOrColonizePlanet = "PostResearchOrColonizePlanet";
             public const string HealthCheck = "HealthCheck";
             public const string NextTurn = "MakeNextTurn";
+            public const string BuildFortification = "BuildFortification";
         }
     }
 }
