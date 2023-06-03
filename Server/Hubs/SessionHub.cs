@@ -39,6 +39,7 @@ public class SessionHub : Hub
     public async Task MakeNextTurn(NextTurnRequest request)
     {
         ServiceResult<Session> result = await _gameService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
+        await _gameService.SaveChangesAsync(CancellationToken.None);
         await HandleSessionResultAndNotifyClients(result);
     }
 

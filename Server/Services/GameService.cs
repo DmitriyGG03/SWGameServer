@@ -58,14 +58,17 @@ public class GameService : IGameService
         if (session.Heroes is null)
             throw new NullReferenceException("You probably changed GetByIdAsync method in session service. Heroes can not be null there");
     
-        // update statuses
-        UpdateHeroesSoldiers(session.Heroes);
-        await UpdatePlanetsHealthAsync(sessionId, cancellationToken);
+        bool newTurn = ChooseNextHeroAndDetermineIfItsTheStartOfNextTurn(session);
+        if (newTurn)
+        {
+            session.TurnNumber += 1;
+            
+            UpdateHeroesSoldiers(session.Heroes);
+            
+            await UpdatePlanetsHealthAsync(sessionId, cancellationToken);
+            await HandleBattlesAsync(cancellationToken);
+        }
         
-        ChooseNextHero(session);
-        
-        await _sessionService.UpdateSessionAsync(session, cancellationToken);
-
         return new ServiceResult<Session>(session);
     }
 
@@ -183,13 +186,77 @@ public class GameService : IGameService
         }
     }
 
-    private void ChooseNextHero(Session session)
+    private bool ChooseNextHeroAndDetermineIfItsTheStartOfNextTurn(Session session)
     {
-        session.TurnNumber += 1;
+        bool startOfTurn = false;
+        session.HeroNumber += 1;
         var heroes = session.Heroes.OrderBy(x => x.Name).ToList();
         
-        int nextHeroIndex = session.TurnNumber % heroes.Count;
+        int nextHeroIndex = session.HeroNumber % heroes.Count;
+        if (nextHeroIndex == 0)
+        {
+            startOfTurn = true;
+        }
+        
         var hero = heroes[nextHeroIndex];
         session.HeroTurnId = hero.HeroId;
+
+        return startOfTurn;
+    }
+
+    private async Task HandleBattlesAsync(CancellationToken cancellationToken)
+    {
+        var battles = await _context.Battles.ToListAsync(cancellationToken);
+        if (battles.Any(x => x.Status == BattleStatus.InProcess))
+        {
+            foreach (var battle in battles)
+            {
+                await HandleBattle(battle, cancellationToken);
+            }
+        }   
+    }
+
+    private async Task HandleBattle(Battle battle, CancellationToken cancellationToken)
+    {
+        // battle
+        var attackedPlanet = await _context.Planets
+            .FirstOrDefaultAsync(x => x.Id == battle.AttackedPlanetId, cancellationToken);
+
+        if (attackedPlanet is null)
+            throw new InvalidOperationException("Attacked planet can not be null");
+
+        var damage = battle.AttackerSoldiers - attackedPlanet.Size * 5;
+        if (attackedPlanet.Health - damage <= 0)
+        {
+            await ConquerPlanetAsync(battle, attackedPlanet, cancellationToken);
+        }
+        else
+        {
+            attackedPlanet.Health -= damage;
+        }
+    }
+
+    private async Task ConquerPlanetAsync(Battle battle, Planet attackedPlanet, CancellationToken cancellationToken)
+    {
+        battle.Status = BattleStatus.AttackerWon;
+        attackedPlanet.OwnerId = battle.AttackerHeroId;
+        attackedPlanet.Health = (int)(attackedPlanet.HealthLimit * 0.5);
+
+        // update planet relation
+        var defenderRelation = await _gameObjectsRepository.GetRelationByHeroAndPlanetIdsAsync(
+            battle.DefendingHeroId,
+            attackedPlanet.Id, cancellationToken);
+        if (defenderRelation is null)
+            throw new InvalidOperationException("Somehow we do not have defender relation");
+
+        defenderRelation.Status = PlanetStatus.Known;
+
+        var attackerRelation = await _gameObjectsRepository.GetRelationByHeroAndPlanetIdsAsync(
+            battle.AttackerHeroId,
+            attackedPlanet.Id, cancellationToken);
+        if (attackerRelation is null)
+            throw new InvalidOperationException("Somehow we do not have attacker relation");
+
+        attackerRelation.Status = PlanetStatus.Colonized;
     }
 }

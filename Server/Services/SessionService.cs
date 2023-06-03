@@ -71,7 +71,7 @@ namespace Server.Services
             }
 
             session.Name = designation.Name;
-            session.TurnNumber = designation.TurnNumber;
+            session.HeroNumber = designation.HeroNumber;
             session.HeroTurnId = designation.HeroTurnId;
             session.TurnTimeLimit = designation.TurnTimeLimit;
 
@@ -121,7 +121,7 @@ namespace Server.Services
                 Heroes = new List<Hero>(),
                 SessionMapId = sessionMap.Id,
                 SessionMap = sessionMap,
-                TurnNumber = 0,
+                HeroNumber = 0,
                 HeroTurnId = Guid.Empty
             };
             session.TurnTimeLimit = session.CalculateTurnTimeLimit(sessionMap.Planets.Count);
