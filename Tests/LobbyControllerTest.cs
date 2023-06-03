@@ -292,7 +292,7 @@ namespace Tests
 			Assert.True(_lobbyClient1.ReasearchPlanet(_lobbyClient1.HeroMapView.Planets.First().Id));
 			Thread.Sleep(5000);
 
-			Assert.True(_lobbyClient1.HeroMapView.Planets.First().Status >= 2);
+			Assert.True(_lobbyClient1.HeroMapView.Planets.First().Status >= PlanetStatus.Researching);
 		}
 	}
 }

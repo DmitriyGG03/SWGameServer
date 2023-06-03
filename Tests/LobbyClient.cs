@@ -121,10 +121,11 @@ namespace Tests
 			{
 				HeroMapView = heroMap;
 			});
+			
+			/* WARNING: client handlers has been changed */
 			_connectionSession.On<string>(ClientHandlers.Session.ColonizedPlanet, (response) =>
 			{
 				 var message = $"Server response: {response}";
-
 			});
 			_connectionSession.On<string>(ClientHandlers.Session.IterationDone, (response) =>
 			{
