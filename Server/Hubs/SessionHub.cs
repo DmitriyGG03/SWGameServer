@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Server.Common.Constants;
 using Server.Domain;
+using Server.Domain.GameLogic;
 using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Contracts.Hubs;
@@ -45,7 +46,25 @@ public class SessionHub : Hub
     {
         var planetActionResult = await _gameService
             .GetPlanetActionHandlerAsync(request.PlanetId, request.HeroId, CancellationToken.None);
+        await HandlePlanetActionResultAndNotifyClients(planetActionResult, request);
+    }
 
+    private async Task HandleSessionResultAndNotifyClients(ServiceResult<Session> result)
+    {
+        if (result.Success == false)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
+        }
+        else
+        {
+            var session = result.Value;
+            _cyclicDependencySolver.Solve(session);
+            await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
+        }
+    }
+
+    private async Task HandlePlanetActionResultAndNotifyClients(ServiceResult<IPlanetAction?> planetActionResult, ResearchColonizePlanetRequest request)
+    {
         if (planetActionResult.Success == false)
         {
             await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, planetActionResult.ErrorMessage);
@@ -66,21 +85,7 @@ public class SessionHub : Hub
             }
         }
     }
-
-    private async Task HandleSessionResultAndNotifyClients(ServiceResult<Session> result)
-    {
-        if (result.Success == false)
-        {
-            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
-        }
-        else
-        {
-            var session = result.Value;
-            _cyclicDependencySolver.Solve(session);
-            await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
-        }
-    }
-
+    
     private async Task HandlePlanetActionResultAsync(ServiceResult<PlanetActionResult> result, ResearchColonizePlanetRequest request)
     {
         if (result.Success == false)
