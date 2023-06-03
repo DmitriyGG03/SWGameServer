@@ -1,15 +1,27 @@
 ﻿using System.Drawing;
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
+using SignalR.Client;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
-var sessionId = Guid.Parse("4eac29ce-a57b-4c58-8925-10facad36480");
-string hero1 = "d8b9cc89-6820-4f13-9e17-8ef5d0ed5cd6";
-string hero2 = "7c57de2c-218f-40b4-ad08-fef266cccaff";
-var planetId = Guid.Parse("f9de020a-598d-4de0-8cea-05a52bff157a");
+Settings? settings = null;
+
+using (var r = new StreamReader(@"D:\Asp .Net Core\Projects\SWGameServer\SignalR.Client\settings.json"))
+{
+    string json = r.ReadToEnd();
+    settings = JsonConvert.DeserializeObject<Settings>(json);
+
+    if (settings is null)
+        throw new InvalidOperationException();
+}
+
+if (settings is null)
+    throw new InvalidOperationException();
 
 const int port = 7148;
 Console.WriteLine("Enter hub name");
@@ -28,6 +40,14 @@ if (hubName == "lobby")
     {
         throw new ArgumentException("Given lobby id has wrong format");
     }
+}
+
+Guid sessionId = Guid.Empty, hero1 = Guid.Empty, hero2 = Guid.Empty;
+if (hubName == "session")
+{
+    sessionId = settings.Session.Id;
+    hero1 = settings.Session.Heroes.First().HeroId;
+    hero2 = settings.Session.Heroes.FirstOrDefault(x => x.HeroId != hero1).HeroId;
 }
 
 try
@@ -158,12 +178,22 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine(json);
     });
     
+    hubConnection.On<UpdatedFortificationResponse>(ClientHandlers.Session.UpdatedFortification, (fortificationResponse) =>
+    {
+        Console.WriteLine("Received session");
+        string json = JsonSerializer.Serialize(fortificationResponse, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
     
-    hubConnection.On<PlanetActionResponse>(ClientHandlers.Session.ResearchingPlanet, HandlePlanetActionResponse());
-    hubConnection.On<PlanetActionResponse>(ClientHandlers.Session.ColonizingPlanet, HandlePlanetActionResponse());
+    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.ResearchingPlanet, HandlePlanetActionResponse());
+    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.ColonizingPlanet, HandlePlanetActionResponse());
 
     return currentLobby1;
 }
@@ -228,13 +258,16 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
             
         Console.WriteLine("Are you 1 or 2 user?");
         var userNumber = Console.ReadLine();
-        heroId = Guid.Parse(userNumber == "1" ? hero1 : hero2);
+        heroId = userNumber == "1" ? hero1 : hero2;
+
+        Console.WriteLine("Enter planed ID: ");
+        var planetId = Console.ReadLine();
         
-        var request = new ResearchColonizePlanetRequest
+        var request = new UpdatePlanetStatusRequest
         {
             HeroId = heroId,
             SessionId = sessionId,
-            PlanetId = planetId
+            PlanetId = Guid.Parse(planetId)
         };
         await connection.InvokeAsync(ServerHandlers.Session.PostResearchOrColonizePlanet, request);
     }
@@ -243,8 +276,26 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
         Console.WriteLine("Are you 1 or 2 user?");
         var userNumber = Console.ReadLine();
         var heroId = Guid.Empty;
-        heroId = Guid.Parse(userNumber == "1" ? hero1 : hero2);
+        heroId = userNumber == "1" ? hero1 : hero2;
         await connection.InvokeAsync(ServerHandlers.Session.NextTurn, new NextTurnRequest { SessionId = sessionId, HeroId = heroId});
+    }
+    else if (message == "fort")
+    {
+        Console.WriteLine("Are you 1 or 2 user?");
+        var userNumber = Console.ReadLine();
+        var heroId = Guid.Empty;
+        heroId = userNumber == "1" ? hero1 : hero2;
+        
+        Console.WriteLine("Enter planed ID: ");
+        var planetId = Console.ReadLine();
+        
+        var request = new UpdatePlanetStatusRequest
+        {
+            HeroId = heroId,
+            SessionId = sessionId,
+            PlanetId = Guid.Parse(planetId)
+        };
+        await connection.InvokeAsync(ServerHandlers.Session.BuildFortification, request);
     }
 
     return false;
@@ -258,7 +309,7 @@ Action<string> HandleStringMessageOutput()
     };
 }
 
-Action<PlanetActionResponse> HandlePlanetActionResponse()
+Action<UpdatedPlanetStatusResponse> HandlePlanetActionResponse()
 {
     return (planetActionResponse) =>
     {

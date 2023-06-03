@@ -51,7 +51,7 @@ public class PlanetResearcher : IPlanetAction
         relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
         hero.AvailableResearchShips -= 1;
 
-        var result = new PlanetActionResult(relation.Status, relation.IterationsLeftToTheNextStatus);
+        var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
         return new ServiceResult<PlanetActionResult>(result);
     }
     
@@ -70,12 +70,12 @@ public class PlanetResearcher : IPlanetAction
 
             await UpdateNeighborsRelationStatusesAsync(relation.PlanetId, hero.HeroId, cancellationToken);
             hero.AvailableResearchShips += 1;
-            return new PlanetActionResult(relation.Status, relation.IterationsLeftToTheNextStatus);
+            return new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
         }
         else
         {
             relation.IterationsLeftToTheNextStatus -= 1;
-            var result = new PlanetActionResult(relation.Status, relation.IterationsLeftToTheNextStatus);
+            var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
             return result;
         }
     }

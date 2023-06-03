@@ -10,8 +10,7 @@ public class PlanetColonizer : IPlanetAction
     private readonly HeroPlanetRelation _relation;
     private readonly Hero _hero;
     private readonly Planet _planet;
-    private readonly IGameObjectsRepository _gameObjectsRepository;
-    public PlanetColonizer(HeroPlanetRelation relation, IGameObjectsRepository gameObjectsRepository)
+    public PlanetColonizer(HeroPlanetRelation relation)
     {
         if (relation.Planet is null)
             throw new ArgumentException("Relation must be with planet");
@@ -20,7 +19,6 @@ public class PlanetColonizer : IPlanetAction
 
         _relation = relation;
         _planet = relation.Planet;
-        _gameObjectsRepository = gameObjectsRepository;
         _hero = relation.Hero;
     }
 
@@ -52,7 +50,7 @@ public class PlanetColonizer : IPlanetAction
         relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
         hero.AvailableColonizationShips -= 1;
         
-        var result = new PlanetActionResult(relation.Status, relation.IterationsLeftToTheNextStatus);
+        var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
         return new ServiceResult<PlanetActionResult>(result);
     }
     
@@ -71,14 +69,14 @@ public class PlanetColonizer : IPlanetAction
         else
         {
             relation.IterationsLeftToTheNextStatus -= 1;
-            return new PlanetActionResult(relation.Status, relation.IterationsLeftToTheNextStatus);
+            return new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
         }
     }
     
     private PlanetActionResult ColonizePlanet(HeroPlanetRelation relation, Hero hero)
     {
         relation.Status = PlanetStatus.Colonized;
-        relation.IterationsLeftToTheNextStatus = -1;
+        relation.IterationsLeftToTheNextStatus = 1;
 
         hero.AvailableColonizationShips += 1;
         // planet can not be null -> check ctor
@@ -86,6 +84,6 @@ public class PlanetColonizer : IPlanetAction
         hero.UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(planetSize);
 
         _planet.OwnerId = hero.HeroId;
-        return new PlanetActionResult(_relation.Status, relation.IterationsLeftToTheNextStatus);
+        return new PlanetActionResult(_relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
     }
 }

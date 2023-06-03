@@ -9,6 +9,6 @@ public class PlanetDoNothingAction : IPlanetAction
     {
         // do nothing
         await Task.Delay(1, cancellationToken);
-        return new ServiceResult<PlanetActionResult>(new PlanetActionResult(PlanetStatus.Colonized, -1));
+        return new ServiceResult<PlanetActionResult>(new PlanetActionResult(PlanetStatus.Colonized, Fortification.Strong, -1));
     }
 }

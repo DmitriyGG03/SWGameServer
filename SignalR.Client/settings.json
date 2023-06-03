@@ -1,0 +1,53 @@
+{
+  "lobbyId": "d15a2d8e-e71f-4645-9173-bf948ca83291",
+  "session": {
+    "id": "9d0d5b7d-55c5-40b3-a5ae-f4072cb42a2c",
+    "name": "#1",
+    "heroes": [
+      {
+        "heroId": "c813ede0-1244-4a3e-a10f-6de9516ba36c",
+        "name": "first",
+        "resourses": 1000,
+        "researchShipLimit": 1,
+        "availableResearchShips": 1,
+        "colonizationShipLimit": 1,
+        "availableColonizationShips": 1,
+        "colorStatus": 0,
+        "availableSoldiers": 16,
+        "soldiersLimit": 16,
+        "userId": "e953b497-a0bf-4d30-a90f-802740468272",
+        "user": null,
+        "homePlanetId": "a0dd28af-d47b-4592-8094-9386283830e4",
+        "homePlanet": null,
+        "sessionId": "9d0d5b7d-55c5-40b3-a5ae-f4072cb42a2c",
+        "session": null
+      },
+      {
+        "heroId": "d62a768a-3207-4aec-aeab-7c29f95aaf07",
+        "name": "second",
+        "resourses": 1000,
+        "researchShipLimit": 1,
+        "availableResearchShips": 1,
+        "colonizationShipLimit": 1,
+        "availableColonizationShips": 1,
+        "colorStatus": 0,
+        "availableSoldiers": 125,
+        "soldiersLimit": 125,
+        "userId": "0056783c-b8db-4156-b06f-4bb64db1a392",
+        "user": null,
+        "homePlanetId": "59aca7b0-2d6b-44b2-ba3b-7e3c06578366",
+        "homePlanet": null,
+        "sessionId": "9d0d5b7d-55c5-40b3-a5ae-f4072cb42a2c",
+        "session": null
+      }
+    ],
+    "sessionMapId": "d252ecbb-ac09-44f8-a856-9248bcf9efed",
+    "sessionMap": null,
+    "turnNumber": 0,
+    "turnTimeLimit": 60,
+    "heroTurnId": "d62a768a-3207-4aec-aeab-7c29f95aaf07"
+  },
+  "info": [
+    "Session has been successfully found"
+  ]
+}
