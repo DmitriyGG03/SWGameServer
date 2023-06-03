@@ -24,6 +24,7 @@ namespace SharedLibrary.Contracts.Hubs
             public const string ReceiveHeroMap = "ReceiveHeroMap";
             public const string ResearchingPlanet = "StartedResearching";
             public const string ReceiveSession = "ReceiveSession";
+            public const string UpdatedFortification = nameof(UpdatedFortification);
         }
     }
 }

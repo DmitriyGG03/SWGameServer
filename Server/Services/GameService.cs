@@ -1,4 +1,3 @@
-using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
 using Server.Domain;
 using Server.Domain.GameLogic;
@@ -79,7 +78,19 @@ public class GameService : IGameService
         }
         else if (relation.Status == PlanetStatus.Researched || relation.Status == PlanetStatus.Colonizing)
         {
-            return new PlanetColonizer(relation, _gameObjectsRepository);
+            return new PlanetColonizer(relation);
+        }
+        else if (relation.Status == PlanetStatus.Colonized && relation.FortificationLevel == Fortification.None)
+        {
+            return new FortificationFirstLevelBuilder(relation);
+        }
+        else if (relation.FortificationLevel == Fortification.Weak)
+        {
+            return new FortificationSecondLevelBuilder(relation);
+        }
+        else if (relation.FortificationLevel == Fortification.Reliable)
+        {
+            return new FortificationThirdLevelBuilder(relation);
         }
         else
         {

@@ -162,8 +162,8 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
     
-    hubConnection.On<PlanetActionResponse>(ClientHandlers.Session.ResearchingPlanet, HandlePlanetActionResponse());
-    hubConnection.On<PlanetActionResponse>(ClientHandlers.Session.ColonizingPlanet, HandlePlanetActionResponse());
+    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.ResearchingPlanet, HandlePlanetActionResponse());
+    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.ColonizingPlanet, HandlePlanetActionResponse());
 
     return currentLobby1;
 }
@@ -230,7 +230,7 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
         var userNumber = Console.ReadLine();
         heroId = Guid.Parse(userNumber == "1" ? hero1 : hero2);
         
-        var request = new ResearchColonizePlanetRequest
+        var request = new UpdatePlanetStatusRequest
         {
             HeroId = heroId,
             SessionId = sessionId,
@@ -258,7 +258,7 @@ Action<string> HandleStringMessageOutput()
     };
 }
 
-Action<PlanetActionResponse> HandlePlanetActionResponse()
+Action<UpdatedPlanetStatusResponse> HandlePlanetActionResponse()
 {
     return (planetActionResponse) =>
     {

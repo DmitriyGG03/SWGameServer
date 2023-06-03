@@ -3,4 +3,4 @@ using SharedLibrary.Models.Enums;
 
 namespace Server.Domain;
 
-public record PlanetActionResult(PlanetStatus RelationStatus, int IterationsToTheNextStatus);
+public record PlanetActionResult(PlanetStatus RelationStatus, Fortification FortificationLevel, int IterationsToTheNextStatus);

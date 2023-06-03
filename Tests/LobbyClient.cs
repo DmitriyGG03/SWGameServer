@@ -256,7 +256,7 @@ namespace Tests
 			if (_client.DefaultRequestHeaders.Authorization == null || _connectionSession == null)
 				return false;
 
-			var request = new ResearchColonizePlanetRequest
+			var request = new UpdatePlanetStatusRequest
 			{
 				HeroId = Hero.HeroId,
 				SessionId = Session.Id,

@@ -43,7 +43,15 @@ public class SessionHub : Hub
     }
 
     [Authorize]
-    public async Task PostResearchOrColonizePlanet(ResearchColonizePlanetRequest request)
+    public async Task PostResearchOrColonizePlanet(UpdatePlanetStatusRequest request)
+    {
+        var planetActionResult = await _gameService
+            .GetPlanetActionHandlerAsync(request.PlanetId, request.HeroId, CancellationToken.None);
+        await HandlePlanetActionResultAndNotifyClients(planetActionResult, request);
+    }
+
+    [Authorize]
+    public async Task BuildFortification(UpdatePlanetStatusRequest request)
     {
         var planetActionResult = await _gameService
             .GetPlanetActionHandlerAsync(request.PlanetId, request.HeroId, CancellationToken.None);
@@ -64,7 +72,7 @@ public class SessionHub : Hub
         }
     }
 
-    private async Task HandlePlanetActionResultAndNotifyClients(ServiceResult<IPlanetAction?> planetActionResult, ResearchColonizePlanetRequest request)
+    private async Task HandlePlanetActionResultAndNotifyClients(ServiceResult<IPlanetAction?> planetActionResult, UpdatePlanetStatusRequest request)
     {
         if (planetActionResult.Success == false)
         {
@@ -87,7 +95,7 @@ public class SessionHub : Hub
         }
     }
     
-    private async Task HandlePlanetActionResultAsync(ServiceResult<PlanetActionResult> result, ResearchColonizePlanetRequest request)
+    private async Task HandlePlanetActionResultAsync(ServiceResult<PlanetActionResult> result, UpdatePlanetStatusRequest request)
     {
         if (result.Success == false)
         {
@@ -96,12 +104,12 @@ public class SessionHub : Hub
         }
         else
         {
-            _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value}");
+            _logger.LogInformation($"Successfully handled request, result message: {result.Value}");
             await HandleSuccessStatusesAsync(result, request);
         }
     }
 
-    private async Task HandleSuccessStatusesAsync(ServiceResult<PlanetActionResult> result, ResearchColonizePlanetRequest request)
+    private async Task HandleSuccessStatusesAsync(ServiceResult<PlanetActionResult> result, UpdatePlanetStatusRequest request)
     {
         if (result.Value is null)
             throw new NullReferenceException("Somehow value is null. Result is not succeeded");
@@ -122,6 +130,10 @@ public class SessionHub : Hub
         {
             await NotifyColonizedPlanetAsync(request);
         }
+        else if (result.Value.FortificationLevel > Fortification.None)
+        {
+            await NotifyUpdatedFortificationStatusAsync(result);
+        }
         else
         {
             await NotifyUnhandledStatusAsync();
@@ -130,10 +142,10 @@ public class SessionHub : Hub
 
     private async Task NotifyStartResearchingAsync(ServiceResult<PlanetActionResult> result)
     {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchingPlanet, GetResponse(result));
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchingPlanet, GetUpdatedPlanetStatusResponse(result.Value));
     }
     
-    private async Task NotifyResearchedPlanetAsync(ResearchColonizePlanetRequest request)
+    private async Task NotifyResearchedPlanetAsync(UpdatePlanetStatusRequest request)
     {
         var heroMap = await _heroMapService.GetHeroMapAsync(request.HeroId, CancellationToken.None);
         await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchedPlanet, heroMap);
@@ -141,10 +153,10 @@ public class SessionHub : Hub
 
     private async Task NotifyColonizingAsync(ServiceResult<PlanetActionResult> result)
     {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizingPlanet, GetResponse(result));
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizingPlanet, GetUpdatedPlanetStatusResponse(result.Value));
     }
     
-    private async Task NotifyColonizedPlanetAsync(ResearchColonizePlanetRequest request)
+    private async Task NotifyColonizedPlanetAsync(UpdatePlanetStatusRequest request)
     {
         var result = await _sessionService.GetUserIdWithHeroIdBySessionIdAsync(request.SessionId, CancellationToken.None);
         if (result.Success == false)
@@ -155,6 +167,11 @@ public class SessionHub : Hub
         {
             await SendHeroMapsToHeroes(result.Value);
         }
+    }
+    
+    private async Task NotifyUpdatedFortificationStatusAsync(ServiceResult<PlanetActionResult> result)
+    {
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.UpdatedFortification, GetFortificationResponse(result.Value));
     }
 
     private async Task SendHeroMapsToHeroes(Dictionary<Guid, Guid> userIdWithHeroId)
@@ -172,8 +189,15 @@ public class SessionHub : Hub
             "We are sorry but now we can not handle given status. Selected planet probably already colonized");
     }
 
-    private PlanetActionResponse GetResponse(ServiceResult<PlanetActionResult> result)
+    private UpdatedFortificationResponse GetFortificationResponse(PlanetActionResult result)
     {
-        return new PlanetActionResponse { RelationStatus = result.Value.RelationStatus, IterationsToTheNextStatus = result.Value.IterationsToTheNextStatus};
+        return new UpdatedFortificationResponse
+        {
+            Fortification = result.FortificationLevel, IterationsToTheNextStatus = result.IterationsToTheNextStatus
+        };
+    }
+    private UpdatedPlanetStatusResponse GetUpdatedPlanetStatusResponse(PlanetActionResult result)
+    {
+        return new UpdatedPlanetStatusResponse { RelationStatus = result.RelationStatus, IterationsToTheNextStatus = result.IterationsToTheNextStatus};
     }
 }
