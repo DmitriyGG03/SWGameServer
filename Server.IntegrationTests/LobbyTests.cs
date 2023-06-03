@@ -142,7 +142,6 @@ namespace Server.IntegrationTests
 			await _lobbyClient2.ConnectToLobbyAsync(_lobbyClient2.LobbiesList.Last().Id);
 
 			//Act
-			await _lobbyClient1.ChangeReadyStatusAsync();
 			await _lobbyClient2.ChangeReadyStatusAsync();
 
 			//Assert
@@ -168,7 +167,6 @@ namespace Server.IntegrationTests
 			_lobbyClient2.CreateConnection();
 			_lobbyClient2.GetLobbies();
 			await _lobbyClient2.ConnectToLobbyAsync(_lobbyClient2.LobbiesList.Last().Id);
-			await _lobbyClient1.ChangeReadyStatusAsync();
 			await _lobbyClient2.ChangeReadyStatusAsync();
 
 			//Act
@@ -224,7 +222,6 @@ namespace Server.IntegrationTests
 			_lobbyClient2.CreateConnection();
 			_lobbyClient2.GetLobbies();
 			await _lobbyClient2.ConnectToLobbyAsync(_lobbyClient2.LobbiesList.Last().Id);
-			await _lobbyClient1.ChangeReadyStatusAsync();
 			await _lobbyClient2.ChangeReadyStatusAsync();
 			await _lobbyClient1.CreateSessionAsync();
 
@@ -233,6 +230,42 @@ namespace Server.IntegrationTests
 			Assert.True(await _lobbyClient1.MakeNextTurn());
 			Assert.True(await _lobbyClient2.MakeNextTurn());
 			Assert.True(await _lobbyClient1.MakeNextTurn());
+		}
+
+		[Fact]
+		public async void ReasearchPlanet_ReturnNewSessionWithNewFogOfWar()
+		{
+			//Arrange
+			_lobbyClient1 = new Client(_factory);
+			_lobbyClient2 = new Client(_factory);
+
+			_lobbyClient1.RegisterClient(GenerateUserName(), GenerateEmail(), "123456789");
+			_lobbyClient1.CreateConnection();
+			_lobbyClient1.CreateLobby(GenerateLobbyName(), 2);
+
+			_lobbyClient2.RegisterClient(GenerateUserName(), GenerateEmail(), "123456789");
+			_lobbyClient2.CreateConnection();
+			_lobbyClient2.GetLobbies();
+			await _lobbyClient2.ConnectToLobbyAsync(_lobbyClient2.LobbiesList.Last().Id);
+			await _lobbyClient2.ChangeReadyStatusAsync();
+			await _lobbyClient1.CreateSessionAsync();
+
+			var HeroMapViewStarted = _lobbyClient1.HeroMapView;
+			var planetId = HeroMapViewStarted.Planets.FirstOrDefault(p => p.Status == PlanetStatus.Known).Id;
+
+			//Act
+			while(_lobbyClient1.HeroMapView.Planets.FirstOrDefault(p => p.Id == planetId).Status != PlanetStatus.Researched)
+			{
+				await _lobbyClient1.ResearchOrColonizePlanet(planetId);
+				await _lobbyClient1.MakeNextTurn();
+
+				await _lobbyClient2.MakeNextTurn();
+			}
+
+			var HeroMapViewAfterReasearch= _lobbyClient1.HeroMapView;
+
+			//Assert
+			Assert.True(HeroMapViewStarted.Planets.Count < HeroMapViewAfterReasearch.Planets.Count);
 		}
 	}
 }

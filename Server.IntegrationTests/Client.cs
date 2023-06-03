@@ -112,7 +112,7 @@ namespace Server.IntegrationTests
 				if (result.Result.IsSuccessStatusCode)
 				{
 					Session = result.Result.Content.ReadFromJsonAsync<GetSessionResponse>().Result.Session;
-					Hero = Session.Heroes.First();
+					Hero = Session.Heroes.FirstOrDefault(h => h.UserId == UserId);
 				}
 			});
 
@@ -129,6 +129,7 @@ namespace Server.IntegrationTests
 			_connectionSession.On<Session>(ClientHandlers.Session.ReceiveSession, (session) =>
 			{
 				Session = session;
+				GetUserHeroAndMap();
 			});
 			_connectionLobby.StartAsync();
 			_connectionSession.StartAsync();
@@ -270,6 +271,7 @@ namespace Server.IntegrationTests
 				if (result.Result.IsSuccessStatusCode)
 				{
 					Session = result.Result.Content.ReadFromJsonAsync<GetSessionResponse>().Result.Session;
+					GetUserHeroAndMap();
 				}
 				tcs.SetResult(true);
 			});
@@ -280,9 +282,52 @@ namespace Server.IntegrationTests
 
 			if (result == tcs.Task)
 				return true;
-
 			return false;
 		}
+
+		private bool GetUserHeroAndMap()
+		{
+			var result = _client.GetAsync($"/Hero/{Session.Heroes.FirstOrDefault(h => h.UserId == UserId).HeroId}");
+			if (result.Result.IsSuccessStatusCode)
+			{
+				var response = result.Result.Content.ReadFromJsonAsync<GetHeroResponse>().Result;
+				if (response is not null)
+				{
+					Hero = response.Hero;
+					HeroMapView = response.Map;
+					return true;
+				}	
+			}
+			return false;
+		}
+		
+		public async Task<bool> ResearchOrColonizePlanet(Guid planetId)
+		{
+			if (_client.DefaultRequestHeaders.Authorization == null || _connectionSession == null)
+				return false;
+
+			var tcs = new TaskCompletionSource<bool>();
+
+			_connectionSession.On<string>(ClientHandlers.Session.StartedResearching, (message) =>
+			{
+				tcs.TrySetResult(true);
+			});
+
+			await _connectionSession.InvokeAsync(ServerHandlers.Session.PostResearchOrColonizePlanet, new ResearchColonizePlanetRequest()
+			{
+				HeroId = Hero.HeroId,
+				SessionId = Session.Id,
+				PlanetId = planetId
+			}); ;
+
+			var result = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(10)));
+
+			if (result == tcs.Task)
+				return true;
+			return false;
+
+		}
+
 
 		public async Task<bool> MakeNextTurn()
 		{
@@ -297,11 +342,10 @@ namespace Server.IntegrationTests
 				tcs.TrySetResult(true);
 			});
 
-			var userHero = Session.Heroes.First(h => h.UserId == UserId);
 			await _connectionSession.InvokeAsync(ServerHandlers.Session.NextTurn, new NextTurnRequest() 
 			{ 
 				SessionId = Session.Id, 
-				HeroId = userHero.HeroId
+				HeroId = Hero.HeroId
 			});
 
 			var result = await Task.WhenAny(tcs.Task, Task.Delay(TimeSpan.FromSeconds(10)));
