@@ -30,12 +30,13 @@ public class GameService : IGameService
     private readonly ISessionService _sessionService;
     private readonly GameDbContext _context;
     private readonly IGameObjectsRepository _gameObjectsRepository;
-
-    public GameService(GameDbContext context, ISessionService sessionService, IGameObjectsRepository gameObjectsRepository)
+    private readonly ILogger<GameService> _logger;
+    public GameService(GameDbContext context, ISessionService sessionService, IGameObjectsRepository gameObjectsRepository, ILogger<GameService> logger)
     {
         _context = context;
         _sessionService = sessionService;
         _gameObjectsRepository = gameObjectsRepository;
+        _logger = logger;
     }
 
     public async Task<ServiceResult<IPlanetAction>> GetPlanetActionHandlerAsync(Guid planetId, Guid heroId,
@@ -311,5 +312,11 @@ public class GameService : IGameService
             throw new InvalidOperationException("Somehow we do not have attacker relation");
 
         attackerRelation.Status = PlanetStatus.Colonized;
+
+        if (attackedPlanet.IsCapital)
+        {
+            _logger.LogWarning($"The capital of hero: {attackedPlanet.OwnerId} has been colonized");
+            _logger.LogWarning($"User: {attackedPlanet.OwnerId} has been defeated!");
+        }
     }
 }
