@@ -4,11 +4,12 @@ using Microsoft.AspNetCore.SignalR.Client;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
+using SharedLibrary.Responses;
 
-/* Constants:
-    Access token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ijc3ZTlhM2JhLWIxZTItNDY1Yi1iMjU4LTczMzQ1MjM0ZTE2NSIsImhlcm8iOiJudWxsIiwibmJmIjoxNjgzOTc0NDg4LCJleHAiOjE5OTk1OTM2ODgsImlhdCI6MTY4Mzk3NDQ4OH0.QiZ-LQIi9peuzLmCxAWgsCNoRRf0h9g2_lLqpmUoAIo
-    Lobby id: de7c3558-1a03-40a3-92a3-369a520977ed
- */
+var sessionId = Guid.Parse("4eac29ce-a57b-4c58-8925-10facad36480");
+string hero1 = "d8b9cc89-6820-4f13-9e17-8ef5d0ed5cd6";
+string hero2 = "7c57de2c-218f-40b4-ad08-fef266cccaff";
+var planetId = Guid.Parse("f9de020a-598d-4de0-8cea-05a52bff157a");
 
 const int port = 7148;
 Console.WriteLine("Enter hub name");
@@ -158,11 +159,11 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     });
     
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
-    hubConnection.On<string>(ClientHandlers.Session.StartedResearching, HandleStringMessageOutput());
-    hubConnection.On<string>(ClientHandlers.Session.StartedColonizingPlanet, HandleStringMessageOutput());
-    hubConnection.On<string>(ClientHandlers.Session.IterationDone, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
+    
+    hubConnection.On<PlanetActionResponse>(ClientHandlers.Session.ResearchingPlanet, HandlePlanetActionResponse());
+    hubConnection.On<PlanetActionResponse>(ClientHandlers.Session.ColonizingPlanet, HandlePlanetActionResponse());
 
     return currentLobby1;
 }
@@ -223,13 +224,11 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "research or colonize")
     {
-        var planetId = Guid.Parse("02d325b3-a37e-4e9c-915e-cc6d6866f7c8");
         var heroId = Guid.NewGuid();
             
         Console.WriteLine("Are you 1 or 2 user?");
         var userNumber = Console.ReadLine();
-        heroId = Guid.Parse(userNumber == "1" ? "8130b2ca-d231-45ed-82b7-bae43e7c53dc" : "bdfb8efb-ea7e-44fa-bb0f-52e9ed1b34e1");
-        var sessionId = Guid.Parse("e112cae3-cd9f-4f0a-8260-90317473353f");
+        heroId = Guid.Parse(userNumber == "1" ? hero1 : hero2);
         
         var request = new ResearchColonizePlanetRequest
         {
@@ -241,11 +240,10 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "next-turn")
     {
-        var sessionId = Guid.Parse("e112cae3-cd9f-4f0a-8260-90317473353f");
         Console.WriteLine("Are you 1 or 2 user?");
         var userNumber = Console.ReadLine();
         var heroId = Guid.Empty;
-        heroId = Guid.Parse(userNumber == "1" ? "8130b2ca-d231-45ed-82b7-bae43e7c53dc" : "bdfb8efb-ea7e-44fa-bb0f-52e9ed1b34e1");
+        heroId = Guid.Parse(userNumber == "1" ? hero1 : hero2);
         await connection.InvokeAsync(ServerHandlers.Session.NextTurn, new NextTurnRequest { SessionId = sessionId, HeroId = heroId});
     }
 
@@ -257,5 +255,18 @@ Action<string> HandleStringMessageOutput()
     return (message) =>
     {
         Console.WriteLine(message);
+    };
+}
+
+Action<PlanetActionResponse> HandlePlanetActionResponse()
+{
+    return (planetActionResponse) =>
+    {
+        Console.WriteLine("Received session");
+        string json = JsonSerializer.Serialize(planetActionResponse, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
     };
 }

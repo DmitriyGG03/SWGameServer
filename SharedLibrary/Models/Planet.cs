@@ -30,9 +30,11 @@ namespace SharedLibrary.Models
         [NotMapped] 
         public bool IsEnemy { get; set; }
         [NotMapped] 
-        public int Status { get; set; }
+        public PlanetStatus Status { get; set; }
         [NotMapped] 
         public int IterationsLeftToNextStatus { get; set; }
+        [NotMapped] 
+        public Fortification FortificationLevel { get; set; }
 
         public Planet()
         {

@@ -18,11 +18,13 @@ public class HeroController : ControllerBase
     private readonly IHeroService _heroService;
     private readonly ILogger<HeroController> _logger;
     private readonly ISessionService _sessionService;
-    public HeroController(IHeroService heroService, ILogger<HeroController> logger, ISessionService sessionService)
+    private readonly IHeroMapService _heroMapService;
+    public HeroController(IHeroService heroService, ILogger<HeroController> logger, ISessionService sessionService, IHeroMapService heroMapService)
     {
         _heroService = heroService;
         _logger = logger;
         _sessionService = sessionService;
+        _heroMapService = heroMapService;
     }
 
     [HttpPut, Route(ApiRoutes.Hero.Update)]
@@ -78,7 +80,7 @@ public class HeroController : ControllerBase
             return Ok(new GetHeroResponse { Hero = null, Info = new []{ErrorMessages.Hero.NotFound} });
         
         SolveCyclicDependency(hero);
-        var heroMap = await _sessionService.GetHeroMapAsync(id, cancellationToken);
+        var heroMap = await _heroMapService.GetHeroMapAsync(id, cancellationToken);
         var response = new GetHeroResponse { Hero = hero, Map = heroMap, Info = new[] { SuccessMessages.Hero.Found } };
         return Ok(response);
     }

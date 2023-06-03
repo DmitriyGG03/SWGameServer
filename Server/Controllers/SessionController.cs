@@ -13,10 +13,12 @@ public class SessionController : ControllerBase
 {
     private readonly ISessionService _sessionService;
     private readonly CyclicDependencySolver _cyclicDependencySolver;
-    public SessionController(ISessionService sessionService, CyclicDependencySolver cyclicDependencySolver)
+    private readonly IHeroMapService _heroMapService;
+    public SessionController(ISessionService sessionService, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService)
     {
         _sessionService = sessionService;
         _cyclicDependencySolver = cyclicDependencySolver;
+        _heroMapService = heroMapService;
     }
 
     [HttpGet, Route(ApiRoutes.Session.GetById)]
@@ -35,7 +37,7 @@ public class SessionController : ControllerBase
     [HttpGet, Route(ApiRoutes.Session.GetHeroMap)]
     public async Task<IActionResult> GetHeroMap([FromRoute] Guid id, CancellationToken cancellationToken)
     {
-        var heroMap = await _sessionService.GetHeroMapAsync(id, cancellationToken);
+        var heroMap = await _heroMapService.GetHeroMapAsync(id, cancellationToken);
         if (heroMap is null)
             return NotFound();
         return Ok(heroMap);
