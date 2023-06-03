@@ -2,6 +2,7 @@ using System.Drawing;
 using Server.Domain.Math;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
+using SharedLibrary.Models.Enums;
 
 namespace Server.Services;
 
@@ -41,7 +42,15 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
             string planetName = _planetNameGenerator.GeneratePlanetNameBasedOnUniqueIndex(i);
             
             var planetType = (PlanetType)Random.Shared.Next(0, (int)PlanetType.Venus);
-            var planet = new Planet(position, Random.Shared.Next(1, 26), planetName, planetType);
+            int planetSize = Random.Shared.Next(1, 26), resourceCount = planetSize * 10;
+            
+            var planet = new Planet(position, 
+                planetSize, 
+                planetName, 
+                planetType, 
+                ResourceType.Default, 
+                resourceCount);
+            
             planets.Add(planet);
         }
 

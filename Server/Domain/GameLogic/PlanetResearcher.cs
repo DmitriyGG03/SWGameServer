@@ -1,6 +1,7 @@
 using Server.Common.Constants;
 using Server.Repositories;
 using SharedLibrary.Models;
+using SharedLibrary.Models.Enums;
 
 namespace Server.Domain.GameLogic;
 

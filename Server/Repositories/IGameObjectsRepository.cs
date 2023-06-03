@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SharedLibrary.Models;
+using SharedLibrary.Models.Enums;
 
 namespace Server.Repositories;
 
