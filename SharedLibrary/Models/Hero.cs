@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Drawing;
+using SharedLibrary.Models.Enums;
 
 namespace SharedLibrary.Models
 {
@@ -24,7 +25,7 @@ namespace SharedLibrary.Models
 
 		[Range(0, byte.MaxValue)] 
 		public byte AvailableColonizationShips { get; set; } = 0;
-		public int ColorStatus { get; set; }
+		public ColorStatus ColorStatus { get; set; }
 		
 		[Range(0, int.MaxValue)]
 		public int AvailableSoldiers { get; set; }

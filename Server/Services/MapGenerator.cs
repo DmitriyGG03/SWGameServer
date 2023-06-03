@@ -49,7 +49,8 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
                 planetName, 
                 planetType, 
                 ResourceType.Default, 
-                resourceCount);
+                resourceCount,
+                Planet.CalculateHealthLimit(planetSize));
             
             planets.Add(planet);
         }
