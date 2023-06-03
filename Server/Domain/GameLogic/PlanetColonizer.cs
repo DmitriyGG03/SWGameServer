@@ -83,6 +83,8 @@ public class PlanetColonizer : IPlanetAction
         hero.UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(planetSize);
 
         _planet.OwnerId = hero.HeroId;
+        _planet.ColorStatus = hero.ColorStatus;
+        
         return new PlanetActionResult(_relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
     }
 }
