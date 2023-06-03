@@ -33,6 +33,11 @@ public static class ErrorMessages
     {
         public const string NotFound = "There is no relation with given parameters";
     }
+    
+    public static class Battle
+    {
+        public const string NotFound = "There is no battle with given parameters";
+    }
 
     public static class Planet
     {

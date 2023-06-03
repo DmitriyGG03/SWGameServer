@@ -63,18 +63,34 @@ public class SessionHub : Hub
     public async Task StartBattle(StartBattleRequest request)
     {
         var result = await _gameService.StartBattleAsync(request.HeroId, request.AttackedPlanetId,
-            request.AttackedPlanetId, request.CountOfSoldiers, CancellationToken.None);
+            request.FromPlanetId, request.CountOfSoldiers, CancellationToken.None);
 
+        await HandleBattleResult(result);
+    }
+
+    [Authorize]
+    public async Task DefendPlanet(DefendPlanetRequest request)
+    {
+        var result = await _gameService.DefendPlanetAsync(request.HeroId, request.AttackedPlanetId,
+            request.CountOfSoldiers, CancellationToken.None);
+
+        await HandleBattleResult(result);
+    }
+    
+    private async Task HandleBattleResult(ServiceResult<Battle> result)
+    {
         if (result.Success == false)
         {
             await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
         }
         else
         {
-            await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveBattle, result.Value);
+            var battle = result.Value;
+            _cyclicDependencySolver.Solve(result.Value);
+            await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveBattle, battle);
         }
     }
-
+    
     private async Task HandleSessionResultAndNotifyClients(ServiceResult<Session> result)
     {
         if (result.Success == false)

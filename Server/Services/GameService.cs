@@ -20,6 +20,9 @@ public interface IGameService
 
     Task<ServiceResult<Battle>> StartBattleAsync(Guid attackerId, Guid attackedPlanetId, Guid fromPlanetId,
         int attackerSoldiersCount, CancellationToken cancellationToken);
+
+    Task<ServiceResult<Battle>> DefendPlanetAsync(Guid heroId, Guid planetId, int countOfSoldiers,
+        CancellationToken cancellationToken);
 }
 
 public class GameService : IGameService
@@ -114,6 +117,41 @@ public class GameService : IGameService
         };
 
         _context.Battles.Add(battle);
+        await _context.SaveChangesAsync(cancellationToken);
+        return new ServiceResult<Battle>(battle);
+    }
+
+    public async Task<ServiceResult<Battle>> DefendPlanetAsync(Guid heroId, Guid planetId, int countOfSoldiers, CancellationToken cancellationToken)
+    {
+        var hero = await _context.Heroes.FirstOrDefaultAsync(x => x.HeroId == heroId, cancellationToken);
+        if (hero is null)
+            return new ServiceResult<Battle>(ErrorMessages.Hero.NotFound);
+        if (hero.AvailableSoldiers < countOfSoldiers)
+            return new ServiceResult<Battle>(ErrorMessages.Session.NotEnoughSoldiers);
+
+        var battle = await _context.Battles
+            .Include(x => x.AttackedPlanet)
+            .FirstOrDefaultAsync(x =>
+                x.AttackedPlanetId == planetId &&
+                x.DefendingHeroId == heroId, cancellationToken);
+        if (battle is null)
+            return new ServiceResult<Battle>(ErrorMessages.Battle.NotFound);
+
+        battle.DefenderSoldiers += countOfSoldiers;
+
+        if (battle.AttackedPlanet is null)
+            throw new InvalidOperationException("Battle must contain attacked planet");
+
+        var attackedPlanet = battle.AttackedPlanet;
+        if (attackedPlanet.Health + countOfSoldiers > attackedPlanet.HealthLimit)
+        {
+            attackedPlanet.Health = attackedPlanet.HealthLimit;
+        }
+        else
+        {
+            battle.AttackedPlanet.Health += countOfSoldiers;
+        }
+        
         await _context.SaveChangesAsync(cancellationToken);
         return new ServiceResult<Battle>(battle);
     }
