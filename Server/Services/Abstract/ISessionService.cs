@@ -17,8 +17,5 @@ namespace Server.Services.Abstract
         
         Task<ServiceResult<Dictionary<Guid, Guid>>> GetUserIdWithHeroIdBySessionIdAsync(Guid sessionId,
             CancellationToken cancellationToken);
-        
-        Task<ServiceResult<MessageContainer>> ResearchOrColonizePlanetAsync(Guid sessionId, Guid planetId, Guid heroId,
-            CancellationToken cancellationToken);
     }
 }

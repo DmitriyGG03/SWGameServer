@@ -158,8 +158,8 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     });
     
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
-    hubConnection.On<string>(ClientHandlers.Session.StartedResearching, HandleStringMessageOutput());
-    hubConnection.On<string>(ClientHandlers.Session.StartedColonizingPlanet, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.Researching, HandleStringMessageOutput());
+    hubConnection.On<string>(ClientHandlers.Session.Colonizing, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.IterationDone, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());

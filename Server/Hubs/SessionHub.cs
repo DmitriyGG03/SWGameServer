@@ -7,6 +7,7 @@ using Server.Services.Abstract;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
+using SharedLibrary.Responses;
 
 namespace Server.Hubs;
 
@@ -16,12 +17,14 @@ public class SessionHub : Hub
     private readonly ILogger<SessionHub> _logger;
     private readonly CyclicDependencySolver _cyclicDependencySolver;
     private readonly IHeroMapService _heroMapService;
-    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService)
+    private readonly IGameService _gameService;
+    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService, IGameService gameService)
     {
         _sessionService = sessionService;
         _logger = logger;
         _cyclicDependencySolver = cyclicDependencySolver;
         _heroMapService = heroMapService;
+        _gameService = gameService;
     }
 
     [Authorize]
@@ -33,16 +36,26 @@ public class SessionHub : Hub
     [Authorize]
     public async Task MakeNextTurn(NextTurnRequest request)
     {
-        ServiceResult<Session> result = await _sessionService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
+        ServiceResult<Session> result = await _gameService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
         await HandleSessionResultAndNotifyClients(result);
     }
 
     [Authorize]
     public async Task PostResearchOrColonizePlanet(ResearchColonizePlanetRequest request)
     {
-        var result = await _sessionService.ResearchOrColonizePlanetAsync(request.SessionId, request.PlanetId, request.HeroId, 
-            CancellationToken.None);
-        await HandlePostResearchOrColonizeAsync(result, request);
+        var planetActionResult = await _gameService
+            .GetPlanetActionHandlerAsync(request.PlanetId, request.HeroId, CancellationToken.None);
+
+        if (planetActionResult.Success == false)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, planetActionResult.ErrorMessage);
+
+        }
+        else
+        {
+            var result = await planetActionResult.Value.ExecuteAsync(CancellationToken.None);
+            await HandlePlanetActionResultAsync(result, request);
+        }
     }
 
     private async Task HandleSessionResultAndNotifyClients(ServiceResult<Session> result)
@@ -59,7 +72,7 @@ public class SessionHub : Hub
         }
     }
 
-    private async Task HandlePostResearchOrColonizeAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
+    private async Task HandlePlanetActionResultAsync(ServiceResult<PlanetActionResult> result, ResearchColonizePlanetRequest request)
     {
         if (result.Success == false)
         {
@@ -68,35 +81,31 @@ public class SessionHub : Hub
         }
         else
         {
-            _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value.Message}");
+            _logger.LogInformation($"Successfully done {nameof(PostResearchOrColonizePlanet)} method, result message: {result.Value}");
             await HandleSuccessStatusesAsync(result, request);
         }
     }
 
-    private async Task HandleSuccessStatusesAsync(ServiceResult<MessageContainer> result, ResearchColonizePlanetRequest request)
+    private async Task HandleSuccessStatusesAsync(ServiceResult<PlanetActionResult> result, ResearchColonizePlanetRequest request)
     {
         if (result.Value is null)
             throw new NullReferenceException("Somehow value is null. Result is not succeeded");
         
-        if (result.Value.Message.StartsWith(SuccessMessages.Session.StartedResearching))
+        if (result.Value.RelationStatus == PlanetStatus.Researching)
         {
             await NotifyStartResearchingAsync(result);
         }
-        else if (result.Value.Message == SuccessMessages.Session.Researched)
+        else if (result.Value.RelationStatus == PlanetStatus.Researched)
         {
             await NotifyResearchedPlanetAsync(request);
         }
-        else if (result.Value.Message.StartsWith(SuccessMessages.Session.StartedColonization))
+        else if (result.Value.RelationStatus == PlanetStatus.Colonizing)
         {
-            await NotifyStartColonizationAsync(result);
+            await NotifyColonizingAsync(result);
         }
-        else if (result.Value.Message == SuccessMessages.Session.Colonized)
+        else if (result.Value.RelationStatus == PlanetStatus.Colonized)
         {
             await NotifyColonizedPlanetAsync(request);
-        }
-        else if (result.Value.Message.StartsWith(SuccessMessages.Session.IterationDone))
-        {
-            await NotifyIterationDoneAsync(result);
         }
         else
         {
@@ -104,16 +113,9 @@ public class SessionHub : Hub
         }
     }
 
-    private async Task NotifyStartResearchingAsync(ServiceResult<MessageContainer> result)
+    private async Task NotifyStartResearchingAsync(ServiceResult<PlanetActionResult> result)
     {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartedResearching,
-            result.Value.Message);
-    }
-
-    private async Task NotifyStartColonizationAsync(ServiceResult<MessageContainer> result)
-    {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartedColonizingPlanet,
-            result.Value.Message);
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.Researching, GetResponse(result));
     }
     
     private async Task NotifyResearchedPlanetAsync(ResearchColonizePlanetRequest request)
@@ -122,6 +124,11 @@ public class SessionHub : Hub
         await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchedPlanet, heroMap);
     }
 
+    private async Task NotifyColonizingAsync(ServiceResult<PlanetActionResult> result)
+    {
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.Colonizing, GetResponse(result));
+    }
+    
     private async Task NotifyColonizedPlanetAsync(ResearchColonizePlanetRequest request)
     {
         var result = await _sessionService.GetUserIdWithHeroIdBySessionIdAsync(request.SessionId, CancellationToken.None);
@@ -144,15 +151,14 @@ public class SessionHub : Hub
         }
     }
 
-    private async Task NotifyIterationDoneAsync(ServiceResult<MessageContainer> result)
-    {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.IterationDone,
-            result.Value.Message);
-    }
-    
     private async Task NotifyUnhandledStatusAsync()
     {
         await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler,
             "We are sorry but now we can not handle given status. Selected planet probably already colonized");
+    }
+
+    private PlanetActionResponse GetResponse(ServiceResult<PlanetActionResult> result)
+    {
+        return new PlanetActionResponse { RelationStatus = result.Value.RelationStatus, IterationsToTheNextStatus = result.Value.IterationsToTheNextStatus};
     }
 }
