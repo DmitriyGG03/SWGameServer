@@ -166,10 +166,13 @@ namespace Server.Services
                     UserId = item.UserId
                 };
                 
+                // TODO: change home planet receiving
                 var homePlanet = sessionMap.Planets[Random.Shared.Next(0, sessionMap.Planets.Count)];
                 hero.HomePlanetId = homePlanet.Id;
                 hero.HomePlanet = homePlanet;
                 homePlanet.OwnerId = hero.HeroId;
+                homePlanet.IsCapital = true;
+                
                 hero.SetSoldiersLimitBasedOnPlanetSize(homePlanet.Size);
                 hero.InitializeAvailableSoldiers();
 

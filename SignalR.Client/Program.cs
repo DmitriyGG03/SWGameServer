@@ -188,6 +188,16 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine(json);
     });
     
+    hubConnection.On<Battle>(ClientHandlers.Session.ReceiveBattle, (battle) =>
+    {
+        Console.WriteLine("Battle");
+        string json = JsonSerializer.Serialize(battle, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
@@ -296,6 +306,47 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
             PlanetId = Guid.Parse(planetId)
         };
         await connection.InvokeAsync(ServerHandlers.Session.BuildFortification, request);
+    }
+    else if (message == "attack")
+    {
+        Console.WriteLine("Are you 1 or 2 user?");
+        var userNumber = Console.ReadLine();
+        var heroId = Guid.Empty;
+        heroId = userNumber == "1" ? hero1 : hero2;
+        
+        Console.WriteLine("Enter planed ID to attack: ");
+        var planetIdToAttack = Console.ReadLine();
+        
+        Console.WriteLine("Enter planed ID from attack: ");
+        var planetIdFrom = Console.ReadLine();
+        
+        var request = new StartBattleRequest
+        {
+            HeroId = heroId,
+            AttackedPlanetId = Guid.Parse(planetIdToAttack),
+            FromPlanetId = Guid.Parse(planetIdFrom),
+            CountOfSoldiers = 10
+        };
+        
+        await connection.InvokeAsync(ServerHandlers.Session.StartBattle, request);
+    }
+    else if (message == "defend")
+    {
+        Console.WriteLine("Are you 1 or 2 user?");
+        var userNumber = Console.ReadLine();
+        var heroId = Guid.Empty;
+        heroId = userNumber == "1" ? hero1 : hero2;
+        
+        Console.WriteLine("Enter planed ID to defend: ");
+        var planetIdToAttack = Console.ReadLine();
+
+        var request = new DefendPlanetRequest
+        {
+            HeroId = heroId,
+            AttackedPlanetId = Guid.Parse(planetIdToAttack),
+            CountOfSoldiers = 10
+        };
+        await connection.InvokeAsync(ServerHandlers.Session.DefendPlanet, request);
     }
 
     return false;

@@ -24,6 +24,8 @@ namespace SharedLibrary.Models
         public int Health { get; set; }
         public int HealthLimit { get; set; }
 
+        public bool IsCapital { get; set; } = false;
+
         public string PlanetName { get; set; }
         public Guid? OwnerId { get; set; }
 
