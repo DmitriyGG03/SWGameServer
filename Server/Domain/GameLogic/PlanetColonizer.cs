@@ -79,7 +79,6 @@ public class PlanetColonizer : IPlanetAction
         relation.IterationsLeftToTheNextStatus = 1;
 
         hero.AvailableColonizationShips += 1;
-        // planet can not be null -> check ctor
         var planetSize = _planet.Size;
         hero.UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(planetSize);
 

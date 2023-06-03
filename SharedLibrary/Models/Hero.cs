@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Drawing;
 using SharedLibrary.Models.Enums;
 
 namespace SharedLibrary.Models
@@ -51,18 +50,18 @@ namespace SharedLibrary.Models
 		
 		public int SetSoldiersLimitBasedOnPlanetSize(int planetSize)
 		{
-			SoldiersLimit = CalculateSoldiersLimitByPlanetType(planetSize);
+			SoldiersLimit = CalculateSoldiersLimitByPlanetSize(planetSize);
 			return SoldiersLimit;
 		}
 
 		public void UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(int planetSize)
 		{
-			int currentSoldiersLimit = CalculateSoldiersLimitByPlanetType(planetSize);
-			SoldiersLimit += currentSoldiersLimit;
-			AvailableSoldiers += (int)(0.5 * currentSoldiersLimit);
+			int soldiersLimitOnPlanet = CalculateSoldiersLimitByPlanetSize(planetSize);
+			SoldiersLimit += soldiersLimitOnPlanet;
+			AvailableSoldiers += (int)(0.5 * soldiersLimitOnPlanet);
 		}
 
-		private int CalculateSoldiersLimitByPlanetType(int planetSize)
+		private int CalculateSoldiersLimitByPlanetSize(int planetSize)
 		{
 			int coefficient = 0;
 			if (planetSize < 10)
@@ -79,6 +78,11 @@ namespace SharedLibrary.Models
 			}
 
 			return coefficient * planetSize;
+		}
+
+		public int CalculateNextSoldiersCount()
+		{
+			return (int)(SoldiersLimit * 0.2);
 		}
 	}
 }

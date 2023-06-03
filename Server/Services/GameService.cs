@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
 using Server.Domain;
 using Server.Domain.GameLogic;
@@ -53,13 +54,13 @@ public class GameService : IGameService
             
         if (session.Heroes is null)
             throw new NullReferenceException("You probably changed GetByIdAsync method in session service. Heroes can not be null there");
-
-        session.TurnNumber += 1;
-        var heroes = session.Heroes.OrderBy(x => x.Name).ToList();
-        int nextHeroIndex = session.TurnNumber % heroes.Count;
-        var hero = heroes[nextHeroIndex];
-            
-        session.HeroTurnId = hero.HeroId;
+    
+        // update statuses
+        UpdateHeroesSoldiers(session.Heroes);
+        await UpdatePlanetsHealthAsync(sessionId, cancellationToken);
+        
+        ChooseNextHero(session);
+        
         await _sessionService.UpdateSessionAsync(session, cancellationToken);
 
         return new ServiceResult<Session>(session);
@@ -96,5 +97,55 @@ public class GameService : IGameService
         {
             return new PlanetDoNothingAction();
         }
+    }
+
+    private void UpdateHeroesSoldiers(ICollection<Hero> heroes)
+    {
+        foreach (var hero in heroes)
+        {
+            var soldiersCount = hero.CalculateNextSoldiersCount();
+
+            if (soldiersCount + hero.AvailableSoldiers > hero.SoldiersLimit)
+            {
+                hero.AvailableSoldiers = hero.SoldiersLimit;
+            }
+            else
+            {
+                hero.AvailableSoldiers += soldiersCount;
+            }
+        }
+    }
+
+    private async Task UpdatePlanetsHealthAsync(Guid sessionId, CancellationToken cancellationToken)
+    {
+        var sessionMap = await _context.SessionMaps
+            .Include(x => x.Planets)
+            .FirstOrDefaultAsync(x => x.Session.Id == sessionId, cancellationToken);
+
+        var planets = sessionMap.Planets;
+
+        foreach (var planet in planets.Where(x => x.Health < x.HealthLimit))
+        {
+            var heal = planet.CalculateHealOnTheNextTurn();
+
+            if (heal + planet.Health > planet.HealthLimit)
+            {
+                planet.Health = planet.HealthLimit;
+            }
+            else
+            {
+                planet.Health += heal;
+            }
+        }
+    }
+
+    private void ChooseNextHero(Session session)
+    {
+        session.TurnNumber += 1;
+        var heroes = session.Heroes.OrderBy(x => x.Name).ToList();
+        
+        int nextHeroIndex = session.TurnNumber % heroes.Count;
+        var hero = heroes[nextHeroIndex];
+        session.HeroTurnId = hero.HeroId;
     }
 }

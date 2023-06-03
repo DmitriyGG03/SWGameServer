@@ -94,5 +94,10 @@ namespace SharedLibrary.Models
                 return planetSize * 17;
             }
         }
+
+        public int CalculateHealOnTheNextTurn()
+        {
+            return (int)(HealthLimit * 0.2);
+        }
     }
 }
