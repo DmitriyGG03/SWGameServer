@@ -18,12 +18,11 @@ namespace SharedLibrary.Contracts.Hubs
         public static class Session
         {
             public const string PostResearchOrColonizeErrorHandler = "PostResearchOrColonizeErrorHandler";
-            public const string IterationDone = "IterationDone";
             public const string ResearchedPlanet = "Researched";
-            public const string Colonizing = "Colonized";
+            public const string ColonizingPlanet = "Colonizing";
             public const string HealthCheckHandler = "healthcheck";
             public const string ReceiveHeroMap = "ReceiveHeroMap";
-            public const string Researching = "StartedResearching";
+            public const string ResearchingPlanet = "StartedResearching";
             public const string ReceiveSession = "ReceiveSession";
         }
     }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
 using SharedLibrary.Requests;
+using SharedLibrary.Responses;
 
 var sessionId = Guid.Parse("b10ee965-403d-41c1-b633-60e17ea57ce1");
 string hero1 = "64977684-5667-4182-8571-7e85577381f5";
@@ -158,11 +159,11 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     });
     
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
-    hubConnection.On<string>(ClientHandlers.Session.Researching, HandleStringMessageOutput());
-    hubConnection.On<string>(ClientHandlers.Session.Colonizing, HandleStringMessageOutput());
-    hubConnection.On<string>(ClientHandlers.Session.IterationDone, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
+    
+    hubConnection.On<PlanetActionResponse>(ClientHandlers.Session.ResearchingPlanet, HandlePlanetActionResponse());
+    hubConnection.On<PlanetActionResponse>(ClientHandlers.Session.ColonizingPlanet, HandlePlanetActionResponse());
 
     return currentLobby1;
 }
@@ -254,5 +255,18 @@ Action<string> HandleStringMessageOutput()
     return (message) =>
     {
         Console.WriteLine(message);
+    };
+}
+
+Action<PlanetActionResponse> HandlePlanetActionResponse()
+{
+    return (planetActionResponse) =>
+    {
+        Console.WriteLine("Received session");
+        string json = JsonSerializer.Serialize(planetActionResponse, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
     };
 }

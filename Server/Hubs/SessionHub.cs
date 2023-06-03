@@ -115,7 +115,7 @@ public class SessionHub : Hub
 
     private async Task NotifyStartResearchingAsync(ServiceResult<PlanetActionResult> result)
     {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.Researching, GetResponse(result));
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchingPlanet, GetResponse(result));
     }
     
     private async Task NotifyResearchedPlanetAsync(ResearchColonizePlanetRequest request)
@@ -126,7 +126,7 @@ public class SessionHub : Hub
 
     private async Task NotifyColonizingAsync(ServiceResult<PlanetActionResult> result)
     {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.Colonizing, GetResponse(result));
+        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizingPlanet, GetResponse(result));
     }
     
     private async Task NotifyColonizedPlanetAsync(ResearchColonizePlanetRequest request)
