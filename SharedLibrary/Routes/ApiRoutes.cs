@@ -32,6 +32,7 @@ namespace SharedLibrary.Routes
             public const string GetById = "{id}";
             public const string ResearchColonizePlanet = "researchorcolonize/{sessionId}";
             public const string GetHeroMap = "heromap/{id}";
+            public const string GetBattles = "get-battles";
         }
         
         public static class Map

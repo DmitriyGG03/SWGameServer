@@ -13,6 +13,8 @@ public interface IGameObjectsRepository
     Task<HeroPlanetRelation?> GetUnknownRelationByHeroAndPlanetIdsAsync(Guid heroId, Guid planetId, CancellationToken cancellationToken);
 
     void UpdateHeroPlanetRelations(List<HeroPlanetRelation> relations);
+
+    Task<List<Battle>> GetBattlesAsync(CancellationToken cancellationToken);
 }
 
 public class GameObjectRepository : IGameObjectsRepository
@@ -69,5 +71,10 @@ public class GameObjectRepository : IGameObjectsRepository
     public void UpdateHeroPlanetRelations(List<HeroPlanetRelation> relations)
     {
         _context.HeroPlanetRelations.UpdateRange(relations);
+    }
+
+    public async Task<List<Battle>> GetBattlesAsync(CancellationToken cancellationToken)
+    {
+        return await _context.Battles.ToListAsync(cancellationToken);
     }
 }

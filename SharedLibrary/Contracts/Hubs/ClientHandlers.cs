@@ -25,6 +25,7 @@ namespace SharedLibrary.Contracts.Hubs
             public const string ResearchingPlanet = "StartedResearching";
             public const string ReceiveSession = "ReceiveSession";
             public const string UpdatedFortification = nameof(UpdatedFortification);
+            public const string ReceiveBattle = nameof(ReceiveBattle);
         }
     }
 }

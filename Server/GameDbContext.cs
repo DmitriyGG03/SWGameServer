@@ -24,4 +24,5 @@ public class GameDbContext : DbContext
     public DbSet<Planet> Planets { get; set; }
     public DbSet<Edge> Connections { get; set; }
     public DbSet<HeroPlanetRelation> HeroPlanetRelations { get; set; }
+    public DbSet<Battle> Battles { get; set; }
 }

@@ -17,6 +17,9 @@ public interface IGameService
     Task<ServiceResult<Session>> MakeNextTurnAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken);
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
+
+    Task<ServiceResult<Battle>> StartBattleAsync(Guid attackerId, Guid attackedPlanetId, Guid fromPlanetId,
+        int attackerSoldiersCount, CancellationToken cancellationToken);
 }
 
 public class GameService : IGameService
@@ -69,6 +72,47 @@ public class GameService : IGameService
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
         return await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<ServiceResult<Battle>> StartBattleAsync(Guid attackerId, Guid attackedPlanetId, Guid fromPlanetId, 
+        int attackerSoldiersCount, CancellationToken cancellationToken)
+    {
+        var attacker = await _context.Heroes.FirstOrDefaultAsync(x => x.HeroId == attackerId, cancellationToken);
+        if (attacker is null)
+            return new ServiceResult<Battle>(ErrorMessages.Hero.NotFound);
+
+        if (attackerSoldiersCount > attacker.AvailableSoldiers)
+        {
+            return new ServiceResult<Battle>(ErrorMessages.Session.NotEnoughSoldiers);
+        }
+
+        var heroPlanetRelation = await _context.HeroPlanetRelations
+            .Include(x => x.Hero)
+            .FirstOrDefaultAsync(x => 
+                x.PlanetId == attackedPlanetId && 
+                x.Status == PlanetStatus.Colonized, 
+                cancellationToken);
+
+        if (heroPlanetRelation is null)
+            return new ServiceResult<Battle>(ErrorMessages.Relation.NotFound);
+
+        var defendingHero = heroPlanetRelation.Hero;
+
+        var battle = new Battle
+        {
+            Id = Guid.NewGuid(),
+            AttackerHeroId = attackerId,
+            DefendingHeroId = defendingHero.HeroId,
+            AttackedPlanetId = attackedPlanetId,
+            AttackedFromId = fromPlanetId,
+            Status = BattleStatus.InProcess,
+            AttackerSoldiers = attackerSoldiersCount,
+            DefenderSoldiers = 0
+        };
+
+        _context.Battles.Add(battle);
+        await _context.SaveChangesAsync(cancellationToken);
+        return new ServiceResult<Battle>(battle);
     }
 
     private IPlanetAction GetPlanetActionBasedOnRelationStatus(HeroPlanetRelation relation)
