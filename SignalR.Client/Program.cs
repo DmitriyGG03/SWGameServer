@@ -6,10 +6,10 @@ using SharedLibrary.Models;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
 
-var sessionId = Guid.Parse("b10ee965-403d-41c1-b633-60e17ea57ce1");
-string hero1 = "64977684-5667-4182-8571-7e85577381f5";
+var sessionId = Guid.Parse("4eac29ce-a57b-4c58-8925-10facad36480");
+string hero1 = "d8b9cc89-6820-4f13-9e17-8ef5d0ed5cd6";
 string hero2 = "7c57de2c-218f-40b4-ad08-fef266cccaff";
-var planetId = Guid.Parse("5a44275d-4b07-48b0-b6e7-6429d0519440");
+var planetId = Guid.Parse("7341ac5e-0e9e-4c3a-8b38-7c7622b2f01c");
 
 const int port = 7148;
 Console.WriteLine("Enter hub name");

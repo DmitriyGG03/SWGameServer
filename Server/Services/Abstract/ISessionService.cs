@@ -8,8 +8,7 @@ namespace Server.Services.Abstract
     {
         Task<Session?> GetByIdAsync(Guid sessionId, CancellationToken cancellationToken);
 
-        Task<ServiceResult> GetSessionAndValidateTurnId(Guid sessionId, Guid heroId,
-            CancellationToken cancellationToken);
+        Task<bool> IsHeroTurn(Guid sessionId, Guid heroId, CancellationToken cancellationToken);
         
         Task<ServiceResult<Session>> CreateAsync(Guid lobbyId, CancellationToken cancellationToken);
 

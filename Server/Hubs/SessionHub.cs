@@ -49,12 +49,21 @@ public class SessionHub : Hub
         if (planetActionResult.Success == false)
         {
             await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, planetActionResult.ErrorMessage);
-
         }
         else
         {
-            var result = await planetActionResult.Value.ExecuteAsync(CancellationToken.None);
-            await HandlePlanetActionResultAsync(result, request);
+            var turnResult = await _sessionService
+                .IsHeroTurn(request.SessionId, request.HeroId, CancellationToken.None);
+            if (turnResult == false)
+            {
+                await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, ErrorMessages.Session.NotHeroTurn);
+            }
+            else
+            {
+                var result = await planetActionResult.Value.ExecuteAsync(CancellationToken.None);
+                await _gameService.SaveChangesAsync(CancellationToken.None);
+                await HandlePlanetActionResultAsync(result, request);
+            }
         }
     }
 

@@ -78,16 +78,19 @@ namespace Server.Services
             return result;
         }
 
-        public async Task<ServiceResult> GetSessionAndValidateTurnId(Guid sessionId, Guid heroId,
+        public async Task<bool> IsHeroTurn(Guid sessionId, Guid heroId,
             CancellationToken cancellationToken)
         {
             var session = await GetByIdAsync(sessionId, cancellationToken);
             if (session is null)
-                return new ServiceResult(ErrorMessages.Session.NotFound);
+            {
+                _logger.LogWarning($"We can not find session by id! Session id: {sessionId}");
+                return false;
+            }
             if (session.HeroTurnId != heroId)
-                return new ServiceResult(ErrorMessages.Session.NotHeroTurn);
-            
-            return new ServiceResult();
+                return false;
+
+            return true;
         }
 
         public async Task<ServiceResult<Dictionary<Guid, Guid>>> GetUserIdWithHeroIdBySessionIdAsync(Guid sessionId, CancellationToken cancellationToken)

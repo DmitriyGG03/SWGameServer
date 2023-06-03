@@ -87,7 +87,7 @@ public class PlanetResearcher : IPlanetAction
         foreach (var planet in neighborPlanets)
         {
             var relationToKnow =
-                await _gameObjectsRepository.GetRelationByHeroAndPlanetIdsAsync(heroId, planetId, cancellationToken);
+                await _gameObjectsRepository.GetUnknownRelationByHeroAndPlanetIdsAsync(heroId, planet.Id, cancellationToken);
 
             if (relationToKnow is not null)
             {

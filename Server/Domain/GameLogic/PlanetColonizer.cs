@@ -25,11 +25,11 @@ public class PlanetColonizer : IPlanetAction
 
     public async Task<ServiceResult<PlanetActionResult>> ExecuteAsync(CancellationToken cancellationToken)
     {
-        if (_relation.Status == PlanetStatus.Known)
+        if (_relation.Status == PlanetStatus.Researched)
         {
             return StartPlanetColonization(_relation, _hero);
         }
-        else if(_relation.Status == PlanetStatus.Researching)
+        else if(_relation.Status == PlanetStatus.Colonizing)
         {
             var result = ContinuePlanetColonization(_relation, _hero, cancellationToken);
             return new ServiceResult<PlanetActionResult>(result);

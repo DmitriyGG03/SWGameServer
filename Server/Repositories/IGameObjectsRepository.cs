@@ -8,6 +8,8 @@ public interface IGameObjectsRepository
     Task<List<Planet>> GetNeighborPlanetsAsync(Guid planetId, CancellationToken cancellationToken);
 
     Task<HeroPlanetRelation?> GetRelationByHeroAndPlanetIdsAsync(Guid heroId, Guid planetId, CancellationToken cancellationToken);
+    
+    Task<HeroPlanetRelation?> GetUnknownRelationByHeroAndPlanetIdsAsync(Guid heroId, Guid planetId, CancellationToken cancellationToken);
 
     void UpdateHeroPlanetRelations(List<HeroPlanetRelation> relations);
 }
@@ -42,10 +44,23 @@ public class GameObjectRepository : IGameObjectsRepository
 
     public async Task<HeroPlanetRelation?> GetRelationByHeroAndPlanetIdsAsync(Guid heroId, Guid planetId, CancellationToken cancellationToken)
     {
-        HeroPlanetRelation? relation = await _context.HeroPlanetRelations.FirstOrDefaultAsync(x =>
+        HeroPlanetRelation? relation = await _context.HeroPlanetRelations
+            .Include(x => x.Hero)
+            .Include(x => x.Planet)
+            .FirstOrDefaultAsync(x =>
             x.HeroId == heroId &&
             x.PlanetId == planetId &&
-            x.Status == PlanetStatus.Unknown, cancellationToken);
+            x.Status >= PlanetStatus.Known, cancellationToken);
+
+        return relation;
+    }
+
+    public async Task<HeroPlanetRelation?> GetUnknownRelationByHeroAndPlanetIdsAsync(Guid heroId, Guid planetId, CancellationToken cancellationToken)
+    {
+        HeroPlanetRelation? relation = await _context.HeroPlanetRelations.FirstOrDefaultAsync(x =>
+                x.HeroId == heroId &&
+                x.PlanetId == planetId &&
+                x.Status == PlanetStatus.Unknown, cancellationToken);
 
         return relation;
     }
