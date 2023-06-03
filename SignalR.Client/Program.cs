@@ -33,13 +33,7 @@ var accessToken = Console.ReadLine();
 var lobbyId = Guid.Empty;
 if (hubName == "lobby")
 {
-    Console.WriteLine("Enter lobby id, that you want to use: ");
-    var lobbyIdRaw = Console.ReadLine();
-    
-    if (Guid.TryParse(lobbyIdRaw, out lobbyId) == false)
-    {
-        throw new ArgumentException("Given lobby id has wrong format");
-    }
+    lobbyId = settings.LobbyId;
 }
 
 Guid sessionId = Guid.Empty, hero1 = Guid.Empty, hero2 = Guid.Empty;
