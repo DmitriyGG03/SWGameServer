@@ -180,7 +180,7 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     
     hubConnection.On<UpdatedFortificationResponse>(ClientHandlers.Session.UpdatedFortification, (fortificationResponse) =>
     {
-        Console.WriteLine("Received session");
+        Console.WriteLine("UpdatedFortificationResponse");
         string json = JsonSerializer.Serialize(fortificationResponse, new JsonSerializerOptions
         {
             WriteIndented = true

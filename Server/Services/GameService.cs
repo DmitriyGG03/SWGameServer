@@ -263,6 +263,14 @@ public class GameService : IGameService
         if (attackedPlanet is null)
             throw new InvalidOperationException("Attacked planet can not be null");
 
+        if (battle.BattleTurnNumber == 5)
+        {
+            // defender won
+            battle.Status = BattleStatus.DefenderWon;
+            attackedPlanet.Health = (int)(attackedPlanet.HealthLimit * 0.5);
+            return;
+        }
+
         var damage = battle.AttackerSoldiers - attackedPlanet.Size * 5;
         if (attackedPlanet.Health - damage <= 0)
         {
@@ -271,6 +279,7 @@ public class GameService : IGameService
         else
         {
             attackedPlanet.Health -= damage;
+            battle.BattleTurnNumber += 1;
         }
     }
 
