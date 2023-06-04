@@ -204,10 +204,10 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine(json);
     });
     
-    hubConnection.On<GetHeroDataResponse>(ClientHandlers.Session.GetHeroDataHandler, (heroData) =>
+    hubConnection.On<NextTurnResponse>(ClientHandlers.Session.GetHeroDataHandler, (nextTurnResponse) =>
     {
-        Console.WriteLine("GetHeroDataResponse");
-        string json = JsonSerializer.Serialize(heroData, new JsonSerializerOptions
+        Console.WriteLine("GetHeroData");
+        string json = JsonSerializer.Serialize(nextTurnResponse, new JsonSerializerOptions
         {
             WriteIndented = true
         });

@@ -168,7 +168,7 @@ public class SessionHub : Hub
             List<Battle> sessionBattles = await _gameService.GetBattlesBySessionAsync(session, CancellationToken.None);
             var heroMap = await _heroMapService.GetHeroMapAsync(hero.HeroId, CancellationToken.None);
             _cyclicDependencySolver.Solve(session);
-            var response = new GetHeroDataResponse
+            var response = new NextTurnResponse
             {
                 Hero = hero,
                 Session = session,
