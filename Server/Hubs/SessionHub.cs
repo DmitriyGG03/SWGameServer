@@ -173,7 +173,7 @@ public class SessionHub : Hub
         {
             var heroMap = await _heroMapService.GetHeroMapAsync(item.Value, CancellationToken.None);
             response.HeroMapView = heroMap;
-            response.Hero = heroes.First(x => x.HeroId == heroMap.HeroId);
+            response.Hero = heroes.First(x => x.HeroId == item.Value);
             await this.Clients.User(item.Key.ToString()).SendAsync(ClientHandlers.Session.NextTurnHandler, response);
         }
     }

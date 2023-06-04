@@ -40,8 +40,9 @@ Guid sessionId = Guid.Empty, hero1 = Guid.Empty, hero2 = Guid.Empty;
 if (hubName == "session")
 {
     sessionId = settings.Session.Id;
-    hero1 = settings.Session.Heroes.First().HeroId;
-    hero2 = settings.Session.Heroes.FirstOrDefault(x => x.HeroId != hero1).HeroId;
+    var heroes = settings.Session.Heroes.OrderBy(x => x.Name);
+    hero1 = heroes.First().HeroId;
+    hero2 = heroes.FirstOrDefault(x => x.HeroId != hero1).HeroId;
 }
 
 try
