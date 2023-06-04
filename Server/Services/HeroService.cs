@@ -68,6 +68,7 @@ public class HeroService : IHeroService
         var hero = await _dbContext
             .Heroes
             .Include(x => x.Session)
+             .ThenInclude(x => x.Heroes)
             .FirstOrDefaultAsync(h => h.UserId == userId, cancellationToken);
         
         return hero;
