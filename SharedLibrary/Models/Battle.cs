@@ -27,8 +27,6 @@ namespace SharedLibrary.Models
         public Planet? AttackedFrom { get; set; }
 
         public BattleStatus Status { get; set; } = BattleStatus.InProcess;
-        public int AttackerSoldiers { get; set; }
-        public int DefenderSoldiers { get; set; }
         public int BattleTurnNumber { get; set; } = 0;
     }
 }

@@ -14,7 +14,7 @@ public interface IGameService
     Task<ServiceResult<IPlanetAction>> GetPlanetActionHandlerAsync(Guid planetId, Guid heroId,
         CancellationToken cancellationToken);
 
-    Task<ServiceResult<Session>> MakeNextTurnAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken);
+    Task<ServiceResult<(Session session, bool nextTurn)>> MakeNextTurnAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken);
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 
@@ -23,6 +23,8 @@ public interface IGameService
 
     Task<ServiceResult<Battle>> DefendPlanetAsync(Guid heroId, Guid planetId, int countOfSoldiers,
         CancellationToken cancellationToken);
+
+    Task<List<Battle>> GetBattlesBySessionAsync(Session session, CancellationToken cancellationToken);
 }
 
 public class GameService : IGameService
@@ -51,13 +53,13 @@ public class GameService : IGameService
         return new ServiceResult<IPlanetAction>(planetAction);
     }
 
-    public async Task<ServiceResult<Session>> MakeNextTurnAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken)
+    public async Task<ServiceResult<(Session session, bool nextTurn)>> MakeNextTurnAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken)
     {
         var session = await _sessionService.GetByIdAsync(sessionId, cancellationToken);
         if (session is null)
-            return new ServiceResult<Session>(ErrorMessages.Session.NotFound);
+            return new ServiceResult<(Session session, bool nextTurn)>(ErrorMessages.Session.NotFound);
         if (session.HeroTurnId != heroId)
-            return new ServiceResult<Session>(ErrorMessages.Session.NotHeroTurn);
+            return new ServiceResult<(Session session, bool nextTurn)>(ErrorMessages.Session.NotHeroTurn);
             
         if (session.Heroes is null)
             throw new NullReferenceException("You probably changed GetByIdAsync method in session service. Heroes can not be null there");
@@ -68,12 +70,14 @@ public class GameService : IGameService
             session.TurnNumber += 1;
             
             UpdateHeroesSoldiers(session.Heroes);
-            
             await UpdatePlanetsHealthAsync(sessionId, cancellationToken);
+            
             await HandleBattlesAsync(cancellationToken);
+            await HandlePlanetActions(cancellationToken);
         }
-        
-        return new ServiceResult<Session>(session);
+
+        await SaveChangesAsync(cancellationToken);
+        return new ServiceResult<(Session session, bool nextTurn)>((session, newTurn));
     }
 
     public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
@@ -117,11 +121,10 @@ public class GameService : IGameService
             AttackedPlanetId = attackedPlanetId,
             AttackedFromId = fromPlanetId,
             Status = BattleStatus.InProcess,
-            AttackerSoldiers = attackerSoldiersCount,
-            DefenderSoldiers = 0
+            BattleTurnNumber = 0
         };
 
-        _context.Battles.Add(battle);
+        await _context.Battles.AddAsync(battle, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
         return new ServiceResult<Battle>(battle);
     }
@@ -140,11 +143,10 @@ public class GameService : IGameService
             .Include(x => x.AttackedPlanet)
             .FirstOrDefaultAsync(x =>
                 x.AttackedPlanetId == planetId &&
-                x.DefendingHeroId == heroId, cancellationToken);
+                x.DefendingHeroId == heroId &&
+                x.Status == BattleStatus.InProcess, cancellationToken);
         if (battle is null)
             return new ServiceResult<Battle>(ErrorMessages.Battle.NotFound);
-
-        battle.DefenderSoldiers += countOfSoldiers;
 
         if (battle.AttackedPlanet is null)
             throw new InvalidOperationException("Battle must contain attacked planet");
@@ -163,13 +165,28 @@ public class GameService : IGameService
         return new ServiceResult<Battle>(battle);
     }
 
+    public async Task<List<Battle>> GetBattlesBySessionAsync(Session session, CancellationToken cancellationToken)
+    {
+        if (session.Heroes is null)
+            throw new ArgumentException("Session must contain heroes to get their battles");
+
+        var battles = await _context.Battles.ToListAsync(cancellationToken);
+        var sessionBattles = battles
+            .Where(x => 
+                session.Heroes.Any(h => 
+                    h.HeroId == x.AttackerHeroId || 
+                    h.HeroId == x.DefendingHeroId))
+            .ToList();
+        return sessionBattles;
+    }
+
     private IPlanetAction GetPlanetActionBasedOnRelationStatus(HeroPlanetRelation relation)
     {
-        if (relation.Status == PlanetStatus.Known || relation.Status == PlanetStatus.Researching)
+        if (relation.Status is PlanetStatus.Known or PlanetStatus.Researching)
         {
             return new PlanetResearcher(relation, _gameObjectsRepository);
         }
-        else if (relation.Status == PlanetStatus.Researched || relation.Status == PlanetStatus.Colonizing)
+        else if (relation.Status is PlanetStatus.Researched or PlanetStatus.Colonizing)
         {
             return new PlanetColonizer(relation);
         }
@@ -215,9 +232,12 @@ public class GameService : IGameService
             .FirstOrDefaultAsync(x => x.Session.Id == sessionId, cancellationToken);
 
         var planets = sessionMap.Planets;
-
+        var battles = await _context.Battles.Where(x => x.Status == BattleStatus.InProcess).ToListAsync(cancellationToken);
         foreach (var planet in planets.Where(x => x.Health < x.HealthLimit))
         {
+            if (battles.Any(x => x.AttackedPlanetId == planet.Id))
+                 continue;
+             
             var heal = planet.CalculateHealOnTheNextTurn();
 
             if (heal + planet.Health > planet.HealthLimit)
@@ -251,8 +271,14 @@ public class GameService : IGameService
 
     private async Task HandleBattlesAsync(CancellationToken cancellationToken)
     {
-        var battles = await _context.Battles.ToListAsync(cancellationToken);
-        if (battles.Any(x => x.Status == BattleStatus.InProcess))
+        var battles = await _context.Battles
+            .Include(x => x.AttackerHero)
+            .Include(x => x.DefendingHero)
+            .Include(x => x.AttackedPlanet)
+            .Where(x => x.Status == BattleStatus.InProcess)
+            .ToListAsync(cancellationToken);
+        
+        if (battles.Any())
         {
             foreach (var battle in battles)
             {
@@ -264,22 +290,22 @@ public class GameService : IGameService
     private async Task HandleBattle(Battle battle, CancellationToken cancellationToken)
     {
         // battle
-        var attackedPlanet = await _context.Planets
-            .FirstOrDefaultAsync(x => x.Id == battle.AttackedPlanetId, cancellationToken);
+        var attackedPlanet = battle.AttackedPlanet;
 
         if (attackedPlanet is null)
-            throw new InvalidOperationException("Attacked planet can not be null");
+            throw new InvalidOperationException("Attacked planet can not be null. You probably changed the HandleBattlesAsync method");
 
-        if (battle.BattleTurnNumber == 5)
+        var attacker = battle.AttackerHero;
+        if (attacker is null)
+            throw new InvalidOperationException("You probably changed the battle getting request. Attacker can not be null");
+        
+        attacker.AvailableSoldiers -= (int)(attacker.AvailableSoldiers * 0.2);
+        var damage = attacker.AvailableSoldiers - attackedPlanet.Size * 2;
+        if (damage <= 0)
         {
-            // defender won
             battle.Status = BattleStatus.DefenderWon;
-            attackedPlanet.Health = (int)(attackedPlanet.HealthLimit * 0.5);
-            return;
         }
-
-        var damage = battle.AttackerSoldiers - attackedPlanet.Size * 5;
-        if (attackedPlanet.Health - damage <= 0)
+        else if (attackedPlanet.Health - damage <= 0)
         {
             await ConquerPlanetAsync(battle, attackedPlanet, cancellationToken);
         }
@@ -317,6 +343,28 @@ public class GameService : IGameService
         {
             _logger.LogWarning($"The capital of hero: {attackedPlanet.OwnerId} has been colonized");
             _logger.LogWarning($"User: {attackedPlanet.OwnerId} has been defeated!");
+        }
+    }
+
+    private async Task HandlePlanetActions(CancellationToken cancellationToken)
+    {
+        // TODO: update fortifications
+        var relations = await _context.HeroPlanetRelations
+            .Include(x => x.Hero)
+            .Include(x => x.Planet)
+            .Where(x => 
+                x.Status == PlanetStatus.Researching ||
+                x.Status == PlanetStatus.Colonizing)
+            .ToListAsync(cancellationToken);
+
+        foreach (var relation in relations)
+        {
+            IPlanetAction relationHandler = GetPlanetActionBasedOnRelationStatus(relation);
+            var result = await relationHandler.ExecuteAsync(cancellationToken);
+            if (result.Success == false)
+            {
+                _logger.LogWarning("We can not handle planet status updating");
+            }
         }
     }
 }

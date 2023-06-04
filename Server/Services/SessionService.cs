@@ -99,15 +99,20 @@ namespace Server.Services
             var session = await _context.Sessions
                 .Include(x => x.Heroes)
                 .FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
-            if (session is null)
-            {
-                return new ServiceResult<Dictionary<Guid, Guid>>(ErrorMessages.Session.NotFound);
-            }
-
             if (session.Heroes is null)
                 throw new InvalidOperationException("Can not get user id's, cause heroes in session is null");
 
             return new ServiceResult<Dictionary<Guid, Guid>>(session.Heroes
+                .Select(x => new {x.UserId, x.HeroId})
+                .ToDictionary(t => t.UserId, t => t.HeroId));
+        }
+        
+        public Dictionary<Guid, Guid> GetUserIdWithHeroIdBySession(Session session)
+        {
+            if (session.Heroes is null)
+                throw new InvalidOperationException("Can not get user id's, cause heroes in session is null");
+
+            return new Dictionary<Guid, Guid>(session.Heroes
                 .Select(x => new {x.UserId, x.HeroId})
                 .ToDictionary(t => t.UserId, t => t.HeroId));
         }

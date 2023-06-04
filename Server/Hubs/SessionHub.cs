@@ -38,9 +38,25 @@ public class SessionHub : Hub
     [Authorize]
     public async Task MakeNextTurn(NextTurnRequest request)
     {
-        ServiceResult<Session> result = await _gameService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
-        await _gameService.SaveChangesAsync(CancellationToken.None);
-        await HandleSessionResultAndNotifyClients(result);
+        ServiceResult<(Session session, bool nextTurn)> result = await _gameService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
+
+        if (result.Success == false)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
+        }
+        else
+        {
+            (Session session, bool nextTurn) = result.Value;
+            
+            if(nextTurn == true)
+            {
+                await HandleNextTurnAndNotifyClients(session);
+            }            
+            else
+            {
+                await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
+            }
+        }
     }
 
     [Authorize]
@@ -91,17 +107,24 @@ public class SessionHub : Hub
         }
     }
     
-    private async Task HandleSessionResultAndNotifyClients(ServiceResult<Session> result)
+    private async Task HandleNextTurnAndNotifyClients(Session session)
     {
-        if (result.Success == false)
+        _cyclicDependencySolver.Solve(session);
+
+        List<Battle> sessionBattles = await _gameService.GetBattlesBySessionAsync(session, CancellationToken.None);
+        var response = new NextTurnResponse
         {
-            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
-        }
-        else
+            Session = session,
+            Battles = sessionBattles
+        };
+
+        var userIdsWithHeroIds = _sessionService.GetUserIdWithHeroIdBySession(session);
+
+        foreach (var item in userIdsWithHeroIds)
         {
-            var session = result.Value;
-            _cyclicDependencySolver.Solve(session);
-            await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
+            var heroMap = await _heroMapService.GetHeroMapAsync(item.Value, CancellationToken.None);
+            response.HeroMapView = heroMap;
+            await this.Clients.User(item.Key.ToString()).SendAsync(ClientHandlers.Session.NextTurnHandler, response);
         }
     }
 

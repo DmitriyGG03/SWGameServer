@@ -23,7 +23,7 @@ public class CyclicDependencySolver
     
     public void Solve(Session sessionToSolve)
     {
-        if (sessionToSolve.Heroes != null)
+        if (sessionToSolve.Heroes is not null)
         {
             foreach (var item in sessionToSolve.Heroes)
             {
