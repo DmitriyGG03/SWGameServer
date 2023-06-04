@@ -8,7 +8,7 @@ public abstract class FortificationBuilderBase : IPlanetAction
 {
     protected readonly HeroPlanetRelation Relation;
     protected readonly Hero Hero;
-    protected FortificationBuilderBase(HeroPlanetRelation relation, Hero hero)
+    protected FortificationBuilderBase(HeroPlanetRelation relation)
     {
         if (relation.Planet is null)
             throw new ArgumentException("Relation must be with planet");
@@ -16,7 +16,7 @@ public abstract class FortificationBuilderBase : IPlanetAction
             throw new ArgumentException("Relation must be with not null hero");
         
         Relation = relation;
-        Hero = hero;
+        Hero = relation.Hero;
     }
     
     public virtual async Task<ServiceResult<PlanetActionResult>> ExecuteAsync(CancellationToken cancellationToken)

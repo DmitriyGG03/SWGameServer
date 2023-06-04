@@ -5,7 +5,7 @@ namespace Server.Domain.GameLogic;
 
 public class FortificationSecondLevelBuilder : FortificationBuilderBase
 {
-    public FortificationSecondLevelBuilder(HeroPlanetRelation relation, Hero hero) : base(relation, hero)
+    public FortificationSecondLevelBuilder(HeroPlanetRelation relation) : base(relation)
     {
     }
 

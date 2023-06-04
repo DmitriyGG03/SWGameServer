@@ -94,6 +94,7 @@ public class GameService : IGameService
             
             UpdateHeroesSoldiers(session.Heroes);
             await UpdatePlanetsHealthAsync(sessionId, cancellationToken);
+            await UpdateHeroesResourcesAsync(session.Heroes);
             
             await HandleBattlesAsync(cancellationToken);
             await HandlePlanetActions(cancellationToken);
@@ -259,7 +260,22 @@ public class GameService : IGameService
             }
         }
     }
-
+    
+    private async Task UpdateHeroesResourcesAsync(ICollection<Hero> heroes)
+    {
+        var relations = await _context.HeroPlanetRelations
+            .Include(x => x.Planet)
+            .Where(x => x.Status == PlanetStatus.Colonized).ToListAsync();
+        
+        foreach (var hero in heroes)
+        {
+            foreach (var relation in relations.Where(x => x.HeroId == hero.HeroId))
+            {
+                hero.Resourses += (int)(relation.Planet.ResourceCount * 0.5);
+            }
+        }
+    }
+    
     private async Task UpdatePlanetsHealthAsync(Guid sessionId, CancellationToken cancellationToken)
     {
         var sessionMap = await _context.SessionMaps

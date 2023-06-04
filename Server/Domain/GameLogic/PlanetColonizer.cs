@@ -91,7 +91,7 @@ public class PlanetColonizer : IPlanetAction
         hero.AvailableColonizationShips += 1;
         var planetSize = _planet.Size;
         hero.UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(planetSize);
-
+        
         _planet.OwnerId = hero.HeroId;
         _planet.ColorStatus = hero.ColorStatus;
         
