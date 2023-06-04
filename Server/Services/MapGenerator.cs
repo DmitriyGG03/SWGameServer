@@ -52,12 +52,12 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
     private static Planet CreatePlanet(PointF position, string planetName)
     {
         var planetType = (PlanetType)Random.Shared.Next(0, (int)PlanetType.Venus);
-        int planetSize = Random.Shared.Next(1, 26), resourceCount = planetSize * 3;
+        int planetSize = Random.Shared.Next(1, 26), resourceCount = Random.Shared.Next(1, 11);
         
         Planet planet = null;
 
         var randomValue = Random.Shared.Next(0, 100);
-        if (randomValue < 50)
+        if (randomValue < 80)
         {
             planet = new Planet(position,
                 planetSize,
@@ -67,14 +67,14 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
                 resourceCount,
                 Planet.CalculateHealthLimit(planetSize));
         }
-        else if (randomValue < 75)
+        else if (randomValue < 90)
         {
             planet = new Planet(position,
                 planetSize,
                 planetName,
                 planetType,
-                ResourceType.ResourcesWithResearchShip,
-                resourceCount,
+                ResourceType.ResearchShip,
+                1,
                 Planet.CalculateHealthLimit(planetSize));
         }
         else
@@ -83,8 +83,8 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
                 planetSize,
                 planetName,
                 planetType,
-                ResourceType.ResourcesWithColonizationShip,
-                resourceCount,
+                ResourceType.ColonizationShip,
+                1,
                 Planet.CalculateHealthLimit(planetSize));
         }
 
