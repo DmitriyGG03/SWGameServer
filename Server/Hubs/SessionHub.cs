@@ -63,8 +63,25 @@ public class SessionHub : Hub
     public async Task PostResearchOrColonizePlanet(UpdatePlanetStatusRequest request)
     {
         var planetActionResult = await _gameService
-            .GetPlanetActionHandlerAsync(request.PlanetId, request.HeroId, CancellationToken.None);
-        await HandlePlanetActionResultAndNotifyClients(planetActionResult, request);
+            .StartPlanetColonizationOrResearching(request.PlanetId, request.HeroId, CancellationToken.None);
+        if (planetActionResult.Success == false)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, planetActionResult.ErrorMessage);
+        }
+        else
+        {
+            var result = planetActionResult.Value;
+            var response = new UpdatedPlanetStatusResponse
+            {
+                RelationStatus = result.RelationStatus,
+                IterationsToTheNextStatus = result.IterationsToTheNextStatus,
+                PlanetId = result.PlanetId,
+                AvailableResearchShips = result.AvailableResearchShips,
+                AvailableColonizationShips = result.AvailableColonizationShips
+            };
+            
+            await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartPlanetResearchingOrColonization, response);
+        }
     }
 
     [Authorize]

@@ -9,6 +9,11 @@ public abstract class FortificationBuilderBase : IPlanetAction
     
     protected FortificationBuilderBase(HeroPlanetRelation relation)
     {
+        if (relation.Planet is null)
+            throw new ArgumentException("Relation must be with planet");
+        if (relation.Hero is null)
+            throw new ArgumentException("Relation must be with not null hero");
+        
         Relation = relation;
     }
     
@@ -23,9 +28,11 @@ public abstract class FortificationBuilderBase : IPlanetAction
         {
             Relation.IterationsLeftToTheNextStatus -= 1;
         }
-
-        return Task.FromResult(new ServiceResult<PlanetActionResult>(new PlanetActionResult(Relation.Status, Relation.FortificationLevel,
-            Relation.IterationsLeftToTheNextStatus)));
+        
+        var result = new PlanetActionResult(Relation.Status, Relation.FortificationLevel, Relation.PlanetId, 
+            Relation.Hero.AvailableResearchShips, Relation.Hero.AvailableColonizationShips, Relation.Hero.Resourses, 
+            Relation.IterationsLeftToTheNextStatus);
+        return Task.FromResult(new ServiceResult<PlanetActionResult>(result));
     }
 
     public abstract Fortification GetNextFortificationLevel();

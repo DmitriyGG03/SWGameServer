@@ -51,13 +51,15 @@ public class PlanetResearcher : IPlanetAction
         relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
         hero.AvailableResearchShips -= 1;
 
-        var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
+        var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, _relation.PlanetId, 
+            _hero.AvailableResearchShips, _hero.AvailableColonizationShips, _hero.Resourses, 
+            relation.IterationsLeftToTheNextStatus);
         return new ServiceResult<PlanetActionResult>(result);
     }
     
     private int CalculateIterationsToNextStatus()
     {
-        return Random.Shared.Next(1, 5);
+        return Random.Shared.Next(2, 5);
     }
     
     private async Task<PlanetActionResult> ContinuePlanetResearchingAsync(HeroPlanetRelation relation, Hero hero, CancellationToken cancellationToken)
@@ -70,12 +72,17 @@ public class PlanetResearcher : IPlanetAction
 
             await UpdateNeighborsRelationStatusesAsync(relation.PlanetId, hero.HeroId, cancellationToken);
             hero.AvailableResearchShips += 1;
-            return new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
+            var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, _relation.PlanetId, 
+                _hero.AvailableResearchShips, _hero.AvailableColonizationShips, _hero.Resourses, 
+                relation.IterationsLeftToTheNextStatus);
+            return result;
         }
         else
         {
             relation.IterationsLeftToTheNextStatus -= 1;
-            var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
+            var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, _relation.PlanetId, 
+                _hero.AvailableResearchShips, _hero.AvailableColonizationShips, _hero.Resourses, 
+                relation.IterationsLeftToTheNextStatus);
             return result;
         }
     }

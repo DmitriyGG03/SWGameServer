@@ -14,6 +14,9 @@ public interface IGameService
     Task<ServiceResult<IPlanetAction>> GetPlanetActionHandlerAsync(Guid planetId, Guid heroId,
         CancellationToken cancellationToken);
 
+    Task<ServiceResult<PlanetActionResult>> StartPlanetColonizationOrResearching(Guid planetId, Guid heroId,
+        CancellationToken cancellationToken);
+    
     Task<ServiceResult<(Session session, bool nextTurn)>> MakeNextTurnAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken);
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
@@ -51,6 +54,26 @@ public class GameService : IGameService
 
         IPlanetAction planetAction = GetPlanetActionBasedOnRelationStatus(relation);
         return new ServiceResult<IPlanetAction>(planetAction);
+    }
+    
+    public async Task<ServiceResult<PlanetActionResult>> StartPlanetColonizationOrResearching(Guid planetId, Guid heroId,
+        CancellationToken cancellationToken)
+    {
+        var relation = await _gameObjectsRepository.GetRelationByHeroAndPlanetIdsAsync(heroId, planetId, cancellationToken);
+
+        if (relation is null)
+            return new ServiceResult<PlanetActionResult>(ErrorMessages.Relation.NotFound);
+
+        IPlanetAction? planetAction = GetPlanetStartActionBasedOnRelationStatus(relation);
+        if (planetAction is null)
+            return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.CanNotStartResearchingOrColonization);
+        
+        var result = await planetAction.ExecuteAsync(cancellationToken);
+        if (result.Success == false)
+            return new ServiceResult<PlanetActionResult>(result.ErrorMessage);
+
+        await SaveChangesAsync(cancellationToken);
+        return new ServiceResult<PlanetActionResult>(result.Value);
     }
 
     public async Task<ServiceResult<(Session session, bool nextTurn)>> MakeNextTurnAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken)
@@ -180,6 +203,20 @@ public class GameService : IGameService
         return sessionBattles;
     }
 
+    private IPlanetAction? GetPlanetStartActionBasedOnRelationStatus(HeroPlanetRelation relation)
+    {
+        if (relation.Status is PlanetStatus.Known)
+        {
+            return new PlanetResearcher(relation, _gameObjectsRepository);
+        }
+        else if (relation.Status is PlanetStatus.Researched)
+        {
+            return new PlanetColonizer(relation);
+        }
+
+        return null;
+    }
+    
     private IPlanetAction GetPlanetActionBasedOnRelationStatus(HeroPlanetRelation relation)
     {
         if (relation.Status is PlanetStatus.Known or PlanetStatus.Researching)
@@ -202,10 +239,8 @@ public class GameService : IGameService
         {
             return new FortificationThirdLevelBuilder(relation);
         }
-        else
-        {
-            return new PlanetDoNothingAction();
-        }
+        
+        return new PlanetDoNothingAction(relation);
     }
 
     private void UpdateHeroesSoldiers(ICollection<Hero> heroes)

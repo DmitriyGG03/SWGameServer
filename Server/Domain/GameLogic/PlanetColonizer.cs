@@ -50,13 +50,15 @@ public class PlanetColonizer : IPlanetAction
         relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
         hero.AvailableColonizationShips -= 1;
         
-        var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
+        var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, _relation.PlanetId, 
+            _hero.AvailableResearchShips, _hero.AvailableColonizationShips, _hero.Resourses, 
+            relation.IterationsLeftToTheNextStatus);
         return new ServiceResult<PlanetActionResult>(result);
     }
     
     private int CalculateIterationsToNextStatus()
     {
-        return Random.Shared.Next(1, 5);
+        return Random.Shared.Next(2, 5);
     }
     
     private PlanetActionResult ContinuePlanetColonization(HeroPlanetRelation relation, Hero hero, CancellationToken cancellationToken)
@@ -69,7 +71,10 @@ public class PlanetColonizer : IPlanetAction
         else
         {
             relation.IterationsLeftToTheNextStatus -= 1;
-            return new PlanetActionResult(relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
+            var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, _relation.PlanetId, 
+                _hero.AvailableResearchShips, _hero.AvailableColonizationShips, _hero.Resourses, 
+                relation.IterationsLeftToTheNextStatus);
+            return result;
         }
     }
     
@@ -85,6 +90,9 @@ public class PlanetColonizer : IPlanetAction
         _planet.OwnerId = hero.HeroId;
         _planet.ColorStatus = hero.ColorStatus;
         
-        return new PlanetActionResult(_relation.Status, relation.FortificationLevel, relation.IterationsLeftToTheNextStatus);
+        var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, _relation.PlanetId, 
+            _hero.AvailableResearchShips, _hero.AvailableColonizationShips, _hero.Resourses, 
+            relation.IterationsLeftToTheNextStatus);
+        return result;
     }
 }
