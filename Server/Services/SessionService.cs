@@ -32,7 +32,7 @@ namespace Server.Services
 
             return session;
         }
-
+        
         public async Task<ServiceResult<Session>> CreateAsync(Guid lobbyId, CancellationToken cancellationToken)
         {
             var lobby = await GetLobbyByIdWithLobbyInfosAsync(lobbyId, cancellationToken);

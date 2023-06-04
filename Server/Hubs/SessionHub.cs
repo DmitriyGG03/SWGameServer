@@ -19,13 +19,15 @@ public class SessionHub : Hub
     private readonly CyclicDependencySolver _cyclicDependencySolver;
     private readonly IHeroMapService _heroMapService;
     private readonly IGameService _gameService;
-    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService, IGameService gameService)
+    private readonly IHeroService _heroService;
+    public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService, IGameService gameService, IHeroService heroService)
     {
         _sessionService = sessionService;
         _logger = logger;
         _cyclicDependencySolver = cyclicDependencySolver;
         _heroMapService = heroMapService;
         _gameService = gameService;
+        _heroService = heroService;
     }
 
     [Authorize]
@@ -142,6 +144,45 @@ public class SessionHub : Hub
             _logger.LogError(e, e.Message);
         }
     }
+
+    [Authorize]
+    public async Task GetHeroData()
+    {
+        try
+        {
+            var userId = GetUserIdFromContext();
+            var hero = await _heroService.GetHeroByUserIdAsync(userId, CancellationToken.None);
+            if (hero is null)
+            {
+                await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, "There is no hero with given user id");
+                return;
+            }
+            if (hero.Session is null)
+            {
+                throw new InvalidOperationException("You probably changed GetHeroByUserIdAsync method. Hero must be with session");
+            }
+            
+            var session = hero.Session;
+            
+            List<Battle> sessionBattles = await _gameService.GetBattlesBySessionAsync(session, CancellationToken.None);
+            var heroMap = await _heroMapService.GetHeroMapAsync(hero.HeroId, CancellationToken.None);
+            session.Heroes = null;
+            var response = new GetHeroDataResponse
+            {
+                Hero = hero,
+                Session = session,
+                Battles = sessionBattles,
+                HeroMapView = heroMap
+            };
+
+            await this.Clients.Caller.SendAsync(ClientHandlers.Session.GetHeroDataHandler, response);
+        }
+        catch (Exception e)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, e.Message);
+            _logger.LogError(e, e.Message);
+        }
+    }
     
     private async Task HandleBattleResult(ServiceResult<Battle> result)
     {
@@ -235,5 +276,20 @@ public class SessionHub : Hub
             AvailableColonizationShips = result.AvailableColonizationShips,
             Resources = result.Resources
         };
+    }
+    
+    private Guid GetUserIdFromContext()
+    {
+        var result = Guid.Empty;
+        string? userId = this.Context.User?.FindFirst("id")?.Value;
+        if (Guid.TryParse(userId, out result) == true)
+        {
+            return result;
+        }
+        else
+        {
+            _logger.LogError($"Can not resolve user id ({userId}), it's not guid type");
+            throw new ArgumentException("Invalid Guid format");
+        }
     }
 }

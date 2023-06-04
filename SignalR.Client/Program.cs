@@ -204,6 +204,16 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine(json);
     });
     
+    hubConnection.On<GetHeroDataResponse>(ClientHandlers.Session.GetHeroDataHandler, (heroData) =>
+    {
+        Console.WriteLine("GetHeroDataResponse");
+        string json = JsonSerializer.Serialize(heroData, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
@@ -350,6 +360,10 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
             CountOfSoldiers = 10
         };
         await connection.InvokeAsync(ServerHandlers.Session.DefendPlanet, request);
+    }
+    else if (message == "get-data")
+    {
+        await connection.InvokeAsync(ServerHandlers.Session.GetHeroData);
     }
 
     return false;
