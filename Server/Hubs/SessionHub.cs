@@ -166,7 +166,7 @@ public class SessionHub : Hub
             
             List<Battle> sessionBattles = await _gameService.GetBattlesBySessionAsync(session, CancellationToken.None);
             var heroMap = await _heroMapService.GetHeroMapAsync(hero.HeroId, CancellationToken.None);
-            session.Heroes = null;
+            _cyclicDependencySolver.Solve(session);
             var response = new GetHeroDataResponse
             {
                 Hero = hero,
@@ -209,7 +209,6 @@ public class SessionHub : Hub
 
         var userIdsWithHeroIds = _sessionService.GetUserIdWithHeroIdBySession(session);
         var heroes = session.Heroes;
-        session.Heroes = null;
         foreach (var item in userIdsWithHeroIds)
         {
             var heroMap = await _heroMapService.GetHeroMapAsync(item.Value, CancellationToken.None);

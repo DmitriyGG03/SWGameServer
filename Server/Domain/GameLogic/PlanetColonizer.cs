@@ -88,12 +88,12 @@ public class PlanetColonizer : IPlanetAction
         relation.IterationsLeftToTheNextStatus = 1;
 
         hero.AvailableColonizationShips += 1;
-        if (_planet.ResourceType == ResourceType.ResourcesWithColonizationShip)
+        if (_planet.ResourceType == ResourceType.ColonizationShip)
         {
             hero.ColonizationShipLimit += 1;
             hero.AvailableColonizationShips += 1;
         }
-        else if (_planet.ResourceType == ResourceType.ResourcesWithResearchShip)
+        else if (_planet.ResourceType == ResourceType.ResearchShip)
         {
             hero.ResearchShipLimit += 1;
             hero.AvailableResearchShips += 1;

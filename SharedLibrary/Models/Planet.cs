@@ -31,8 +31,6 @@ namespace SharedLibrary.Models
 
         public ResourceType ResourceType { get; set; }
         public int ResourceCount { get; set; }
-        public int ColonizationShips { get; set; }
-        public int ResearchShips { get; set; }
 
         [NotMapped, IgnoreDataMember]
         public PointF Position
@@ -78,13 +76,13 @@ namespace SharedLibrary.Models
             ResourceCount = resourceCount;
             Health = HealthLimit = health;
 
-            if (resourceType == ResourceType.ResourcesWithColonizationShip)
+            if (resourceType == ResourceType.ColonizationShip)
             {
-                ColonizationShips = 1;
+                ResourceCount = 1;
             }
-            else if (resourceType == ResourceType.ResourcesWithResearchShip)
+            else if (resourceType == ResourceType.ResearchShip)
             {
-                ResearchShips = 1;
+                ResourceCount = 1;
             }
         }
 
