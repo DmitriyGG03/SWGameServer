@@ -20,6 +20,7 @@ public class SessionHub : Hub
     private readonly IHeroMapService _heroMapService;
     private readonly IGameService _gameService;
     private readonly IHeroService _heroService;
+    
     public SessionHub(ISessionService sessionService, ILogger<SessionHub> logger, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService, IGameService gameService, IHeroService heroService)
     {
         _sessionService = sessionService;
