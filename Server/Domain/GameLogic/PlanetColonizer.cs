@@ -45,10 +45,15 @@ public class PlanetColonizer : IPlanetAction
         {
             return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.NotEnoughColonizationShips);
         }
+        
+        int resourcesToColonize = relation.Planet.ResourceCount;
+        if (hero.Resourses < resourcesToColonize)
+            return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.NotEnoughResourcesToColonize);
             
         relation.Status = PlanetStatus.Colonizing;
         relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
         hero.AvailableColonizationShips -= 1;
+        hero.Resourses -= resourcesToColonize;
         
         var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, _relation.PlanetId, 
             _hero.AvailableResearchShips, _hero.AvailableColonizationShips, _hero.Resourses, 

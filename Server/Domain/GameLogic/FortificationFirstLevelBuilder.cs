@@ -5,10 +5,11 @@ namespace Server.Domain.GameLogic;
 
 public class FortificationFirstLevelBuilder : FortificationBuilderBase
 {
-    public FortificationFirstLevelBuilder(HeroPlanetRelation relation) : base(relation)
-    { }
-    
-    public override Fortification GetNextFortificationLevel()
+    public FortificationFirstLevelBuilder(HeroPlanetRelation relation, Hero hero) : base(relation, hero)
+    {
+    }
+
+    protected override Fortification GetNextFortificationLevel()
     {
         return Fortification.Weak;
     }

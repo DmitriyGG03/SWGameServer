@@ -46,10 +46,15 @@ public class PlanetResearcher : IPlanetAction
         {
             return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.NotEnoughResearchShips);
         }
-            
+
+        int resourcesToResearch = (int)(relation.Planet.ResourceCount / 2);
+        if (hero.Resourses < resourcesToResearch)
+            return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.NotEnoughResourcesToResearch);
+                
         relation.Status = PlanetStatus.Researching;
         relation.IterationsLeftToTheNextStatus = CalculateIterationsToNextStatus();
         hero.AvailableResearchShips -= 1;
+        hero.Resourses -= resourcesToResearch;
 
         var result = new PlanetActionResult(relation.Status, relation.FortificationLevel, _relation.PlanetId, 
             _hero.AvailableResearchShips, _hero.AvailableColonizationShips, _hero.Resourses, 

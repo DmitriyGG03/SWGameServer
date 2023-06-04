@@ -77,7 +77,8 @@ public class SessionHub : Hub
                 IterationsToTheNextStatus = result.IterationsToTheNextStatus,
                 PlanetId = result.PlanetId,
                 AvailableResearchShips = result.AvailableResearchShips,
-                AvailableColonizationShips = result.AvailableColonizationShips
+                AvailableColonizationShips = result.AvailableColonizationShips,
+                Resources = result.Resources
             };
             
             await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartPlanetResearchingOrColonization, response);
