@@ -93,11 +93,12 @@ public class GameService : IGameService
             session.TurnNumber += 1;
             
             UpdateHeroesSoldiers(session.Heroes);
-            await UpdatePlanetsHealthAsync(sessionId, cancellationToken);
-            await UpdateHeroesResourcesAsync(session.Heroes);
-            
             await HandleBattlesAsync(cancellationToken);
+            
             await HandlePlanetActions(cancellationToken);
+
+            await UpdateHeroesResourcesAsync(session.Heroes);
+            await UpdatePlanetsHealthAsync(sessionId, cancellationToken);
         }
 
         await SaveChangesAsync(cancellationToken);

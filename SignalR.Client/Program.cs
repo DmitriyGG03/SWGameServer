@@ -143,15 +143,6 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine("Session id: " + sessionId);
     });
 
-    hubConnection.On<HeroMapView>(ClientHandlers.Session.ResearchedPlanet, (heroMap) =>
-    {
-        string json = JsonSerializer.Serialize(heroMap, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
-        Console.WriteLine(json);
-    });
-    
     hubConnection.On<HeroMapView>(ClientHandlers.Session.ReceiveHeroMap, (heroMap) =>
     {
         Console.WriteLine("Received hero map");
@@ -192,12 +183,29 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine(json);
     });
     
+    hubConnection.On<NextTurnResponse>(ClientHandlers.Session.NextTurnHandler, (nextTurn) =>
+    {
+        Console.WriteLine("NextTurnResponse");
+        string json = JsonSerializer.Serialize(nextTurn, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
+    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.StartPlanetResearchingOrColonization, (newPlanetStatus) =>
+    {
+        Console.WriteLine("UpdatedPlanetStatusResponse");
+        string json = JsonSerializer.Serialize(newPlanetStatus, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
-    
-    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.ResearchingPlanet, HandlePlanetActionResponse());
-    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.ColonizingPlanet, HandlePlanetActionResponse());
 
     return currentLobby1;
 }
