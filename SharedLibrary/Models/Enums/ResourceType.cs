@@ -2,6 +2,8 @@ namespace SharedLibrary.Models.Enums
 {
     public enum ResourceType
     {
-        Default
+        OnlyResources,
+        ResourcesWithResearchShip,
+        ResourcesWithColonizationShip
     }
 }

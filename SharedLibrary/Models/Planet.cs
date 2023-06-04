@@ -24,12 +24,16 @@ namespace SharedLibrary.Models
         public int Health { get; set; }
         public int HealthLimit { get; set; }
 
+        public bool IsCapital { get; set; } = false;
+
         public string PlanetName { get; set; }
         public Guid? OwnerId { get; set; }
 
         public ResourceType ResourceType { get; set; }
         public int ResourceCount { get; set; }
-        
+        public int ColonizationShips { get; set; }
+        public int ResearchShips { get; set; }
+
         [NotMapped, IgnoreDataMember]
         public PointF Position
         {
@@ -73,6 +77,15 @@ namespace SharedLibrary.Models
             ResourceType = resourceType;
             ResourceCount = resourceCount;
             Health = HealthLimit = health;
+
+            if (resourceType == ResourceType.ResourcesWithColonizationShip)
+            {
+                ColonizationShips = 1;
+            }
+            else if (resourceType == ResourceType.ResourcesWithResearchShip)
+            {
+                ResearchShips = 1;
+            }
         }
 
         public static int CalculateHealthLimit(int planetSize)

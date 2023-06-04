@@ -26,11 +26,21 @@ public static class ErrorMessages
         public const string NotEnoughResearchShips = "Given hero does not have enough research ships";
         public const string NotEnoughColonizationShips = "Given hero does not have enough colonization ships";
         public const string NotHeroTurn = "We are sorry, but now it isn't your turn";
+        public const string NotEnoughSoldiers = "You do not have enough soldiers to attack";
+        public const string NotEnoughResourcesToResearch = "You do not have enough resources to research";
+        public const string NotEnoughResourcesToColonize = "You do not have enough resources to colonize";
+        public const string NotEnoughResourcesToBuildFortification = "You do not have enough resources to build fortification";
+        public const string CanNotStartResearchingOrColonization = "We can't start researching or colonizetion of given planet";
     }
     
     public static class Relation
     {
         public const string NotFound = "There is no relation with given parameters";
+    }
+    
+    public static class Battle
+    {
+        public const string NotFound = "There is no battle with given parameters";
     }
 
     public static class Planet

@@ -9,7 +9,7 @@ public class FortificationThirdLevelBuilder : FortificationBuilderBase
     {
     }
 
-    public override Fortification GetNextFortificationLevel()
+    protected override Fortification GetNextFortificationLevel()
     {
         return Fortification.Strong;
     }

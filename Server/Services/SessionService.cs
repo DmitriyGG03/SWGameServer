@@ -71,7 +71,7 @@ namespace Server.Services
             }
 
             session.Name = designation.Name;
-            session.TurnNumber = designation.TurnNumber;
+            session.HeroNumber = designation.HeroNumber;
             session.HeroTurnId = designation.HeroTurnId;
             session.TurnTimeLimit = designation.TurnTimeLimit;
 
@@ -99,15 +99,20 @@ namespace Server.Services
             var session = await _context.Sessions
                 .Include(x => x.Heroes)
                 .FirstOrDefaultAsync(x => x.Id == sessionId, cancellationToken);
-            if (session is null)
-            {
-                return new ServiceResult<Dictionary<Guid, Guid>>(ErrorMessages.Session.NotFound);
-            }
-
             if (session.Heroes is null)
                 throw new InvalidOperationException("Can not get user id's, cause heroes in session is null");
 
             return new ServiceResult<Dictionary<Guid, Guid>>(session.Heroes
+                .Select(x => new {x.UserId, x.HeroId})
+                .ToDictionary(t => t.UserId, t => t.HeroId));
+        }
+        
+        public Dictionary<Guid, Guid> GetUserIdWithHeroIdBySession(Session session)
+        {
+            if (session.Heroes is null)
+                throw new InvalidOperationException("Can not get user id's, cause heroes in session is null");
+
+            return new Dictionary<Guid, Guid>(session.Heroes
                 .Select(x => new {x.UserId, x.HeroId})
                 .ToDictionary(t => t.UserId, t => t.HeroId));
         }
@@ -121,7 +126,7 @@ namespace Server.Services
                 Heroes = new List<Hero>(),
                 SessionMapId = sessionMap.Id,
                 SessionMap = sessionMap,
-                TurnNumber = 0,
+                HeroNumber = 0,
                 HeroTurnId = Guid.Empty
             };
             session.TurnTimeLimit = session.CalculateTurnTimeLimit(sessionMap.Planets.Count);
@@ -158,7 +163,7 @@ namespace Server.Services
                     AvailableColonizationShips = 1,
                     ResearchShipLimit = 1,
                     AvailableResearchShips = 1,
-                    Resourses = 1000,
+                    Resourses = 100,
                     AvailableSoldiers = int.MinValue,
                     SoldiersLimit = int.MinValue,
                     SessionId = session.Id,
@@ -166,10 +171,13 @@ namespace Server.Services
                     UserId = item.UserId
                 };
                 
+                // TODO: change home planet receiving
                 var homePlanet = sessionMap.Planets[Random.Shared.Next(0, sessionMap.Planets.Count)];
                 hero.HomePlanetId = homePlanet.Id;
                 hero.HomePlanet = homePlanet;
                 homePlanet.OwnerId = hero.HeroId;
+                homePlanet.IsCapital = true;
+                
                 hero.SetSoldiersLimitBasedOnPlanetSize(homePlanet.Size);
                 hero.InitializeAvailableSoldiers();
 

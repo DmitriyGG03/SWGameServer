@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Server.Common.Constants;
+using Server.Repositories;
 using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
@@ -14,11 +15,13 @@ public class SessionController : ControllerBase
     private readonly ISessionService _sessionService;
     private readonly CyclicDependencySolver _cyclicDependencySolver;
     private readonly IHeroMapService _heroMapService;
-    public SessionController(ISessionService sessionService, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService)
+    private readonly IGameObjectsRepository _gameObjectsRepository;
+    public SessionController(ISessionService sessionService, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService, IGameObjectsRepository gameObjectsRepository)
     {
         _sessionService = sessionService;
         _cyclicDependencySolver = cyclicDependencySolver;
         _heroMapService = heroMapService;
+        _gameObjectsRepository = gameObjectsRepository;
     }
 
     [HttpGet, Route(ApiRoutes.Session.GetById)]
@@ -32,7 +35,7 @@ public class SessionController : ControllerBase
         return Ok(new GetSessionResponse { Info = new []{SuccessMessages.Session.Found}, Session = session});
     }
 
-    #region endpoint for testing functionality
+    #region endpoints for testing functionality
 
     [HttpGet, Route(ApiRoutes.Session.GetHeroMap)]
     public async Task<IActionResult> GetHeroMap([FromRoute] Guid id, CancellationToken cancellationToken)
@@ -42,7 +45,14 @@ public class SessionController : ControllerBase
             return NotFound();
         return Ok(heroMap);
     }
-
+    
+    [HttpGet, Route(ApiRoutes.Session.GetBattles)]
+    public async Task<IActionResult> GetBattles(CancellationToken cancellationToken)
+    {
+        var battles = await _gameObjectsRepository.GetBattlesAsync(cancellationToken);
+        return Ok(battles);
+    }
+    
     #endregion
 
 }

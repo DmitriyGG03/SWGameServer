@@ -21,6 +21,8 @@ namespace SharedLibrary.Contracts.Hubs
             public const string HealthCheck = "HealthCheck";
             public const string NextTurn = "MakeNextTurn";
             public const string BuildFortification = "BuildFortification";
+            public const string StartBattle = nameof(StartBattle);
+            public const string DefendPlanet = nameof(DefendPlanet);
         }
     }
 }

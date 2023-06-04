@@ -21,7 +21,8 @@ namespace SharedLibrary.Models
         public Guid SessionMapId { get; set; }
         public SessionMap? SessionMap { get; set; }
 
-        public int TurnNumber { get; set; }
+        public int HeroNumber { get; set; }
+        public int TurnNumber { get; set; } = 0;
         public int TurnTimeLimit { get; set; } = MinTurnTime;
         public Guid HeroTurnId { get; set; }
 

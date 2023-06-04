@@ -16,5 +16,7 @@ namespace Server.Services.Abstract
         
         Task<ServiceResult<Dictionary<Guid, Guid>>> GetUserIdWithHeroIdBySessionIdAsync(Guid sessionId,
             CancellationToken cancellationToken);
+
+        Dictionary<Guid, Guid> GetUserIdWithHeroIdBySession(Session session);
     }
 }

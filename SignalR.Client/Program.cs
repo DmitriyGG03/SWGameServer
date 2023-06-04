@@ -33,21 +33,16 @@ var accessToken = Console.ReadLine();
 var lobbyId = Guid.Empty;
 if (hubName == "lobby")
 {
-    Console.WriteLine("Enter lobby id, that you want to use: ");
-    var lobbyIdRaw = Console.ReadLine();
-    
-    if (Guid.TryParse(lobbyIdRaw, out lobbyId) == false)
-    {
-        throw new ArgumentException("Given lobby id has wrong format");
-    }
+    lobbyId = settings.LobbyId;
 }
 
 Guid sessionId = Guid.Empty, hero1 = Guid.Empty, hero2 = Guid.Empty;
 if (hubName == "session")
 {
     sessionId = settings.Session.Id;
-    hero1 = settings.Session.Heroes.First().HeroId;
-    hero2 = settings.Session.Heroes.FirstOrDefault(x => x.HeroId != hero1).HeroId;
+    var heroes = settings.Session.Heroes.OrderBy(x => x.Name);
+    hero1 = heroes.First().HeroId;
+    hero2 = heroes.FirstOrDefault(x => x.HeroId != hero1).HeroId;
 }
 
 try
@@ -149,15 +144,6 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine("Session id: " + sessionId);
     });
 
-    hubConnection.On<HeroMapView>(ClientHandlers.Session.ResearchedPlanet, (heroMap) =>
-    {
-        string json = JsonSerializer.Serialize(heroMap, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
-        Console.WriteLine(json);
-    });
-    
     hubConnection.On<HeroMapView>(ClientHandlers.Session.ReceiveHeroMap, (heroMap) =>
     {
         Console.WriteLine("Received hero map");
@@ -180,8 +166,38 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     
     hubConnection.On<UpdatedFortificationResponse>(ClientHandlers.Session.UpdatedFortification, (fortificationResponse) =>
     {
-        Console.WriteLine("Received session");
+        Console.WriteLine("UpdatedFortificationResponse");
         string json = JsonSerializer.Serialize(fortificationResponse, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
+    hubConnection.On<Battle>(ClientHandlers.Session.ReceiveBattle, (battle) =>
+    {
+        Console.WriteLine("Battle");
+        string json = JsonSerializer.Serialize(battle, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
+    hubConnection.On<NextTurnResponse>(ClientHandlers.Session.NextTurnHandler, (nextTurn) =>
+    {
+        Console.WriteLine("NextTurnResponse");
+        string json = JsonSerializer.Serialize(nextTurn, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
+    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.StartPlanetResearchingOrColonization, (newPlanetStatus) =>
+    {
+        Console.WriteLine("UpdatedPlanetStatusResponse");
+        string json = JsonSerializer.Serialize(newPlanetStatus, new JsonSerializerOptions
         {
             WriteIndented = true
         });
@@ -191,9 +207,6 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());
-    
-    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.ResearchingPlanet, HandlePlanetActionResponse());
-    hubConnection.On<UpdatedPlanetStatusResponse>(ClientHandlers.Session.ColonizingPlanet, HandlePlanetActionResponse());
 
     return currentLobby1;
 }
@@ -296,6 +309,47 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
             PlanetId = Guid.Parse(planetId)
         };
         await connection.InvokeAsync(ServerHandlers.Session.BuildFortification, request);
+    }
+    else if (message == "attack")
+    {
+        Console.WriteLine("Are you 1 or 2 user?");
+        var userNumber = Console.ReadLine();
+        var heroId = Guid.Empty;
+        heroId = userNumber == "1" ? hero1 : hero2;
+        
+        Console.WriteLine("Enter planed ID to attack: ");
+        var planetIdToAttack = Console.ReadLine();
+        
+        Console.WriteLine("Enter planed ID from attack: ");
+        var planetIdFrom = Console.ReadLine();
+        
+        var request = new StartBattleRequest
+        {
+            HeroId = heroId,
+            AttackedPlanetId = Guid.Parse(planetIdToAttack),
+            FromPlanetId = Guid.Parse(planetIdFrom),
+            CountOfSoldiers = 10
+        };
+        
+        await connection.InvokeAsync(ServerHandlers.Session.StartBattle, request);
+    }
+    else if (message == "defend")
+    {
+        Console.WriteLine("Are you 1 or 2 user?");
+        var userNumber = Console.ReadLine();
+        var heroId = Guid.Empty;
+        heroId = userNumber == "1" ? hero1 : hero2;
+        
+        Console.WriteLine("Enter planed ID to defend: ");
+        var planetIdToAttack = Console.ReadLine();
+
+        var request = new DefendPlanetRequest
+        {
+            HeroId = heroId,
+            AttackedPlanetId = Guid.Parse(planetIdToAttack),
+            CountOfSoldiers = 10
+        };
+        await connection.InvokeAsync(ServerHandlers.Session.DefendPlanet, request);
     }
 
     return false;

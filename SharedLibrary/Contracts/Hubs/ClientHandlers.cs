@@ -3,6 +3,7 @@ namespace SharedLibrary.Contracts.Hubs
     public static class ClientHandlers
     {
         public const string ErrorHandler = "ErrorHandler";
+        public const string ServerInternalError = nameof(ServerInternalError);
         public static class Lobby
         {
             public const string HealthHandler = "HealthHandler";
@@ -18,13 +19,13 @@ namespace SharedLibrary.Contracts.Hubs
         public static class Session
         {
             public const string PostResearchOrColonizeErrorHandler = "PostResearchOrColonizeErrorHandler";
-            public const string ResearchedPlanet = "Researched";
-            public const string ColonizingPlanet = "Colonizing";
             public const string HealthCheckHandler = "healthcheck";
             public const string ReceiveHeroMap = "ReceiveHeroMap";
-            public const string ResearchingPlanet = "StartedResearching";
             public const string ReceiveSession = "ReceiveSession";
             public const string UpdatedFortification = nameof(UpdatedFortification);
+            public const string ReceiveBattle = nameof(ReceiveBattle);
+            public const string NextTurnHandler = nameof(NextTurnHandler);
+            public const string StartPlanetResearchingOrColonization = nameof(StartPlanetResearchingOrColonization);
         }
     }
 }

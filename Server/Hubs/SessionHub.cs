@@ -7,7 +7,6 @@ using Server.Services;
 using Server.Services.Abstract;
 using SharedLibrary.Contracts.Hubs;
 using SharedLibrary.Models;
-using SharedLibrary.Models.Enums;
 using SharedLibrary.Requests;
 using SharedLibrary.Responses;
 
@@ -38,27 +37,113 @@ public class SessionHub : Hub
     [Authorize]
     public async Task MakeNextTurn(NextTurnRequest request)
     {
-        ServiceResult<Session> result = await _gameService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
-        await HandleSessionResultAndNotifyClients(result);
+        try
+        {
+            ServiceResult<(Session session, bool nextTurn)> result = await _gameService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
+
+            if (result.Success == false)
+            {
+                await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
+            }
+            else
+            {
+                (Session session, bool nextTurn) = result.Value;
+                _cyclicDependencySolver.Solve(session);
+            
+                if(nextTurn == true)
+                {
+                    await HandleNextTurnAndNotifyClients(session);
+                }            
+                else
+                {
+                    await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ServerInternalError, e.Message);
+            _logger.LogError(e, e.Message);
+        }
     }
 
     [Authorize]
     public async Task PostResearchOrColonizePlanet(UpdatePlanetStatusRequest request)
     {
-        var planetActionResult = await _gameService
-            .GetPlanetActionHandlerAsync(request.PlanetId, request.HeroId, CancellationToken.None);
-        await HandlePlanetActionResultAndNotifyClients(planetActionResult, request);
+        try
+        {
+            var planetActionResult = await _gameService
+                .StartPlanetColonizationOrResearching(request.PlanetId, request.HeroId, CancellationToken.None);
+            if (planetActionResult.Success == false)
+            {
+                await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, planetActionResult.ErrorMessage);
+            }
+            else
+            {
+                var result = planetActionResult.Value;
+                var response = GetUpdatedPlanetStatusResponse(result);
+            
+                await this.Clients.Caller.SendAsync(ClientHandlers.Session.StartPlanetResearchingOrColonization, response);
+            }
+        }
+        catch (Exception e)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ServerInternalError, e.Message);
+            _logger.LogError(e, e.Message);
+        }
     }
 
     [Authorize]
     public async Task BuildFortification(UpdatePlanetStatusRequest request)
     {
-        var planetActionResult = await _gameService
-            .GetPlanetActionHandlerAsync(request.PlanetId, request.HeroId, CancellationToken.None);
-        await HandlePlanetActionResultAndNotifyClients(planetActionResult, request);
+        try
+        {
+            var planetActionResult = await _gameService
+                .GetPlanetActionHandlerAsync(request.PlanetId, request.HeroId, CancellationToken.None);
+            await HandlePlanetActionResultAndNotifyClients(planetActionResult, request);
+        }
+        catch (Exception e)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ServerInternalError, e.Message);
+            _logger.LogError(e, e.Message);
+        }
     }
 
-    private async Task HandleSessionResultAndNotifyClients(ServiceResult<Session> result)
+    [Authorize]
+    public async Task StartBattle(StartBattleRequest request)
+    {
+        try
+        {
+            var result = await _gameService.StartBattleAsync(request.HeroId, request.AttackedPlanetId,
+                request.FromPlanetId, request.CountOfSoldiers, CancellationToken.None);
+
+            await HandleBattleResult(result);
+        }
+        catch (Exception e)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ServerInternalError, e.Message);
+            _logger.LogError(e, e.Message);
+        }
+    }
+
+    [Authorize]
+    public async Task DefendPlanet(DefendPlanetRequest request)
+    {
+        try
+        {
+            var result = await _gameService.DefendPlanetAsync(request.HeroId, request.AttackedPlanetId,
+                request.CountOfSoldiers, CancellationToken.None);
+
+            await HandleBattleResult(result);
+        }
+        catch (Exception e)
+        {
+            await this.Clients.Caller.SendAsync(ClientHandlers.ServerInternalError, e.Message);
+            _logger.LogError(e, e.Message);
+        }
+    }
+    
+    private async Task HandleBattleResult(ServiceResult<Battle> result)
     {
         if (result.Success == false)
         {
@@ -66,17 +151,38 @@ public class SessionHub : Hub
         }
         else
         {
-            var session = result.Value;
-            _cyclicDependencySolver.Solve(session);
-            await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
+            var battle = result.Value;
+            _cyclicDependencySolver.Solve(result.Value);
+            await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveBattle, battle);
+        }
+    }
+    
+    private async Task HandleNextTurnAndNotifyClients(Session session)
+    {
+        List<Battle> sessionBattles = await _gameService.GetBattlesBySessionAsync(session, CancellationToken.None);
+        var response = new NextTurnResponse
+        {
+            Session = session,
+            Battles = sessionBattles,
+        };
+
+        var userIdsWithHeroIds = _sessionService.GetUserIdWithHeroIdBySession(session);
+        var heroes = session.Heroes;
+        session.Heroes = null;
+        foreach (var item in userIdsWithHeroIds)
+        {
+            var heroMap = await _heroMapService.GetHeroMapAsync(item.Value, CancellationToken.None);
+            response.HeroMapView = heroMap;
+            response.Hero = heroes.First(x => x.HeroId == item.Value);
+            await this.Clients.User(item.Key.ToString()).SendAsync(ClientHandlers.Session.NextTurnHandler, response);
         }
     }
 
-    private async Task HandlePlanetActionResultAndNotifyClients(ServiceResult<IPlanetAction?> planetActionResult, UpdatePlanetStatusRequest request)
+    private async Task HandlePlanetActionResultAndNotifyClients(ServiceResult<IPlanetAction?> planetAction, UpdatePlanetStatusRequest request)
     {
-        if (planetActionResult.Success == false)
+        if (planetAction.Success == false)
         {
-            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, planetActionResult.ErrorMessage);
+            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, planetAction.ErrorMessage);
         }
         else
         {
@@ -88,118 +194,46 @@ public class SessionHub : Hub
             }
             else
             {
-                var result = await planetActionResult.Value.ExecuteAsync(CancellationToken.None);
+                var planetActionResult = await planetAction.Value.ExecuteAsync(CancellationToken.None);
                 await _gameService.SaveChangesAsync(CancellationToken.None);
-                await HandlePlanetActionResultAsync(result, request);
+
+                if (planetActionResult.Success == false)
+                {
+                    await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, ErrorMessages.Session.NotHeroTurn);
+                }
+                else
+                {
+                    var result = planetActionResult.Value;
+                    var response = GetFortificationResponse(result);
+                    
+                    await this.Clients.Caller.SendAsync(ClientHandlers.Session.UpdatedFortification, response);
+                }
             }
         }
-    }
-    
-    private async Task HandlePlanetActionResultAsync(ServiceResult<PlanetActionResult> result, UpdatePlanetStatusRequest request)
-    {
-        if (result.Success == false)
-        {
-            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler,
-                result.ErrorMessage);
-        }
-        else
-        {
-            _logger.LogInformation($"Successfully handled request, result message: {result.Value}");
-            await HandleSuccessStatusesAsync(result, request);
-        }
-    }
-
-    private async Task HandleSuccessStatusesAsync(ServiceResult<PlanetActionResult> result, UpdatePlanetStatusRequest request)
-    {
-        if (result.Value is null)
-            throw new NullReferenceException("Somehow value is null. Result is not succeeded");
-        
-        if (result.Value.FortificationLevel > Fortification.None)
-        {
-            await NotifyUpdatedFortificationStatusAsync(result);
-            return;
-        }
-        
-        if (result.Value.RelationStatus == PlanetStatus.Researching)
-        {
-            await NotifyStartResearchingAsync(result);
-        }
-        else if (result.Value.RelationStatus == PlanetStatus.Researched)
-        {
-            await NotifyResearchedPlanetAsync(request);
-        }
-        else if (result.Value.RelationStatus == PlanetStatus.Colonizing)
-        {
-            await NotifyColonizingAsync(result);
-        }
-        else if (result.Value.RelationStatus == PlanetStatus.Colonized)
-        {
-            await NotifyColonizedPlanetAsync(request);
-        }
-        else
-        {
-            await NotifyUnhandledStatusAsync();
-        }
-    }
-
-    private async Task NotifyStartResearchingAsync(ServiceResult<PlanetActionResult> result)
-    {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchingPlanet, GetUpdatedPlanetStatusResponse(result.Value));
-    }
-    
-    private async Task NotifyResearchedPlanetAsync(UpdatePlanetStatusRequest request)
-    {
-        var heroMap = await _heroMapService.GetHeroMapAsync(request.HeroId, CancellationToken.None);
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ResearchedPlanet, heroMap);
-    }
-
-    private async Task NotifyColonizingAsync(ServiceResult<PlanetActionResult> result)
-    {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.ColonizingPlanet, GetUpdatedPlanetStatusResponse(result.Value));
-    }
-    
-    private async Task NotifyColonizedPlanetAsync(UpdatePlanetStatusRequest request)
-    {
-        var result = await _sessionService.GetUserIdWithHeroIdBySessionIdAsync(request.SessionId, CancellationToken.None);
-        if (result.Success == false)
-        {
-            await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, result.ErrorMessage);
-        }            
-        else
-        {
-            await SendHeroMapsToHeroes(result.Value);
-        }
-    }
-    
-    private async Task NotifyUpdatedFortificationStatusAsync(ServiceResult<PlanetActionResult> result)
-    {
-        await this.Clients.Caller.SendAsync(ClientHandlers.Session.UpdatedFortification, GetFortificationResponse(result.Value));
-    }
-
-    private async Task SendHeroMapsToHeroes(Dictionary<Guid, Guid> userIdWithHeroId)
-    {
-        foreach (var item in userIdWithHeroId)
-        {
-            var heroMap = await _heroMapService.GetHeroMapAsync(item.Value, CancellationToken.None);
-            await this.Clients.User(item.Key.ToString()).SendAsync(ClientHandlers.Session.ReceiveHeroMap, heroMap);
-        }
-    }
-
-    private async Task NotifyUnhandledStatusAsync()
-    {
-        await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler,
-            "We are sorry but now we can not handle given status. Selected planet probably already colonized");
     }
 
     private UpdatedFortificationResponse GetFortificationResponse(PlanetActionResult result)
     {
         return new UpdatedFortificationResponse
         {
-            Fortification = result.FortificationLevel, IterationsToTheNextStatus = result.IterationsToTheNextStatus
+            IterationsToTheNextStatus = result.IterationsToTheNextStatus,
+            PlanetId = result.PlanetId,
+            AvailableResearchShips = result.AvailableResearchShips,
+            AvailableColonizationShips = result.AvailableColonizationShips,
+            Resources = result.Resources
         };
     }
+    
     private UpdatedPlanetStatusResponse GetUpdatedPlanetStatusResponse(PlanetActionResult result)
     {
-        return new UpdatedPlanetStatusResponse { RelationStatus = result.RelationStatus, IterationsToTheNextStatus = result.IterationsToTheNextStatus};
+        return new UpdatedPlanetStatusResponse
+        {
+            RelationStatus = result.RelationStatus,
+            IterationsToTheNextStatus = result.IterationsToTheNextStatus,
+            PlanetId = result.PlanetId,
+            AvailableResearchShips = result.AvailableResearchShips,
+            AvailableColonizationShips = result.AvailableColonizationShips,
+            Resources = result.Resources
+        };
     }
 }
