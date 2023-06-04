@@ -26,6 +26,7 @@ namespace SharedLibrary.Contracts.Hubs
             public const string ReceiveBattle = nameof(ReceiveBattle);
             public const string NextTurnHandler = nameof(NextTurnHandler);
             public const string StartPlanetResearchingOrColonization = nameof(StartPlanetResearchingOrColonization);
+            public const string GetHeroDataHandler = nameof(GetHeroDataHandler);
         }
     }
 }

@@ -11,6 +11,7 @@ public interface IHeroService
     Task<ServiceResult<Hero>> Update(Guid id, Hero destination, CancellationToken cancellationToken);
     Task<ServiceResult<Hero>> Create(Guid userId, Hero hero, CancellationToken cancellationToken);
     Task<Hero?> GetByIdAsync(Guid heroId, CancellationToken cancellationToken);
+    Task<Hero?> GetHeroByUserIdAsync(Guid userId, CancellationToken cancellationToken);
 }
 
 public class HeroService : IHeroService
@@ -58,6 +59,16 @@ public class HeroService : IHeroService
             .Include(x => x.Session)
             .Include(x => x.User)
             .FirstOrDefaultAsync(h => h.HeroId == heroId, cancellationToken);
+        
+        return hero;
+    }
+
+    public async Task<Hero?> GetHeroByUserIdAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var hero = await _dbContext
+            .Heroes
+            .Include(x => x.Session)
+            .FirstOrDefaultAsync(h => h.UserId == userId, cancellationToken);
         
         return hero;
     }
