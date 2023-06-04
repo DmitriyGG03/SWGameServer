@@ -163,7 +163,7 @@ namespace Server.Services
                     AvailableColonizationShips = 1,
                     ResearchShipLimit = 1,
                     AvailableResearchShips = 1,
-                    Resourses = 1000,
+                    Resourses = 100,
                     AvailableSoldiers = int.MinValue,
                     SoldiersLimit = int.MinValue,
                     SessionId = session.Id,

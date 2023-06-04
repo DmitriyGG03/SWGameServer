@@ -40,22 +40,55 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
             }
 
             string planetName = _planetNameGenerator.GeneratePlanetNameBasedOnUniqueIndex(i);
-            
-            var planetType = (PlanetType)Random.Shared.Next(0, (int)PlanetType.Venus);
-            int planetSize = Random.Shared.Next(1, 26), resourceCount = planetSize * 10;
-            
-            var planet = new Planet(position, 
-                planetSize, 
-                planetName, 
-                planetType, 
-                ResourceType.Default, 
-                resourceCount,
-                Planet.CalculateHealthLimit(planetSize));
-            
+
+            var planet = CreatePlanet(position, planetName);
+
             planets.Add(planet);
         }
 
         return planets;
+    }
+
+    private static Planet CreatePlanet(PointF position, string planetName)
+    {
+        var planetType = (PlanetType)Random.Shared.Next(0, (int)PlanetType.Venus);
+        int planetSize = Random.Shared.Next(1, 26), resourceCount = planetSize * 3;
+        
+        Planet planet = null;
+
+        var randomValue = Random.Shared.Next(0, 100);
+        if (randomValue < 50)
+        {
+            planet = new Planet(position,
+                planetSize,
+                planetName,
+                planetType,
+                ResourceType.OnlyResources,
+                resourceCount,
+                Planet.CalculateHealthLimit(planetSize));
+        }
+        else if (randomValue < 75)
+        {
+            planet = new Planet(position,
+                planetSize,
+                planetName,
+                planetType,
+                ResourceType.ResourcesWithResearchShip,
+                resourceCount,
+                Planet.CalculateHealthLimit(planetSize));
+        }
+        else
+        {
+            planet = new Planet(position,
+                planetSize,
+                planetName,
+                planetType,
+                ResourceType.ResourcesWithColonizationShip,
+                resourceCount,
+                Planet.CalculateHealthLimit(planetSize));
+        }
+
+        return planet;
     }
 
     private List<Edge> GenerateConnectionsBetweenPlanets(List<Planet> planets, MapGenerationOptions options)

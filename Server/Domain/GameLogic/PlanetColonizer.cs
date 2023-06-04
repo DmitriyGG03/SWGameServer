@@ -45,7 +45,7 @@ public class PlanetColonizer : IPlanetAction
             return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.NotEnoughColonizationShips);
         }
         
-        int resourcesToColonize = relation.Planet.ResourceCount;
+        int resourcesToColonize = 30;
         if (hero.Resourses < resourcesToColonize)
             return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.NotEnoughResourcesToColonize);
             
@@ -88,6 +88,17 @@ public class PlanetColonizer : IPlanetAction
         relation.IterationsLeftToTheNextStatus = 1;
 
         hero.AvailableColonizationShips += 1;
+        if (_planet.ResourceType == ResourceType.ResourcesWithColonizationShip)
+        {
+            hero.ColonizationShipLimit += 1;
+            hero.AvailableColonizationShips += 1;
+        }
+        else if (_planet.ResourceType == ResourceType.ResourcesWithResearchShip)
+        {
+            hero.ResearchShipLimit += 1;
+            hero.AvailableResearchShips += 1;
+        }
+        
         var planetSize = _planet.Size;
         hero.UpdateAvailableSoldiersAndSoldiersLimitByColonizedPlanetSize(planetSize);
         

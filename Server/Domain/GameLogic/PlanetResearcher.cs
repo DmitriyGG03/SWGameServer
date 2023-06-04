@@ -47,7 +47,7 @@ public class PlanetResearcher : IPlanetAction
             return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.NotEnoughResearchShips);
         }
 
-        int resourcesToResearch = (int)(relation.Planet.ResourceCount / 2);
+        int resourcesToResearch = 10;
         if (hero.Resourses < resourcesToResearch)
             return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.NotEnoughResourcesToResearch);
                 

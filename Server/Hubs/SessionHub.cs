@@ -163,15 +163,17 @@ public class SessionHub : Hub
         var response = new NextTurnResponse
         {
             Session = session,
-            Battles = sessionBattles
+            Battles = sessionBattles,
         };
 
         var userIdsWithHeroIds = _sessionService.GetUserIdWithHeroIdBySession(session);
-
+        var heroes = session.Heroes;
+        session.Heroes = null;
         foreach (var item in userIdsWithHeroIds)
         {
             var heroMap = await _heroMapService.GetHeroMapAsync(item.Value, CancellationToken.None);
             response.HeroMapView = heroMap;
+            response.Hero = heroes.First(x => x.HeroId == heroMap.HeroId);
             await this.Clients.User(item.Key.ToString()).SendAsync(ClientHandlers.Session.NextTurnHandler, response);
         }
     }
