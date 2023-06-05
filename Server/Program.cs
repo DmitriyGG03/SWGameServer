@@ -104,13 +104,16 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+string? port = Environment.GetEnvironmentVariable("PORT");
+if(string.IsNullOrEmpty(port) == false)
+{
+    builder.WebHost.UseUrls($"http://*:{port}");
+}
+
 var app = builder.Build(); // Создает обьект WebApplication
 
-if (app.Environment.IsDevelopment()) 
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
