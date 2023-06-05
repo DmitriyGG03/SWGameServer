@@ -6,6 +6,5 @@ namespace SharedLibrary.Responses
     {
         public Hero? GameWinner { get; set; }
         public int CountOfTurns { get; set; }
-        public int CountOfBattles { get; set; }
     }
 }

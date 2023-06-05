@@ -67,7 +67,10 @@ public class SessionHub : Hub
         }
         catch (GameEndedException e)
         {
-            
+            if (e.Winner is null)
+                throw new ArgumentException("GameEnded exception should contain winner");
+
+            await NotifyGameEndAsync(e.Winner);
         }
         catch (Exception e)
         {
@@ -310,6 +313,7 @@ public class SessionHub : Hub
         if (session is null)
             throw new InvalidOperationException("Session can not be null. Something unexpected has occured");
         
+        _cyclicDependencySolver.Solve(winner);
         var response = new GameEndedResponse
         {
             GameWinner = winner,
