@@ -27,6 +27,7 @@ namespace SharedLibrary.Contracts.Hubs
             public const string NextTurnHandler = nameof(NextTurnHandler);
             public const string StartPlanetResearchingOrColonization = nameof(StartPlanetResearchingOrColonization);
             public const string GetHeroDataHandler = nameof(GetHeroDataHandler);
+            public const string GameEnded = nameof(GameEnded);
         }
     }
 }
