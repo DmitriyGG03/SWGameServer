@@ -27,6 +27,7 @@ public abstract class FortificationBuilderBase : IPlanetAction
             
         Relation.FortificationLevel = GetNextFortificationLevel();
         Relation.IterationsLeftToTheNextStatus = 1;
+        Hero.Resourses -= resourcesToBuildFortification;
         
         var result = new PlanetActionResult(Relation.Status, Relation.FortificationLevel, Relation.PlanetId, 
             Relation.Hero.AvailableResearchShips, Relation.Hero.AvailableColonizationShips, Relation.Hero.Resourses, 
