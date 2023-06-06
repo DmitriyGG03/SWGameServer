@@ -4,6 +4,23 @@ namespace Server.Services;
 
 public class CyclicDependencySolver
 {
+    public void Solve(Hero hero)
+    {
+        if (hero.Session?.Heroes != null)
+        {
+            foreach (var sessionHero in hero.Session.Heroes)
+            {
+                sessionHero.Session = null;
+                if (sessionHero.User != null) 
+                    sessionHero.User.Heroes = null;
+            }
+        }
+
+        if (hero.User != null) 
+            hero.User.Heroes = null;
+    }
+
+    
     public void Solve(Battle battle)
     {
         if (battle.AttackerHero is not null)

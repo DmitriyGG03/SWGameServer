@@ -179,6 +179,7 @@ namespace Server.Services
                 homePlanet.IsCapital = true;
                 homePlanet.ResourceCount = 10;
                 homePlanet.ResourceType = ResourceType.OnlyResources;
+                homePlanet.ColorStatus = hero.ColorStatus;
                 
                 hero.SetSoldiersLimitBasedOnPlanetSize(homePlanet.Size);
                 hero.InitializeAvailableSoldiers();

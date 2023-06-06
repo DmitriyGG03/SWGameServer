@@ -214,6 +214,16 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         Console.WriteLine(json);
     });
     
+    hubConnection.On<GameEndedResponse>(ClientHandlers.Session.GameEnded, (gameEndedResponse) =>
+    {
+        Console.WriteLine("GameEndedResponse");
+        string json = JsonSerializer.Serialize(gameEndedResponse, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
+    
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.HealthCheckHandler, HandleStringMessageOutput());

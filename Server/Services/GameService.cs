@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
 using Server.Domain;
+using Server.Domain.Exceptions;
 using Server.Domain.GameLogic;
 using Server.Repositories;
 using Server.Services.Abstract;
@@ -88,6 +89,7 @@ public class GameService : IGameService
             throw new NullReferenceException("You probably changed GetByIdAsync method in session service. Heroes can not be null there");
     
         bool newTurn = ChooseNextHeroAndDetermineIfItsTheStartOfNextTurn(session);
+        
         if (newTurn)
         {
             session.TurnNumber += 1;
@@ -272,7 +274,7 @@ public class GameService : IGameService
         {
             foreach (var relation in relations.Where(x => x.HeroId == hero.HeroId))
             {
-                hero.Resourses += (int)(relation.Planet.ResourceCount * 0.5);
+                hero.Resourses += (int)(relation.Planet.ResourceCount);
             }
         }
     }
@@ -329,7 +331,7 @@ public class GameService : IGameService
             .Include(x => x.AttackedPlanet)
             .Where(x => x.Status == BattleStatus.InProcess)
             .ToListAsync(cancellationToken);
-        
+
         if (battles.Any())
         {
             foreach (var battle in battles)
@@ -341,7 +343,6 @@ public class GameService : IGameService
 
     private async Task HandleBattle(Battle battle, CancellationToken cancellationToken)
     {
-        // battle
         var attackedPlanet = battle.AttackedPlanet;
 
         if (attackedPlanet is null)
@@ -393,9 +394,17 @@ public class GameService : IGameService
 
         if (attackedPlanet.IsCapital)
         {
-            _logger.LogWarning($"The capital of hero: {attackedPlanet.OwnerId} has been colonized");
-            _logger.LogWarning($"User: {attackedPlanet.OwnerId} has been defeated!");
+            HandleWinStatement(battle);
         }
+    }
+
+    private void HandleWinStatement(Battle battle)
+    {
+        _logger.LogWarning($"The capital of hero: {battle.DefendingHeroId} has been colonized");
+        _logger.LogWarning($"User: {battle.AttackerHeroId} has been defeated!");
+
+        var gameEndedException = new GameEndedException(battle.AttackerHero);
+        throw gameEndedException;
     }
 
     private async Task HandlePlanetActions(CancellationToken cancellationToken)

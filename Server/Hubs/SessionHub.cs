@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Server.Common.Constants;
 using Server.Domain;
+using Server.Domain.Exceptions;
 using Server.Domain.GameLogic;
 using Server.Services;
 using Server.Services.Abstract;
@@ -42,7 +43,8 @@ public class SessionHub : Hub
     {
         try
         {
-            ServiceResult<(Session session, bool nextTurn)> result = await _gameService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
+            ServiceResult<(Session session, bool nextTurn)> result =
+                await _gameService.MakeNextTurnAsync(request.SessionId, request.HeroId, CancellationToken.None);
 
             if (result.Success == false)
             {
@@ -52,16 +54,23 @@ public class SessionHub : Hub
             {
                 (Session session, bool nextTurn) = result.Value;
                 _cyclicDependencySolver.Solve(session);
-            
-                if(nextTurn == true)
+
+                if (nextTurn == true)
                 {
                     await HandleNextTurnAndNotifyClients(session);
-                }            
+                }
                 else
                 {
                     await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
                 }
             }
+        }
+        catch (GameEndedException e)
+        {
+            if (e.Winner is null)
+                throw new ArgumentException("GameEnded exception should contain winner");
+
+            await NotifyGameEndAsync(e.Winner);
         }
         catch (Exception e)
         {
@@ -258,6 +267,7 @@ public class SessionHub : Hub
         return new UpdatedFortificationResponse
         {
             IterationsToTheNextStatus = result.IterationsToTheNextStatus,
+            Fortification = result.FortificationLevel,
             PlanetId = result.PlanetId,
             AvailableResearchShips = result.AvailableResearchShips,
             AvailableColonizationShips = result.AvailableColonizationShips,
@@ -291,5 +301,26 @@ public class SessionHub : Hub
             _logger.LogError($"Can not resolve user id ({userId}), it's not guid type");
             throw new ArgumentException("Invalid Guid format");
         }
+    }
+
+    private async Task NotifyGameEndAsync(Hero winner)
+    {
+        if (winner.SessionId is null)
+        {
+            throw new ArgumentException("Session id in hero can not be null");
+        }
+        
+        var session = await _sessionService.GetByIdAsync(winner.SessionId.Value, CancellationToken.None);
+        if (session is null)
+            throw new InvalidOperationException("Session can not be null. Something unexpected has occured");
+        
+        _cyclicDependencySolver.Solve(winner);
+        var response = new GameEndedResponse
+        {
+            GameWinner = winner,
+            CountOfTurns = session.TurnNumber
+        };
+
+        await this.Clients.All.SendAsync(ClientHandlers.Session.GameEnded, response);
     }
 }
