@@ -14,6 +14,8 @@ namespace SharedLibrary.Models
         public string LobbyName { get; set; }
         [Range(0, byte.MaxValue)]
         public byte MaxHeroNumbers { get; set; }
+
+        public bool Visible { get; set; } = true;
         
         public ICollection<LobbyInfo>? LobbyInfos { get; set; }
     }

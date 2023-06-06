@@ -52,6 +52,7 @@ public class LobbyService : ILobbyService
     public Task<Lobby?> GetLobbyByIdAsync(Guid id)
     {
         var result =  _context.Lobbies
+            .Where(x => x.Visible == true)
             .Include(x => x.LobbyInfos)!
              .ThenInclude(i => i.User)
             .FirstOrDefaultAsync(l => l.Id == id);

@@ -47,6 +47,7 @@ namespace Server.Services
             var sessionMap = GenerateSessionMap();
             var session = CreateSessionAndCalculateTurnTimeLimit(lobby, sessionMap);
 
+            lobby.Visible = false;
             await _context.Sessions.AddAsync(session, cancellationToken);
             await _context.SaveChangesAsync(cancellationToken);
 
@@ -59,9 +60,6 @@ namespace Server.Services
                 session.HeroTurnId = heroes.First().HeroId;
                 await UpdateSessionAsync(session, cancellationToken);
             }
-
-            _context.Lobbies.Remove(lobby);
-            await _context.SaveChangesAsync(cancellationToken);
 
             return new ServiceResult<Session>(session);
         }
