@@ -200,10 +200,14 @@ public class GameService : IGameService
         var battles = await _context.Battles.ToListAsync(cancellationToken);
         var sessionBattles = battles
             .Where(x => 
-                session.Heroes.Any(h => 
-                    h.HeroId == x.AttackerHeroId || 
-                    h.HeroId == x.DefendingHeroId))
+                session.Heroes.Any(h => h.HeroId == x.AttackerHeroId || h.HeroId == x.DefendingHeroId) 
+                    && x.Display == true)
             .ToList();
+
+        var battleToNotDisplay = sessionBattles.Where(x => x.Status != BattleStatus.InProcess).ToList();
+        battleToNotDisplay.ForEach(x => x.Display = false);
+        await SaveChangesAsync(cancellationToken);
+        
         return sessionBattles;
     }
 

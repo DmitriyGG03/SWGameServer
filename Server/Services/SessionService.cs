@@ -60,6 +60,9 @@ namespace Server.Services
                 await UpdateSessionAsync(session, cancellationToken);
             }
 
+            _context.Lobbies.Remove(lobby);
+            await _context.SaveChangesAsync(cancellationToken);
+
             return new ServiceResult<Session>(session);
         }
         
