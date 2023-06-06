@@ -223,6 +223,16 @@ Lobby? ConfigureHandlers(HubConnection hubConnection)
         });
         Console.WriteLine(json);
     });
+        
+    hubConnection.On<ExitFromSessionResponse>(ClientHandlers.Session.ExitFromSessionHandler, (response) =>
+    {
+        Console.WriteLine("ExitFromSessionResponse");
+        string json = JsonSerializer.Serialize(response, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+        Console.WriteLine(json);
+    });
     
     hubConnection.On<string>(ClientHandlers.ErrorHandler, HandleStringMessageOutput());
     hubConnection.On<string>(ClientHandlers.Session.PostResearchOrColonizeErrorHandler, HandleStringMessageOutput());
@@ -374,6 +384,20 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     else if (message == "get-data")
     {
         await connection.InvokeAsync(ServerHandlers.Session.GetHeroData);
+    }
+    else if (message == "session-exit")
+    {
+        Console.WriteLine("Are you 1 or 2 user?");
+        var userNumber = Console.ReadLine();
+        var heroId = Guid.Empty;
+        heroId = userNumber == "1" ? hero1 : hero2;
+        
+        var request = new ExitFromSessionRequest
+        {
+            HeroId = heroId,
+            SessionId = sessionId
+        };
+        await connection.InvokeAsync(ServerHandlers.Session.ExitFromSession, request);
     }
 
     return false;

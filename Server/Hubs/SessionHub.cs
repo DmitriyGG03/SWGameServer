@@ -195,20 +195,12 @@ public class SessionHub : Hub
     }
 
     [Authorize]
-    public async Task ExitFromSession(Guid sessionId)
+    public async Task ExitFromSession(ExitFromSessionRequest request)
     {
         try
         {
-            var userId = GetUserIdFromContext();
-            var hero = await _heroService.GetHeroByUserIdAsync(userId, CancellationToken.None);
-            if (hero is null)
-            {
-                await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, "There is no hero with given user id");
-                return;
-            }
-
             var exitFromSessionResult =
-                await _sessionService.ExitFromSessionAsync(sessionId, hero.HeroId, CancellationToken.None);
+                await _sessionService.ExitFromSessionAsync(request.SessionId, request.HeroId, CancellationToken.None);
             if (exitFromSessionResult.Success == false)
             {
                 await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, exitFromSessionResult.ErrorMessage);
@@ -218,19 +210,12 @@ public class SessionHub : Hub
             {
                 var response = new ExitFromSessionResponse
                 {
-                    Session = exitFromSessionResult.Value
+                    Hero = exitFromSessionResult.Value
                 };
 
-                _cyclicDependencySolver.Solve(response.Session);
+                _cyclicDependencySolver.Solve(response.Hero);
                 await this.Clients.All.SendAsync(ClientHandlers.Session.ExitFromSessionHandler, response);
             }
-        }
-        catch (GameEndedException e)
-        {
-            if (e.Winner is null)
-                throw new ArgumentException("Winner can not be null");
-            
-            await NotifyGameEndAsync(e.Winner);
         }
         catch (Exception e)
         {

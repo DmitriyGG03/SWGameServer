@@ -19,6 +19,6 @@ namespace Server.Services.Abstract
 
         Dictionary<Guid, Guid> GetUserIdWithHeroIdBySession(Session session);
         
-        Task<ServiceResult<Session>> ExitFromSessionAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken);
+        Task<ServiceResult<Hero>> ExitFromSessionAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken);
     }
 }

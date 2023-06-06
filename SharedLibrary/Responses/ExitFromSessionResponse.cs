@@ -4,6 +4,6 @@ namespace SharedLibrary.Responses
 {
     public class ExitFromSessionResponse
     {
-        public Session? Session { get; set; }
+        public Hero? Hero { get; set; }
     }
 }
