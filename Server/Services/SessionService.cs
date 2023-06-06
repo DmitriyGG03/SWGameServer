@@ -178,6 +178,7 @@ namespace Server.Services
         private async Task<List<Hero>> CreateHeroesBasedOnLobbyInfosAndAddThemToDbAsync(ICollection<LobbyInfo> lobbyInfos, Session session, SessionMap sessionMap, CancellationToken cancellationToken)
         {
             var heroes = new List<Hero>();
+            int counter = 0;
             foreach (var item in lobbyInfos)
             {
                 var hero = new Hero
@@ -197,8 +198,9 @@ namespace Server.Services
                     UserId = item.UserId
                 };
                 
-                // TODO: change home planet receiving
-                var homePlanet = sessionMap.Planets[Random.Shared.Next(0, sessionMap.Planets.Count)];
+                var randomIndex = CalculateRandomIndex(sessionMap, counter);
+
+                var homePlanet = sessionMap.Planets[Random.Shared.Next(0, randomIndex)];
                 hero.HomePlanetId = homePlanet.Id;
                 hero.HomePlanet = homePlanet;
                 homePlanet.OwnerId = hero.HeroId;
@@ -222,9 +224,34 @@ namespace Server.Services
                 {
                     heroes.Add(hero);
                 }
+
+                counter += 1;
             }
 
             return heroes;
+        }
+
+        private static int CalculateRandomIndex(SessionMap sessionMap, int counter)
+        {
+            int randomIndex = 0;
+            if (counter == 0)
+            {
+                randomIndex = Random.Shared.Next(0, 10);
+            }
+            else if (counter == 1)
+            {
+                randomIndex = Random.Shared.Next(10, 20);
+            }
+            else if (counter == 2)
+            {
+                randomIndex = Random.Shared.Next(20, 30);
+            }
+            else
+            {
+                randomIndex = Random.Shared.Next(30, sessionMap.Planets.Count);
+            }
+
+            return randomIndex;
         }
 
         private async Task GenerateHeroPlanetRelationsAsync(List<Hero> heroes, List<Planet> planets,
