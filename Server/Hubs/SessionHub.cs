@@ -267,6 +267,7 @@ public class SessionHub : Hub
         return new UpdatedFortificationResponse
         {
             IterationsToTheNextStatus = result.IterationsToTheNextStatus,
+            Fortification = result.FortificationLevel,
             PlanetId = result.PlanetId,
             AvailableResearchShips = result.AvailableResearchShips,
             AvailableColonizationShips = result.AvailableColonizationShips,

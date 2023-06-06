@@ -50,7 +50,7 @@ try
     Lobby? currentLobby = null;
     
     var connection = new HubConnectionBuilder()
-        .WithUrl($"https://space-war-plus.herokuapp.com/hubs/{hubName}", options =>
+        .WithUrl($"https://localhost:{port}/hubs/{hubName}", options =>
         { 
             options.AccessTokenProvider = () => Task.FromResult(accessToken);
         })

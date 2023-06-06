@@ -21,7 +21,7 @@ public abstract class FortificationBuilderBase : IPlanetAction
     
     public virtual async Task<ServiceResult<PlanetActionResult>> ExecuteAsync(CancellationToken cancellationToken)
     {
-        int resourcesToBuildFortification = (int)(Relation.Planet.ResourceCount / 2);
+        int resourcesToBuildFortification = 40;
         if (Hero.Resourses < resourcesToBuildFortification)
             return new ServiceResult<PlanetActionResult>(ErrorMessages.Session.NotEnoughResourcesToBuildFortification);
             

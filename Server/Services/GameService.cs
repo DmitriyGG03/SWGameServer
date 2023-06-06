@@ -274,7 +274,7 @@ public class GameService : IGameService
         {
             foreach (var relation in relations.Where(x => x.HeroId == hero.HeroId))
             {
-                hero.Resourses += (int)(relation.Planet.ResourceCount * 0.5);
+                hero.Resourses += (int)(relation.Planet.ResourceCount);
             }
         }
     }
