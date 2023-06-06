@@ -53,7 +53,6 @@ public class SessionHub : Hub
             else
             {
                 (Session session, bool nextTurn) = result.Value;
-                _cyclicDependencySolver.Solve(session);
 
                 if (nextTurn == true)
                 {
@@ -61,6 +60,7 @@ public class SessionHub : Hub
                 }
                 else
                 {
+                    _cyclicDependencySolver.Solve(session);
                     await this.Clients.All.SendAsync(ClientHandlers.Session.ReceiveSession, session);
                 }
             }
@@ -249,6 +249,7 @@ public class SessionHub : Hub
 
         var userIdsWithHeroIds = _sessionService.GetUserIdWithHeroIdBySession(session);
         var heroes = session.Heroes;
+        _cyclicDependencySolver.Solve(session);
         foreach (var item in userIdsWithHeroIds)
         {
             var heroMap = await _heroMapService.GetHeroMapAsync(item.Value, CancellationToken.None);

@@ -204,11 +204,9 @@ public class GameService : IGameService
                     && x.Display == true)
             .ToList();
 
-        /*
         var battleToNotDisplay = sessionBattles.Where(x => x.Status != BattleStatus.InProcess).ToList();
-                battleToNotDisplay.ForEach(x => x.Display = false);
-                await SaveChangesAsync(cancellationToken);
-                */
+        battleToNotDisplay.ForEach(x => x.Display = false);
+        await SaveChangesAsync(cancellationToken);
         
         return sessionBattles;
     }
