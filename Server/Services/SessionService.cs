@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
 using Server.Domain;
+using Server.Domain.Exceptions;
 using Server.Services.Abstract;
 using SharedLibrary.Models;
 using SharedLibrary.Models.Enums;
@@ -116,7 +117,31 @@ namespace Server.Services
                 .Select(x => new {x.UserId, x.HeroId})
                 .ToDictionary(t => t.UserId, t => t.HeroId));
         }
-        
+
+        public async Task<ServiceResult<Session>> ExitFromSessionAsync(Guid sessionId, Guid heroId, CancellationToken cancellationToken)
+        {
+            var session = await GetByIdAsync(sessionId, cancellationToken);
+            if (session is null)
+                return new ServiceResult<Session>(ErrorMessages.Session.NotFound);
+
+            if (session.Heroes is null)
+                throw new InvalidOperationException("Can not exit from session, cause heroes in session is null");
+            
+            var hero = session.Heroes.FirstOrDefault(x => x.HeroId == heroId);
+            if (hero is null)
+                return new ServiceResult<Session>(ErrorMessages.Hero.NotFound);
+            
+            session.Heroes.Remove(hero);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            if (session.Heroes.Count == 1)
+            {
+                throw new GameEndedException(session.Heroes.First());
+            }
+            
+            return new ServiceResult<Session>(session);
+        }
+
         private static Session CreateSessionAndCalculateTurnTimeLimit(Lobby lobby, SessionMap sessionMap)
         {
             var session = new Session

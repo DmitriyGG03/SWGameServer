@@ -24,6 +24,7 @@ namespace SharedLibrary.Contracts.Hubs
             public const string StartBattle = nameof(StartBattle);
             public const string DefendPlanet = nameof(DefendPlanet);
             public const string GetHeroData = nameof(GetHeroData);
+            public const string ExitFromSession = nameof(ExitFromSession);
         }
     }
 }

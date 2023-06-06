@@ -193,6 +193,51 @@ public class SessionHub : Hub
             _logger.LogError(e, e.Message);
         }
     }
+
+    [Authorize]
+    public async Task ExitFromSession(Guid sessionId)
+    {
+        try
+        {
+            var userId = GetUserIdFromContext();
+            var hero = await _heroService.GetHeroByUserIdAsync(userId, CancellationToken.None);
+            if (hero is null)
+            {
+                await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, "There is no hero with given user id");
+                return;
+            }
+
+            var exitFromSessionResult =
+                await _sessionService.ExitFromSessionAsync(sessionId, hero.HeroId, CancellationToken.None);
+            if (exitFromSessionResult.Success == false)
+            {
+                await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, exitFromSessionResult.ErrorMessage);
+                return;
+            }
+            else
+            {
+                var response = new ExitFromSessionResponse
+                {
+                    Session = exitFromSessionResult.Value
+                };
+
+                _cyclicDependencySolver.Solve(response.Session);
+                await this.Clients.All.SendAsync(ClientHandlers.Session.ExitFromSessionHandler, response);
+            }
+        }
+        catch (GameEndedException e)
+        {
+            if (e.Winner is null)
+                throw new ArgumentException("Winner can not be null");
+            
+            await NotifyGameEndAsync(e.Winner);
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
     
     private async Task HandleBattleResult(ServiceResult<Battle> result)
     {
