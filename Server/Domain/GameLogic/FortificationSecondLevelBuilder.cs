@@ -13,4 +13,9 @@ public class FortificationSecondLevelBuilder : FortificationBuilderBase
     {
         return Fortification.Reliable;
     }
+
+    protected override int CalculatePrice()
+    {
+        return 150;
+    }
 }

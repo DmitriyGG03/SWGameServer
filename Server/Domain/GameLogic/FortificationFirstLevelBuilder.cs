@@ -13,4 +13,9 @@ public class FortificationFirstLevelBuilder : FortificationBuilderBase
     {
         return Fortification.Weak;
     }
+
+    protected override int CalculatePrice()
+    {
+        return 60;
+    }
 }

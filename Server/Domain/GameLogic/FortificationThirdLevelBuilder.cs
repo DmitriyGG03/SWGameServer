@@ -13,4 +13,9 @@ public class FortificationThirdLevelBuilder : FortificationBuilderBase
     {
         return Fortification.Strong;
     }
+
+    protected override int CalculatePrice()
+    {
+        return 300;
+    }
 }
