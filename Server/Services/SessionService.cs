@@ -198,6 +198,8 @@ namespace Server.Services
                     UserId = item.UserId
                 };
                 
+                var sorted = sessionMap.Planets.OrderBy(x => x.X).ToList();
+                sessionMap.Planets = sorted;
                 var randomIndex = CalculateRandomIndex(sessionMap, counter);
 
                 var homePlanet = sessionMap.Planets[Random.Shared.Next(0, randomIndex)];
@@ -234,12 +236,15 @@ namespace Server.Services
         private static int CalculateRandomIndex(SessionMap sessionMap, int counter)
         {
             int randomIndex = 0;
+            
             if (counter == 0)
             {
+                return 0;
                 randomIndex = Random.Shared.Next(0, 10);
             }
             else if (counter == 1)
             {
+                return 1;
                 randomIndex = Random.Shared.Next(10, 20);
             }
             else if (counter == 2)
