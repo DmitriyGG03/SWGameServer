@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using SharedLibrary.Models.Enums;
 
@@ -8,6 +9,8 @@ namespace SharedLibrary.Models
     [Table("HeroPlanets")]
     public class HeroPlanetRelation
     {
+        [Key]
+        public Guid Id { get; set; } = Guid.NewGuid();
         [ForeignKey(nameof(Hero))]
         public Guid HeroId { get; set; }
         public Hero? Hero { get; set; }

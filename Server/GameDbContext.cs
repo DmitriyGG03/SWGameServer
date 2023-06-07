@@ -9,12 +9,6 @@ public class GameDbContext : DbContext
     {
         Database.EnsureCreated();
     }
-
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
-        modelBuilder.Entity<HeroPlanetRelation>().HasKey(sc => new { sc.HeroId, sc.PlanetId });
-    }
     
     public DbSet<ApplicationUser> Users { get; set; }
     public DbSet<Hero> Heroes { get; set; }

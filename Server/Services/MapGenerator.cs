@@ -117,6 +117,12 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
                         options.MinDistanceFromPlanetToEdge);
                     if (!tooClose)
                     {
+                        if (connections.Any(x =>
+                                x.FromPlanetId == neighbor.Id && x.ToPlanetId == planet.Id) == false)
+                        {
+                            connections.Add(new Edge(neighbor, planet));
+                        }
+                        
                         connections.Add(connection);
                     }
                 }
