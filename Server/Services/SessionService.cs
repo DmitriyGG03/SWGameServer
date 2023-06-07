@@ -202,7 +202,7 @@ namespace Server.Services
                 sessionMap.Planets = sorted;
                 var randomIndex = CalculateRandomIndex(sessionMap, counter);
 
-                var homePlanet = sessionMap.Planets[Random.Shared.Next(0, randomIndex)];
+                var homePlanet = sessionMap.Planets[randomIndex];
                 hero.HomePlanetId = homePlanet.Id;
                 hero.HomePlanet = homePlanet;
                 homePlanet.OwnerId = hero.HeroId;
