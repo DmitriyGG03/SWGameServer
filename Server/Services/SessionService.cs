@@ -198,7 +198,7 @@ namespace Server.Services
                     UserId = item.UserId
                 };
                 
-                var sorted = sessionMap.Planets.OrderBy(x => x.X).ToList();
+                var sorted = sessionMap.Planets.OrderBy(x => x.X).ThenBy(x => x.Y).ToList();
                 sessionMap.Planets = sorted;
                 var randomIndex = CalculateRandomIndex(sessionMap, counter);
 
