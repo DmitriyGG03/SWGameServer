@@ -156,12 +156,11 @@ public class SessionHub : Hub
     }
 
     [Authorize]
-    public async Task GetHeroData()
+    public async Task GetHeroData(Guid heroId)
     {
         try
         {
-            var userId = GetUserIdFromContext();
-            var hero = await _heroService.GetHeroByUserIdAsync(userId, CancellationToken.None);
+            var hero = await _heroService.GetByIdAsync(heroId, CancellationToken.None);
             if (hero is null)
             {
                 await this.Clients.Caller.SendAsync(ClientHandlers.ErrorHandler, "There is no hero with given user id");

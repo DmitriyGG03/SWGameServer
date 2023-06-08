@@ -271,6 +271,7 @@ namespace Server.Services
             foreach (var hero in heroes)
             {
                 var knownRelationsPerHero = GenerateRelations(hero.HeroId, hero.HomePlanet, planets, connections);
+                knownRelationsPerHero = knownRelationsPerHero.DistinctBy(x => x.PlanetId).ToList();
                 relations.AddRange(knownRelationsPerHero);
             }
             
@@ -318,7 +319,7 @@ namespace Server.Services
 
                 otherPlanets.Add(planet);
             }
-            
+
             foreach (var planet in otherPlanets)
             {
                 relations.Add(new HeroPlanetRelation

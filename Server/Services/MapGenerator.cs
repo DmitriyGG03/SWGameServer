@@ -9,9 +9,11 @@ namespace Server.Services;
 public class DefaultMapGeneratorStrategy : IMapGenerator
 {
     private readonly IPlanetNameGenerator _planetNameGenerator;
-    public DefaultMapGeneratorStrategy(IPlanetNameGenerator planetNameGenerator)
+    private readonly ILogger<DefaultMapGeneratorStrategy> _logger;
+    public DefaultMapGeneratorStrategy(IPlanetNameGenerator planetNameGenerator, ILogger<DefaultMapGeneratorStrategy> logger)
     {
         _planetNameGenerator = planetNameGenerator;
+        _logger = logger;
     }
 
     public SessionMap GenerateMap(MapGenerationOptions options)
@@ -21,6 +23,8 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
 
         var planets = GeneratePlanets(options);
         var connections = GenerateConnectionsBetweenPlanets(planets, options);
+
+        connections = connections.DistinctBy(x => x.Id).ToList();
 
         return new SessionMap(planets, connections);
     }
@@ -117,8 +121,12 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
                         options.MinDistanceFromPlanetToEdge);
                     if (!tooClose)
                     {
-                        if (connections.Any(x =>
-                                x.FromPlanetId == neighbor.Id && x.ToPlanetId == planet.Id) == false)
+                        if (connections.Any(x => x.FromPlanetId == neighbor.Id && x.ToPlanetId == planet.Id) == false)
+                        {
+                            connections.Add(new Edge(neighbor, planet));
+                        }
+                        
+                        if (connections.Any(x => x.FromPlanetId == planet.Id && x.ToPlanetId == neighbor.Id) == false)
                         {
                             connections.Add(new Edge(neighbor, planet));
                         }

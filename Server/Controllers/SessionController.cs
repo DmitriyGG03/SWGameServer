@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
 using Server.Repositories;
 using Server.Services;
@@ -16,12 +17,14 @@ public class SessionController : ControllerBase
     private readonly CyclicDependencySolver _cyclicDependencySolver;
     private readonly IHeroMapService _heroMapService;
     private readonly IGameObjectsRepository _gameObjectsRepository;
-    public SessionController(ISessionService sessionService, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService, IGameObjectsRepository gameObjectsRepository)
+    private readonly GameDbContext _context;
+    public SessionController(ISessionService sessionService, CyclicDependencySolver cyclicDependencySolver, IHeroMapService heroMapService, IGameObjectsRepository gameObjectsRepository, GameDbContext context)
     {
         _sessionService = sessionService;
         _cyclicDependencySolver = cyclicDependencySolver;
         _heroMapService = heroMapService;
         _gameObjectsRepository = gameObjectsRepository;
+        _context = context;
     }
 
     [HttpGet, Route(ApiRoutes.Session.GetById)]
@@ -51,6 +54,24 @@ public class SessionController : ControllerBase
     {
         var battles = await _gameObjectsRepository.GetBattlesAsync(cancellationToken);
         return Ok(battles);
+    }
+    
+    [HttpGet, Route("get-planets")]
+    public async Task<IActionResult> GetPlanets(CancellationToken cancellationToken)
+    {
+        var planets = await _context.Planets.ToListAsync(cancellationToken);
+        return Ok(planets);
+    }
+    
+    [HttpGet, Route("get-hero-planets-relations")]
+    public async Task<IActionResult> GetHeroPlanetRelations(Guid heroId, CancellationToken cancellationToken)
+    {
+        var relation = await _context.HeroPlanetRelations
+            .Include(x => x.Planet)
+            .Include(x => x.Hero)
+            .Where(x => x.HeroId == heroId)
+            .ToListAsync(cancellationToken);
+        return Ok(relation);
     }
     
     #endregion

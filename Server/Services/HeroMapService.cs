@@ -12,10 +12,12 @@ public interface IHeroMapService
 public class HeroMapService : IHeroMapService
 {
     private readonly GameDbContext _context;
+    private readonly ILogger<HeroMapService> _logger;
 
-    public HeroMapService(GameDbContext context)
+    public HeroMapService(GameDbContext context, ILogger<HeroMapService> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     public async Task<HeroMapView?> GetHeroMapAsync(Guid heroId, CancellationToken cancellationToken)
@@ -44,10 +46,12 @@ public class HeroMapService : IHeroMapService
             x.Planet.Status = x.Status;
             return x.Planet;
         }).ToList();
-
+        
         var rootPlanets = planets.Where(x => x.Status >= PlanetStatus.Researched).ToList();
         var connections = await GetConnectionsAsync(rootPlanets);
 
+        connections = connections.DistinctBy(x => x.Id).ToList();
+        
         var heroMap = new HeroMapView
         {
             HeroId = heroId,

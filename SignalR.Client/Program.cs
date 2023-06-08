@@ -383,7 +383,12 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
     }
     else if (message == "get-data")
     {
-        await connection.InvokeAsync(ServerHandlers.Session.GetHeroData);
+        Console.WriteLine("Are you 1 or 2 user?");
+        var userNumber = Console.ReadLine();
+        var heroId = Guid.Empty;
+        heroId = userNumber == "1" ? hero1 : hero2;
+        
+        await connection.InvokeAsync(ServerHandlers.Session.GetHeroData, heroId);
     }
     else if (message == "session-exit")
     {
