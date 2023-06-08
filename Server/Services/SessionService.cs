@@ -337,10 +337,18 @@ namespace Server.Services
 
         private List<Planet> GetNeighborsPlanet(Guid planetId, List<Edge> connections)
         {
-            return connections
+            var fromPlanets = connections
                 .Where(x => x.FromPlanetId == planetId)
                 .Select(x => x.To)
                 .ToList();
+            var toPlanets = connections
+                .Where(x => x.ToPlanetId == planetId)
+                .Select(x => x.From)
+                .ToList();
+            
+            var planets = new List<Planet>(fromPlanets);   
+            planets.AddRange(toPlanets);
+            return planets;
         }
 
     }

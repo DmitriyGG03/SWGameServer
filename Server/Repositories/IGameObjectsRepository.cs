@@ -29,7 +29,7 @@ public class GameObjectRepository : IGameObjectsRepository
     public async Task<List<Planet>> GetNeighborPlanetsAsync(Guid planetId, CancellationToken cancellationToken)
     {
         var neighborPlanetsIds = await _context.Connections
-            .Where(x => x.FromPlanetId == planetId) 
+            .Where(x => x.FromPlanetId == planetId || x.ToPlanetId == planetId) 
             .Select(x => x.ToPlanetId)
             .ToListAsync(cancellationToken);
             

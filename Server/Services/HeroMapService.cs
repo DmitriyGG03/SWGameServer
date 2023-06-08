@@ -67,7 +67,7 @@ public class HeroMapService : IHeroMapService
         foreach (var planet in planets)
         {
             var subResult = await _context.Connections
-                .Where(x => x.FromPlanetId == planet.Id)
+                .Where(x => x.FromPlanetId == planet.Id || x.ToPlanetId == planet.Id)
                 .ToListAsync();
                 
             connections.AddRange(subResult);
