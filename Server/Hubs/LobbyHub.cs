@@ -32,10 +32,10 @@ public class LobbyHub : Hub
     }
 
     [Authorize]
-    public async Task ConnectToLobby(Guid lobbyId)
+    public async Task ConnectToLobby(Guid lobbyId, string name)
     {
         var userId = GetUserIdFromContext();
-        var result = await _lobbyService.ConnectUserAsync(userId, lobbyId);
+        var result = await _lobbyService.ConnectUserAsync(userId, lobbyId, name);
         await HandleResult(result, ClientHandlers.Lobby.ConnectToLobbyHandler);
     }
     [Authorize]

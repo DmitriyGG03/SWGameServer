@@ -111,7 +111,7 @@ public class LobbyService : ILobbyService
     /// <param name="userId">The ID of the user to connect.</param>
     /// <param name="lobbyId">The ID of the lobby to connect to.</param>
     /// <returns>A service result containing the lobby that the user was connected to.</returns>
-    public async Task<ServiceResult<Lobby>> ConnectUserAsync(Guid userId, Guid lobbyId)
+    public async Task<ServiceResult<Lobby>> ConnectUserAsync(Guid userId, Guid lobbyId, string name)
     {
         var lobby = await GetLobbyWithInfosByIdAsync(lobbyId);
         if (lobby is null)
@@ -130,7 +130,7 @@ public class LobbyService : ILobbyService
             return new ServiceResult<Lobby>(ErrorMessages.User.NotFound);
         }
 
-        return await AddUserInLobbyAsync(user, lobby);
+        return await AddUserInLobbyAsync(user, lobby, name);
     }
 
     /// <summary>
@@ -228,7 +228,7 @@ public class LobbyService : ILobbyService
     {
         return lobby.LobbyInfos.Any(x => x.UserId == userId);
     }
-    private async Task<ServiceResult<Lobby>> AddUserInLobbyAsync(ApplicationUser user, Lobby lobby)
+    private async Task<ServiceResult<Lobby>> AddUserInLobbyAsync(ApplicationUser user, Lobby lobby, string name)
     {
         var lobbyInfo = new LobbyInfo
         {
@@ -236,6 +236,7 @@ public class LobbyService : ILobbyService
             LobbyId = lobby.Id,
             UserId = user.Id,
             User = user,
+            Name = name,
             LobbyLeader = false,
             Ready = false,
             ColorStatus = (int)ColorStatus.Red

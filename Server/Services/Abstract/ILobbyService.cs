@@ -34,7 +34,7 @@ public interface ILobbyService
     /// <param name="userId">The ID of the user to connect.</param>
     /// <param name="lobbyId">The ID of the lobby to connect to.</param>
     /// <returns>A service result containing the lobby that the user was connected to.</returns>
-    Task<ServiceResult<Lobby>> ConnectUserAsync(Guid userId, Guid lobbyId);
+    Task<ServiceResult<Lobby>> ConnectUserAsync(Guid userId, Guid lobbyId, string name);
     /// <summary>
     /// Removes a user from a lobby.
     /// </summary>

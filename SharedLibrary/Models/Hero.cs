@@ -82,7 +82,7 @@ namespace SharedLibrary.Models
 
 		public int CalculateNextSoldiersCount()
 		{
-			return (int)(SoldiersLimit * 0.2);
+			return (int)(SoldiersLimit * 0.05d);
 		}
 	}
 }

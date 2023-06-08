@@ -12,6 +12,7 @@ namespace SharedLibrary.Models
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)] 
         public Guid Id { get; set; }
         public ColorStatus ColorStatus { get; set; }
+        public string Name { get; set; } = String.Empty;
         public bool Ready { get; set; }
         public bool LobbyLeader { get; set; }
         

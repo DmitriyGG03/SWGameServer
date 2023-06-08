@@ -184,7 +184,7 @@ namespace Server.Services
                 var hero = new Hero
                 {
                     HeroId = Guid.NewGuid(),
-                    Name = item.User.Username,
+                    Name = item.Name,
                     ColorStatus = item.ColorStatus,
                     ColonizationShipLimit = 1,
                     AvailableColonizationShips = 1,
