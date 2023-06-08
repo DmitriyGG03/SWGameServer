@@ -50,8 +50,8 @@ public class HeroMapService : IHeroMapService
         var rootPlanets = planets.Where(x => x.Status >= PlanetStatus.Researched).ToList();
         var connections = await GetConnectionsAsync(rootPlanets);
 
-        connections = connections.DistinctBy(x => x.Id).ToList();
-        
+        connections = connections.DistinctBy(m => new { m.ToPlanetId, m.FromPlanetId }).ToList();
+
         var heroMap = new HeroMapView
         {
             HeroId = heroId,

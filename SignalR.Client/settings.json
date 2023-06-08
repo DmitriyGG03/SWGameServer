@@ -1,11 +1,11 @@
 {
-  "lobbyId": "00d32cdc-d080-4a98-b7e1-cf083f5a3ce7",
+  "lobbyId": "2ec7039f-a94d-4321-9e4b-0899be587f50",
   "session": {
-    "id": "0eede677-126a-4c01-a166-197dc2eb25e9",
-    "name": "#eqweesd",
+    "id": "60e4b51c-7896-46c1-ad60-af3fd002e02c",
+    "name": "#dada",
     "heroes": [
       {
-        "heroId": "1fc4c737-61cf-44ae-91ef-8d99da87fd1e",
+        "heroId": "beb04ef7-467f-4d69-8bc6-fc7fff30432f",
         "name": "first",
         "resourses": 100,
         "researchShipLimit": 1,
@@ -13,17 +13,17 @@
         "colonizationShipLimit": 1,
         "availableColonizationShips": 1,
         "colorStatus": 0,
-        "availableSoldiers": 72,
-        "soldiersLimit": 72,
+        "availableSoldiers": 102,
+        "soldiersLimit": 102,
         "userId": "3010bfd9-9beb-4ace-ad23-228a82dd40ee",
         "user": null,
-        "homePlanetId": "447794a8-721f-45a2-a399-21710b582983",
+        "homePlanetId": "2666f23c-9129-41c6-bccf-986b8abdc693",
         "homePlanet": null,
-        "sessionId": "0eede677-126a-4c01-a166-197dc2eb25e9",
+        "sessionId": "60e4b51c-7896-46c1-ad60-af3fd002e02c",
         "session": null
       },
       {
-        "heroId": "4e0dce5e-f4c2-44d2-89a2-e931cde4f27c",
+        "heroId": "c81fe54a-b039-4ae2-a690-a92d0a1f6804",
         "name": "second",
         "resourses": 100,
         "researchShipLimit": 1,
@@ -31,22 +31,22 @@
         "colonizationShipLimit": 1,
         "availableColonizationShips": 1,
         "colorStatus": 0,
-        "availableSoldiers": 96,
-        "soldiersLimit": 96,
+        "availableSoldiers": 105,
+        "soldiersLimit": 105,
         "userId": "d8265465-884e-430f-997a-f10e40bc558c",
         "user": null,
-        "homePlanetId": "6035ddbc-14c8-42a2-b9e0-0ddab55c9edc",
+        "homePlanetId": "285cea5c-8e3f-4031-aad2-2d8dc21b8965",
         "homePlanet": null,
-        "sessionId": "0eede677-126a-4c01-a166-197dc2eb25e9",
+        "sessionId": "60e4b51c-7896-46c1-ad60-af3fd002e02c",
         "session": null
       }
     ],
-    "sessionMapId": "d05c8354-3d5c-4936-8ec7-3de085922b40",
+    "sessionMapId": "b224e07d-ba9a-4a1b-a3b9-99f1d60648c0",
     "sessionMap": null,
     "heroNumber": 0,
     "turnNumber": 0,
     "turnTimeLimit": 60,
-    "heroTurnId": "1fc4c737-61cf-44ae-91ef-8d99da87fd1e"
+    "heroTurnId": "beb04ef7-467f-4d69-8bc6-fc7fff30432f"
   },
   "info": [
     "Session has been successfully found"
