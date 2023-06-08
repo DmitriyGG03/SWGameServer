@@ -122,7 +122,6 @@ public class DefaultMapGeneratorStrategy : IMapGenerator
                     if (!tooClose)
                     {
                         connections.Add(new Edge(planet, neighbor));
-                        connections.Add(new Edge(neighbor, planet));
                     }
                 }
             }
