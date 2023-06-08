@@ -57,7 +57,7 @@ namespace Server.Services
 
             if (session.HeroTurnId == Guid.Empty)
             {
-                session.HeroTurnId = heroes.First().HeroId;
+                session.HeroTurnId = heroes.OrderBy(x => x.Name).First().HeroId;
                 await UpdateSessionAsync(session, cancellationToken);
             }
 
