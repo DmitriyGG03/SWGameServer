@@ -50,7 +50,6 @@ namespace Server.Services
 
             lobby.Visible = false;
             await _context.Sessions.AddAsync(session, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
 
             List<Hero> heroes = await CreateHeroesBasedOnLobbyInfosAndAddThemToDbAsync(lobbyInfos, session, sessionMap, cancellationToken);
 
