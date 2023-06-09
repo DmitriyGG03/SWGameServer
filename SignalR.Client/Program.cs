@@ -247,7 +247,7 @@ async Task<bool> ParseMessageAndSendRequestToServerAsync(string message, HubConn
 
     if (message == "connect")
     {
-        await connection.InvokeAsync(ServerHandlers.Lobby.ConnectToLobby, lobbyId);
+        await connection.InvokeAsync(ServerHandlers.Lobby.ConnectToLobby, lobbyId, Guid.NewGuid().ToString());
     }
     else if (message == "lobbyexit")
     {
