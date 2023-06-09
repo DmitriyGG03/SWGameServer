@@ -198,8 +198,6 @@ namespace Server.Services
                     UserId = item.UserId
                 };
                 
-                var sorted = sessionMap.Planets.OrderBy(x => x.X).ThenBy(x => x.Y).ToList();
-                sessionMap.Planets = sorted;
                 var randomIndex = CalculateRandomIndex(sessionMap, counter);
 
                 var homePlanet = sessionMap.Planets[randomIndex];
@@ -235,28 +233,22 @@ namespace Server.Services
 
         private static int CalculateRandomIndex(SessionMap sessionMap, int counter)
         {
-            int randomIndex = 0;
-            
             if (counter == 0)
             {
-                return 0;
-                randomIndex = Random.Shared.Next(0, 10);
+                return Random.Shared.Next(0, 10);
             }
             else if (counter == 1)
             {
-                return 1;
-                randomIndex = Random.Shared.Next(10, 20);
+                return Random.Shared.Next(10, 20);
             }
             else if (counter == 2)
             {
-                randomIndex = Random.Shared.Next(20, 30);
+                return Random.Shared.Next(20, 30);
             }
             else
             {
-                randomIndex = Random.Shared.Next(30, sessionMap.Planets.Count);
+                return Random.Shared.Next(30, sessionMap.Planets.Count);
             }
-
-            return randomIndex;
         }
 
         private async Task GenerateHeroPlanetRelationsAsync(List<Hero> heroes, List<Planet> planets,
