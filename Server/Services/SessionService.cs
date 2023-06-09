@@ -233,8 +233,6 @@ namespace Server.Services
                 counter += 1;
             }
 
-            await _context.SaveChangesAsync(CancellationToken.None);
-            
             return heroes;
         }
 
