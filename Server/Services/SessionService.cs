@@ -235,10 +235,6 @@ namespace Server.Services
                 counter += 1;
             }
 
-            sessionMap.Connections.Add(new Edge(homePlanets[0], homePlanets[1]));
-            sessionMap.Connections.Add(new Edge(homePlanets[1], homePlanets[0]));
-            await _context.SaveChangesAsync(CancellationToken.None);
-            
             return heroes;
         }
 
