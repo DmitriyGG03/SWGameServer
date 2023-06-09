@@ -95,7 +95,7 @@ public class GameService : IGameService
             session.TurnNumber += 1;
             
             UpdateHeroesSoldiers(session.Heroes);
-            await HandleBattlesAsync(cancellationToken);
+            await HandleBattlesAsync(session, cancellationToken);
             
             await HandlePlanetActions(cancellationToken);
 
@@ -327,18 +327,27 @@ public class GameService : IGameService
         return startOfTurn;
     }
 
-    private async Task HandleBattlesAsync(CancellationToken cancellationToken)
+    private async Task HandleBattlesAsync(Session session, CancellationToken cancellationToken)
     {
+        if (session.Heroes is null)
+            throw new ArgumentException();
+        
         var battles = await _context.Battles
             .Include(x => x.AttackerHero)
             .Include(x => x.DefendingHero)
             .Include(x => x.AttackedPlanet)
             .Where(x => x.Status == BattleStatus.InProcess)
             .ToListAsync(cancellationToken);
+        
+        var sessionBattles = battles
+            .Where(x => 
+                session.Heroes.Any(h => h.HeroId == x.AttackerHeroId || h.HeroId == x.DefendingHeroId) 
+                && x.Display == true)
+            .ToList();
 
-        if (battles.Any())
+        if (sessionBattles.Any())
         {
-            foreach (var battle in battles)
+            foreach (var battle in sessionBattles)
             {
                 await HandleBattle(battle, cancellationToken);
             }
