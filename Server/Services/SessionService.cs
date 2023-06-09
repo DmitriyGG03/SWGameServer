@@ -200,10 +200,12 @@ namespace Server.Services
                     UserId = item.UserId
                 };
                 
+                
+                var sorted = sessionMap.Planets.OrderBy(x => x.Y).ToList();
+                sessionMap.Planets = sorted;
                 var randomIndex = CalculateRandomIndex(sessionMap, counter);
 
-                var homePlanet = GetPlanet(counter);
-                sessionMap.Planets.Add(homePlanet);
+                var homePlanet = sessionMap.Planets[randomIndex];
                 
                 hero.HomePlanetId = homePlanet.Id;
                 hero.HomePlanet = homePlanet;
@@ -241,9 +243,25 @@ namespace Server.Services
         private static Planet GetPlanet(int counter)
         {
             if(counter == 0)
-                return new Planet(new PointF(10, 10));
-            else 
-                return new Planet(new PointF(10, 30));
+            {
+                return new Planet(new PointF(10, 10),
+                    15,
+                    "1",
+                    PlanetType.Earth,
+                    ResourceType.OnlyResources,
+                    21,
+                    Planet.CalculateHealthLimit(15));
+            }
+            else
+            {
+                return new Planet(new PointF(10, 30),
+                    15,
+                    "1",
+                    PlanetType.Earth,
+                    ResourceType.OnlyResources,
+                    21,
+                    Planet.CalculateHealthLimit(15));
+            }
         }
 
         private static int CalculateRandomIndex(SessionMap sessionMap, int counter)
