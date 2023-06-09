@@ -340,9 +340,7 @@ public class GameService : IGameService
             .ToListAsync(cancellationToken);
 
         var sessionBattles = battles
-            .Where(x => 
-                session.Heroes.Any(h => h.HeroId == x.AttackerHeroId || h.HeroId == x.DefendingHeroId) 
-                && x.Display == true)
+            .Where(x => session.Heroes.Any(h => h.HeroId == x.AttackerHeroId || h.HeroId == x.DefendingHeroId))
             .ToList();
         
         if (sessionBattles.Any())
