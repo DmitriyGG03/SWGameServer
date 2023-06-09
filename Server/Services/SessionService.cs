@@ -203,6 +203,8 @@ namespace Server.Services
                 var randomIndex = CalculateRandomIndex(sessionMap, counter);
 
                 var homePlanet = GetPlanet(counter);
+                sessionMap.Planets.Add(homePlanet);
+                
                 hero.HomePlanetId = homePlanet.Id;
                 hero.HomePlanet = homePlanet;
                 homePlanet.OwnerId = hero.HeroId;
@@ -233,6 +235,10 @@ namespace Server.Services
                 counter += 1;
             }
 
+            sessionMap.Connections.Add(new Edge(homePlanets[0], homePlanets[1]));
+            sessionMap.Connections.Add(new Edge(homePlanets[1], homePlanets[0]));
+            await _context.SaveChangesAsync(CancellationToken.None);
+            
             return heroes;
         }
 
