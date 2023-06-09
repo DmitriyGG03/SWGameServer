@@ -66,7 +66,7 @@ public class LobbyController : ControllerBase
         var lobby = new Lobby { Id = Guid.NewGuid(), LobbyName = request.LobbyName, MaxHeroNumbers = request.MaxUsersCount };
         lobby.LobbyInfos = new List<LobbyInfo>
         {
-            new LobbyInfo { Id = Guid.NewGuid(), LobbyLeader = true, Ready = true, LobbyId = lobby.Id, UserId = userId, ColorStatus = (int)ColorStatus.Red }
+            new LobbyInfo { Id = Guid.NewGuid(), LobbyLeader = true, Ready = true, LobbyId = lobby.Id, UserId = userId, ColorStatus = (int)ColorStatus.Red, Name = request.FutureHeroName}
         };
         
         var result = await _lobbyService.CreateLobbyAsync(lobby);
