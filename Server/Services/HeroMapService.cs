@@ -49,7 +49,7 @@ public class HeroMapService : IHeroMapService
         
         var rootPlanets = planets.Where(x => x.Status >= PlanetStatus.Researched).ToList();
         var connections = await GetConnectionsAsync(rootPlanets);
-        connections = connections.Where(x => rootPlanets.Any(p => p.Id == x.FromPlanetId)).ToList();
+        connections = connections.Where(x => rootPlanets.Any(p => p.Id == x.FromPlanetId || p.Id == x.ToPlanetId)).ToList();
 
         var heroMap = new HeroMapView
         {
