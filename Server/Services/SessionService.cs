@@ -201,11 +201,17 @@ namespace Server.Services
                 };
                 
                 
-                var sorted = sessionMap.Planets.OrderBy(x => x.Y).ToList();
+                var sorted = sessionMap.Planets.OrderBy(x => x.X).ToList();
                 sessionMap.Planets = sorted;
                 var randomIndex = CalculateRandomIndex(sessionMap, counter);
 
                 var homePlanet = sessionMap.Planets[randomIndex];
+                homePlanets.Add(homePlanet);
+                if (randomIndex == 1)
+                {
+                    homePlanet.Y = homePlanets.First().Y;
+                    sessionMap.Connections.Add(new Edge(homePlanet, homePlanets.First()));
+                }
                 
                 hero.HomePlanetId = homePlanet.Id;
                 hero.HomePlanet = homePlanet;
