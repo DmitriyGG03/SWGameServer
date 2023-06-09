@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Drawing;
+using Microsoft.EntityFrameworkCore;
 using Server.Common.Constants;
 using Server.Domain;
 using Server.Domain.Exceptions;
@@ -179,6 +180,7 @@ namespace Server.Services
         {
             var heroes = new List<Hero>();
             int counter = 0;
+            var homePlanets = new List<Planet>();   
             foreach (var item in lobbyInfos)
             {
                 var hero = new Hero
@@ -198,11 +200,9 @@ namespace Server.Services
                     UserId = item.UserId
                 };
                 
-                var sorted = sessionMap.Planets.OrderBy(x => x.X).ThenBy(x => x.Y).ToList();
-                sessionMap.Planets = sorted;
                 var randomIndex = CalculateRandomIndex(sessionMap, counter);
 
-                var homePlanet = sessionMap.Planets[randomIndex];
+                var homePlanet = GetPlanet(counter);
                 hero.HomePlanetId = homePlanet.Id;
                 hero.HomePlanet = homePlanet;
                 homePlanet.OwnerId = hero.HeroId;
@@ -210,6 +210,9 @@ namespace Server.Services
                 homePlanet.ResourceCount = 10;
                 homePlanet.ResourceType = ResourceType.OnlyResources;
                 homePlanet.ColorStatus = hero.ColorStatus;
+                
+                homePlanets.Add(homePlanet);
+                sessionMap.Connections.Add(new Edge(homePlanet, sessionMap.Planets.First()));
                 
                 hero.SetSoldiersLimitBasedOnPlanetSize(homePlanet.Size);
                 hero.InitializeAvailableSoldiers();
@@ -230,7 +233,19 @@ namespace Server.Services
                 counter += 1;
             }
 
+            sessionMap.Connections.Add(new Edge(homePlanets[0], homePlanets[1]));
+            sessionMap.Connections.Add(new Edge(homePlanets[1], homePlanets[0]));
+            await _context.SaveChangesAsync(CancellationToken.None);
+            
             return heroes;
+        }
+
+        private static Planet GetPlanet(int counter)
+        {
+            if(counter == 0)
+                return new Planet(new PointF(10, 10));
+            else 
+                return new Planet(new PointF(10, 30));
         }
 
         private static int CalculateRandomIndex(SessionMap sessionMap, int counter)
