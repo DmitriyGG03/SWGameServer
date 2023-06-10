@@ -420,7 +420,6 @@ public class GameService : IGameService
 
     private async Task HandlePlanetActions(CancellationToken cancellationToken)
     {
-        // TODO: update fortifications
         var relations = await _context.HeroPlanetRelations
             .Include(x => x.Hero)
             .Include(x => x.Planet)

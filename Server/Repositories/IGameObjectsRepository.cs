@@ -28,11 +28,18 @@ public class GameObjectRepository : IGameObjectsRepository
 
     public async Task<List<Planet>> GetNeighborPlanetsAsync(Guid planetId, CancellationToken cancellationToken)
     {
-        var neighborPlanetsIds = await _context.Connections
-            .Where(x => x.FromPlanetId == planetId || x.ToPlanetId == planetId) 
-            .Select(x => x.ToPlanetId)
+        var neighborPlanetsFromDb = await _context.Connections
+            .Where(x => x.FromPlanetId == planetId || x.ToPlanetId == planetId)
             .ToListAsync(cancellationToken);
-            
+
+        var neighborPlanetsIds = neighborPlanetsFromDb.Select(x =>
+         {
+             if (x.FromPlanetId == planetId)
+                 return x.ToPlanetId;
+             
+             return x.FromPlanetId;
+         });
+             
         var neighborPlanets = new List<Planet>();
         foreach (var id in neighborPlanetsIds)
         {

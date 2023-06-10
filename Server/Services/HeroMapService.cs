@@ -49,7 +49,8 @@ public class HeroMapService : IHeroMapService
         
         var rootPlanets = planets.Where(x => x.Status >= PlanetStatus.Researched).ToList();
         var connections = await GetConnectionsAsync(rootPlanets);
-        connections = connections.Where(x => rootPlanets.Any(p => p.Id == x.FromPlanetId || p.Id == x.ToPlanetId)).ToList();
+        // useless ???
+        // connections = connections.Where(x => rootPlanets.Any(p => p.Id == x.FromPlanetId || p.Id == x.ToPlanetId)).ToList();
 
         var heroMap = new HeroMapView
         {
@@ -65,6 +66,7 @@ public class HeroMapService : IHeroMapService
         var connections = new List<Edge>();
         foreach (var planet in planets)
         {
+            // erorr?? .Where(x => x.FromPlanetId == planet.Id || x.ToPlanetId == planet.Id) -> something one
             var subResult = await _context.Connections
                 .Where(x => x.FromPlanetId == planet.Id || x.ToPlanetId == planet.Id)
                 .ToListAsync();
